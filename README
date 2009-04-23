@@ -1,0 +1,96 @@
+######################
+# cxreg's bash tools #
+######################
+
+
+##############
+# Quickstart #
+##############
+
+# Install the files
+cp bash_arrays ~/.bash_arrays
+cp bash_varstash ~/.bash_varstash
+cp bash_smartcd ~/.bash_smartcd
+
+# Load them when you log in
+echo >> ~/.profile '
+. ~/.bash_arrays
+. ~/.bash_varstash
+. ~/.bash_smartcd
+alias cd=smartcd
+'
+
+# Create some scripts for a directory that set up environment
+# variables when you enter, and set them back to their original
+# values when you leave
+
+echo >> some/directory/.bash_enter '
+stash PATH
+export PATH=./temporary/path:$PATH
+'
+
+echo >> some/directory/.bash_leave '
+unstash PATH
+'
+
+
+####################
+# More information #
+####################
+
+  bash_arrays
+
+Bash added array support in version 2.0, but it doesn't have a very
+good set of supporting built-ins.  In particular, I find myself missing
+the Perl functions push, pop, stash, unstash, reverse.  So, here they
+are.  The provided functions are:
+
+  apush    - Add an element to the end of your array
+  apop     - Remove the last element from the array and print it
+  ashift   - Remove the first element from the array and print it
+  aunshift - Add an element to the beginning of the array
+  areverse - Reverse the order of elements in the array
+  afirst   - Like ashift, but doesn't remove anything.
+  alast    - Like apop, but doesn't remove anything.
+  alen     - Print the current number of elements in the array
+
+See the documentation included in the file for more detail.
+
+
+  bash_varstash
+
+This provides a couple of simple functions for saving the value of
+an environment variable to a temporary location, so that you can
+edit the value of it and then later restore the original value.  The
+functions are called stash and unstash, and basic usage can be seen
+above, or in bash_smartcd.
+
+
+  bash_smartcd
+
+This is really the primary motivation for the above two libraries.
+What I wanted was environment variables that would set themselves
+when you go to a directory or its child, and then unset themselves
+when you leave.  This powerful alternative to the cd built-in gives
+you that, and more.
+
+All you need to do is create .bash_enter and/or .bash_leave scripts
+in any directory, and alias cd to smartcd.  When you change between
+directories that have the relevant enter or leave scripts, they will
+be run as appropriate.
+
+One thing to note is that going from a directory to its child is not
+considered "leaving", so the .bash_leave will not be run until you go
+to another directory that doesn't contain that same directory as part
+of its path.
+
+For more information, see the documentation in bash_smartcd.
+
+
+###########
+# License #
+###########
+This code is Copyright (c) 2009 Dave Olszewski.  All rights reserved.
+
+You may distribute under the terms of either the GNU General Public
+License or the Artistic License.

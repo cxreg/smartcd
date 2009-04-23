@@ -1,0 +1,52 @@
+#!/bin/bash
+
+################################################################################
+# bash_varstash - Stash/unstash support for per-directory variables
+#
+#   Copyright (c) 2009 Dave Olszewski (cxreg@pobox.com).  All rights reserved.
+#
+#
+#   This library allows you to save the current value of a given environment
+#   variable in a temporary location, so that you can modify it, and then
+#   later restore its original value.
+#
+#   Note that you will need to be in the same directory you were in when you
+#   stashed in order to successfully unstash.  This is because the temporary
+#   variable is derived from your current working directory's path.
+#
+#   Usage:
+#       stash PATH
+#       export PATH=/something/else
+#       [...]
+#       unstash PATH
+#
+#   Note that this was written for use with, and works very well with,
+#   .bash_smartcd.  See the documentation there for examples.
+################################################################################
+
+function stash() {
+    which=$1
+    if [ -z "$which" ]; then
+        return
+    fi
+
+    name=`_mangle_var $which`
+    eval export $name='$'$which
+}
+
+function unstash() {
+    which=$1
+    if [ -z "$which" ]; then
+        return
+    fi
+
+    name=`_mangle_var $which`
+    eval export $which='$'$name
+    unset $name
+}
+
+function _mangle_var() {
+    where=`pwd | /usr/bin/tr ' /' '_'`
+    echo "_tmp_${where}_$1"
+}
+

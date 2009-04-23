@@ -1,0 +1,96 @@
+#!/bin/bash
+
+################################################################################
+# bash_smartcd - cd with some oomph
+#
+#   Copyright (c) 2009 Dave Olszewski (cxreg@pobox.com).  All rights reserved.
+
+#
+#   This replacement for bash's built-in cd function gives you the
+#   ability to run .bash_enter and .bash_leave scripts for each of
+#   the directories you are traveling between.  The scripts are run
+#   in the expected order to the most common root between where you
+#   are, and where you're going.
+#
+#   Basic usage:
+#       # Install the library
+#       cp .bash_smartcd ~
+#
+#       # Add it to your bash init script
+#       . ~/.bash_smartcd
+#       alias cd=smartcd
+#
+#       # Create some custom directives
+#       echo 'echo "hi!"' > somedir/.bash_enter
+#
+#   This library combines very nicely with .bash_varstash to allow
+#   you to set per-directory environment variables:
+#
+#       # .bash_enter
+#       stash PATH
+#       export PATH=/something/extra:$PATH
+#
+#       # .bash_leave
+#       unstash PATH
+#
+################################################################################
+
+# Load array functions
+. ~/.bash_arrays
+
+function smartcd() {
+    # First, take note of where we're starting from
+    wherenow=`pwd`
+
+    # Go there and get the fully qualified path.  Also, fail first if it's an
+    # invalid destination, before we do any more work.
+    \cd "$@"
+    if (( $? != 0 )); then return; fi;
+    where=`pwd`
+
+    # Collect the list of directories we're leaving
+    unset leave_stack
+    while [ "$wherenow" != "/" ]; do
+        apush leave_stack "$wherenow"
+        wherenow=`dirname "$wherenow"`
+    done
+
+    # Collect the list of directories we're entering
+    wherenow=$where
+    unset enter_stack
+    while [ "$wherenow" != "/" ]; do
+        apush enter_stack "$wherenow"
+        wherenow=`dirname "$wherenow"`
+    done
+
+    # Pop off common elements
+    while [ -n "`alast enter_stack`" ] && [ "`alast enter_stack`" = "`alast leave_stack`" ]; do
+        apop enter_stack >/dev/null
+        apop leave_stack >/dev/null
+    done
+
+    # Run leave_stack in lowest to highest
+    while (( "`alen leave_stack`" >= 1 )); do
+        # ashift in a sub-shell doesn't work
+        dir=`afirst leave_stack`;
+        ashift leave_stack >/dev/null
+        \cd "$dir"
+        if [ -f .bash_leave ]; then
+            . .bash_leave
+        fi
+    done
+
+    # Run enter_stack in highest to lowest
+    while (( "`alen enter_stack`" >= 1 )); do
+        # apop in a sub-shell doesn't work
+        dir=`alast enter_stack`;
+        apop enter_stack >/dev/null
+        \cd "$dir"
+        if [ -f .bash_enter ]; then
+            . .bash_enter
+        fi
+    done
+
+    # Go and be happy
+    \cd "$where"
+}

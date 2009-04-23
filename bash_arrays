@@ -1,0 +1,124 @@
+#!/bin/bash
+
+################################################################################
+# bash_arrays - Basic array functions
+#
+#   Copyright (c) 2009 Dave Olszewski (cxreg@pobox.com).  All rights reserved.
+#
+#
+#   While bash gives you support for using variables as arrays, which is a
+#   great improvement over using a space-delimited list, it still leaves it
+#   difficult to make use of this feature.  This library aimes to improve
+#   the situation.
+#
+#   The provided functions are as follows:
+#
+#       apush
+#         Description: Add an element to the end of your array
+#         Usage:       $ apush var_name elem1 [elem2...]
+#
+#       apop
+#         Description: Remove the last element from the array and print it
+#         Usage:       $ apop var_name
+#
+#       ashift
+#         Description: Remove the first element from the array and print it
+#         Usage:       $ ashift var_name
+#
+#       aunshift
+#         Description: Add an element to the beginning of the array
+#         Usage:       $ aunshift var_name elem1 [elem2...]
+#
+#       areverse
+#         Description: Reverse the order of elements in the array
+#         Usage:       $ areverse var_name
+#
+#       afirst
+#         Description: Like ashift, but doesn't remove anything.
+#         Usage:       $ afirst var_name
+#
+#       alast
+#         Description: Like apop, but doesn't remove anything.
+#         Usage:       $ alast var_name
+#
+#       alen
+#         Description: Print the current number of elements in the array
+#         Usage:       $ alen var_name
+#
+#   If the incorrect number of arguments are supplied, all functions exit
+#   silently.  This is subject to change in the future.
+#
+#   This library was inspired largely by having access to this functionality
+#   in Perl, and then finding it severely lacking in bash.
+################################################################################
+
+function apush() {
+    var=$1; shift;
+
+    if [ -n "$var" ]; then
+        eval "$var+=(\"\$@\")"
+    fi
+}
+
+function apop() {
+    var=$1;
+
+    if [ -n "$var" ] && (( $(eval "echo \${#$var[@]}") >= 1 )); then
+        eval "echo \${$var[\${#$var[@]} - 1]}"
+        eval "unset $var[\$(( \${#$var[@]} - 1))]"
+    fi
+}
+
+function ashift() {
+    var=$1;
+
+    if [ -n "$var" ] && (( $(eval "echo \${#$var[@]}") >= 1 )); then
+        eval "echo \${$var[0]}"
+        eval "unset $var[0]"
+        eval "$var=(\"\${$var[@]}\")"
+    fi
+}
+
+function aunshift() {
+    var=$1; shift;
+
+    eval "$var=(\"\$@\" \"\${$var[@]}\")"
+}
+
+function areverse() {
+    var=$1;
+
+    if [ -n "$var" ] && (( $(eval "echo \${#$var[@]}") >= 2 )); then
+        len=$(eval "echo \${#$var[@]}")
+        i=0;
+        while (( $i < $len/2 )); do
+            tmp=$(eval echo "\${$var[\$i]}");
+            eval "$var[\$i]=\"\${$var[\$len-\$i-1]}\"";
+            eval "$var[\$len-\$i-1]=\"\$tmp\"";
+            (( i++ ))
+        done
+    fi
+}
+
+function afirst() {
+    var=$1;
+
+    if [ -n "$var" ] && (( $(eval "echo \${#$var[@]}") >= 1 )); then
+        eval "echo \${$var[0]}"
+    fi
+}
+
+function alast() {
+    var=$1;
+
+    if [ -n "$var" ] && (( $(eval "echo \${#$var[@]}") >= 1 )); then
+        eval "echo \${$var[\${#$var[@]} - 1]}"
+    fi
+}
+
+
+function alen() {
+    var=$1;
+
+    eval "echo \${#$var[@]}"
+}
