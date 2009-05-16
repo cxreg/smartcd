@@ -42,7 +42,7 @@ unstash PATH
 
 Bash added array support in version 2.0, but it doesn't have a very
 good set of supporting built-ins.  In particular, I find myself missing
-the Perl functions push, pop, stash, unstash, reverse.  So, here they
+the Perl functions push, pop, shift, unshift, reverse.  So, here they
 are.  The provided functions are:
 
   apush    - Add an element to the end of your array
