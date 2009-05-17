@@ -3,9 +3,6 @@
 ################################################################################
 # bash_varstash - Stash/unstash support for per-directory variables
 #
-#   Copyright (c) 2009 Dave Olszewski (cxreg@pobox.com).  All rights reserved.
-#
-#
 #   This library allows you to save the current value of a given environment
 #   variable in a temporary location, so that you can modify it, and then
 #   later restore its original value.
@@ -26,7 +23,7 @@
 
 function stash() {
     which=$1
-    if [ -z "$which" ]; then
+    if [[ -z $which ]]; then
         return
     fi
 
@@ -36,13 +33,15 @@ function stash() {
 
 function unstash() {
     which=$1
-    if [ -z "$which" ]; then
+    if [[ -z $which ]]; then
         return
     fi
 
     name=`_mangle_var $which`
-    eval export $which='$'$name
-    unset $name
+    if [[ -n ${!name} ]]; then
+        eval export $which='$'$name
+        unset $name
+    fi
 }
 
 function _mangle_var() {
