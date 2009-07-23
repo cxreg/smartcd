@@ -44,7 +44,7 @@ function smartcd() {
 
     # Go there and get the fully qualified path.  Also, fail first if it's an
     # invalid destination, before we do any more work.
-    \cd "$@"
+    builtin cd "$@"
     if (( $? != 0 )); then return; fi;
     where=`pwd`
 
@@ -74,7 +74,7 @@ function smartcd() {
         # ashift in a sub-shell doesn't work
         dir=`afirst leave_stack`;
         ashift leave_stack >/dev/null
-        \cd "$dir"
+        builtin cd "$dir"
         if [ -f .bash_leave ]; then
             . .bash_leave
         fi
@@ -85,12 +85,12 @@ function smartcd() {
         # apop in a sub-shell doesn't work
         dir=`alast enter_stack`;
         apop enter_stack >/dev/null
-        \cd "$dir"
+        builtin cd "$dir"
         if [ -f .bash_enter ]; then
             . .bash_enter
         fi
     done
 
     # Go and be happy
-    \cd "$where"
+    builtin cd "$where"
 }
