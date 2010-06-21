@@ -3,7 +3,7 @@
 ################################################################################
 # bash_arrays - Basic array functions
 #
-#   Copyright (c) 2009 Dave Olszewski (cxreg@pobox.com).  All rights reserved.
+#   Copyright (c) 2009-10 Dave Olszewski (cxreg@pobox.com). All rights reserved.
 #
 #
 #   While bash gives you support for using variables as arrays, which is a
@@ -63,20 +63,28 @@ function apush() {
 function apop() {
     var=$1;
 
+    _apop_return=
+
     if [ -n "$var" ] && (( $(eval "echo \${#$var[@]}") >= 1 )); then
-        eval "echo \${$var[\${#$var[@]} - 1]}"
+        eval "_apop_return=\$(echo \${$var[\${#$var[@]} - 1]})"
         eval "unset $var[\$(( \${#$var[@]} - 1))]"
     fi
+
+    echo $_apop_return
 }
 
 function ashift() {
     var=$1;
 
+    _ashift_return=
+
     if [ -n "$var" ] && (( $(eval "echo \${#$var[@]}") >= 1 )); then
-        eval "echo \${$var[0]}"
+        eval "_ashift_return=\$(echo \${$var[0]})"
         eval "unset $var[0]"
         eval "$var=(\"\${$var[@]}\")"
     fi
+
+    echo $_ashift_return
 }
 
 function aunshift() {
