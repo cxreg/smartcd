@@ -3,7 +3,11 @@
 ################################################################################
 # bash_arrays - Basic array functions
 #
-#   Copyright (c) 2009-10 Dave Olszewski (cxreg@pobox.com). All rights reserved.
+#   Copyright (c) 2009-10 Dave Olszewski <cxreg@pobox.com>
+#   http://github.com/cxreg/cxregs-bash-tools
+#
+#   This code is released under GPL v2 and the Artistic License, and
+#   may be redistributed under the terms of either.
 #
 #
 #   While bash gives you support for using variables as arrays, which is a

@@ -3,6 +3,13 @@
 ################################################################################
 # bash_varstash - Stash/unstash support for per-directory variables
 #
+#   Copyright (c) 2009-10 Dave Olszewski <cxreg@pobox.com>
+#   http://github.com/cxreg/cxregs-bash-tools
+#
+#   This code is released under GPL v2 and the Artistic License, and
+#   may be redistributed under the terms of either.
+#
+#
 #   This library allows you to save the current value of a given environment
 #   variable in a temporary location, so that you can modify it, and then
 #   later restore its original value.

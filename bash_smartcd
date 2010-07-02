@@ -3,8 +3,12 @@
 ################################################################################
 # bash_smartcd - cd with some oomph
 #
-#   Copyright (c) 2009 Dave Olszewski (cxreg@pobox.com).  All rights reserved.
-
+#   Copyright (c) 2009-10 Dave Olszewski <cxreg@pobox.com>
+#   http://github.com/cxreg/cxregs-bash-tools
+#
+#   This code is released under GPL v2 and the Artistic License, and
+#   may be redistributed under the terms of either.
+#
 #
 #   This replacement for bash's built-in cd function gives you the
 #   ability to run .bash_enter and .bash_leave scripts for each of

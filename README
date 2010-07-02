@@ -90,7 +90,7 @@ For more information, see the documentation in bash_smartcd.
 ###########
 # License #
 ###########
-This code is Copyright (c) 2009 Dave Olszewski.  All rights reserved.
+This code is Copyright (c) 2009-10 Dave Olszewski <cxreg@pobox.com>
 
 You may distribute under the terms of either the GNU General Public
-License or the Artistic License.
+License v2 or the Artistic License.
