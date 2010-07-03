@@ -44,19 +44,19 @@
 
 function smartcd() {
     # First, take note of where we're starting from
-    wherenow=`pwd`
+    wherenow=$(pwd)
 
     # Go there and get the fully qualified path.  Also, fail first if it's an
     # invalid destination, before we do any more work.
     builtin cd "$@"
     if (( $? != 0 )); then return; fi;
-    where=`pwd`
+    where=$(pwd)
 
     # Collect the list of directories we're leaving
     unset leave_stack
     while [ "$wherenow" != "/" ]; do
         apush leave_stack "$wherenow"
-        wherenow=`dirname "$wherenow"`
+        wherenow=$(dirname "$wherenow")
     done
 
     # Collect the list of directories we're entering
@@ -64,19 +64,19 @@ function smartcd() {
     unset enter_stack
     while [ "$wherenow" != "/" ]; do
         apush enter_stack "$wherenow"
-        wherenow=`dirname "$wherenow"`
+        wherenow=$(dirname "$wherenow")
     done
 
     # Pop off common elements
-    while [ -n "`alast enter_stack`" ] && [ "`alast enter_stack`" = "`alast leave_stack`" ]; do
+    while [ -n "$(alast enter_stack)" ] && [ "$(alast enter_stack)" = "$(alast leave_stack)" ]; do
         apop enter_stack >/dev/null
         apop leave_stack >/dev/null
     done
 
     # Run leave_stack in lowest to highest
-    while (( "`alen leave_stack`" >= 1 )); do
+    while (( "$(alen leave_stack)" >= 1 )); do
         # ashift in a sub-shell doesn't work
-        dir=`afirst leave_stack`;
+        dir=$(afirst leave_stack);
         ashift leave_stack >/dev/null
         builtin cd "$dir"
         if [ -f .bash_leave ]; then
@@ -85,9 +85,9 @@ function smartcd() {
     done
 
     # Run enter_stack in highest to lowest
-    while (( "`alen enter_stack`" >= 1 )); do
+    while (( "$(alen enter_stack)" >= 1 )); do
         # apop in a sub-shell doesn't work
-        dir=`alast enter_stack`;
+        dir=$(alast enter_stack);
         apop enter_stack >/dev/null
         builtin cd "$dir"
         if [ -f .bash_enter ]; then

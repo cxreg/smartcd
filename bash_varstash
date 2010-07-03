@@ -34,7 +34,7 @@ function stash() {
         return
     fi
 
-    name=`_mangle_var $which`
+    name=$(_mangle_var $which)
     eval export $name='$'$which
 }
 
@@ -44,7 +44,7 @@ function unstash() {
         return
     fi
 
-    name=`_mangle_var $which`
+    name=$(_mangle_var $which)
     if [[ -n ${!name} ]]; then
         eval export $which='$'$name
         unset $name
@@ -52,7 +52,7 @@ function unstash() {
 }
 
 function _mangle_var() {
-    where=`pwd | /usr/bin/tr ' /' '_'`
+    where=$(pwd | /usr/bin/tr ' /' '_')
     echo "_tmp_${where}_$1"
 }
 
