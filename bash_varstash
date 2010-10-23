@@ -52,7 +52,7 @@ function unstash() {
 }
 
 function _mangle_var() {
-    where=$(pwd | /usr/bin/tr ' /' '_')
+    where=$(pwd | /usr/bin/tr ' /-' '_')
     echo "_tmp_${where}_$1"
 }
 
