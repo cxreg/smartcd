@@ -45,7 +45,7 @@ function unstash() {
     fi
 
     name=$(_mangle_var $which)
-    if [[ -n ${!name} ]]; then
+    if [[ ${!name} || ! ${!name-_} ]]; then
         eval export $which='$'$name
         unset $name
     fi
