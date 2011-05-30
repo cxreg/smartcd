@@ -26,33 +26,65 @@
 #
 #   Note that this was written for use with, and works very well with,
 #   .bash_smartcd.  See the documentation there for examples.
+#
+#   An alternate usage is `autostash' which will trigger autounstash when
+#   leaving the directory, if combined with smartcd.  This reduces the amount
+#   of explicit configuration you need to provide:
+#
+#       autostash PATH
+#       export PATH=/something/else
+#
 ################################################################################
 
 function stash() {
-    which=$1
-    if [[ -z $which ]]; then
+    local stash_which=$1
+    if [[ -z $stash_which ]]; then
         return
     fi
 
-    name=$(_mangle_var $which)
-    eval export $name='$'$which
+    local stash_name=$(_mangle_var $stash_which)
+    eval export $stash_name='$'$stash_which
+}
+
+function autostash () {
+    while [[ -n $1 ]]; do
+        stash $1
+        local autostash_name=$(_mangle_var AUTOSTASH)
+        if [[ -n ${!autostash_name} ]]; then
+            eval export $autostash_name='"''$'$autostash_name' '$1'"'
+        else
+            eval export $autostash_name=$1
+        fi
+
+        shift
+    done
 }
 
 function unstash() {
-    which=$1
-    if [[ -z $which ]]; then
+    local unstash_which=$1
+    if [[ -z $unstash_which ]]; then
         return
     fi
 
-    name=$(_mangle_var $which)
-    if [[ ${!name} || ! ${!name-_} ]]; then
-        eval export $which='$'$name
-        unset $name
+    local unstash_name=$(_mangle_var $unstash_which)
+    if [[ ${!unstash_name} || ! ${!unstash_name-_} ]]; then
+        eval export $unstash_which='$'$unstash_name
+        unset $unstash_name
+    fi
+}
+
+function autounstash() {
+    # If there is anything in (mangled) variable AUTOSTASH, then unstash it
+    local autounstash_name=$(_mangle_var AUTOSTASH)
+    if [[ -n ${!autounstash_name} ]]; then
+        for autounstash_var in ${!autounstash_name}; do
+            unstash $autounstash_var
+        done
+        unset $autounstash_name
     fi
 }
 
 function _mangle_var() {
-    where=$(pwd | /usr/bin/tr ' /-' '_')
-    echo "_tmp_${where}_$1"
+    local mangle_var_where=$(pwd | /usr/bin/tr ' /-' '_')
+    echo "_tmp_${mangle_var_where}_$1"
 }
-

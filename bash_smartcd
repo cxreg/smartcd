@@ -34,7 +34,11 @@
 #       stash PATH
 #       export PATH=/something/extra:$PATH
 #
-#       # .bash_leave
+#       # or the automagic version
+#       autostash PATH
+#       export PATH=/something/extra:$PATH
+#
+#       # .bash_leave, if not using autostash
 #       unstash PATH
 #
 ################################################################################
@@ -81,6 +85,9 @@ function smartcd() {
         builtin cd "$dir"
         if [ -f .bash_leave ]; then
             . .bash_leave
+        fi
+        if [[ $(type -t autounstash) = "function" ]]; then
+            autounstash
         fi
     done
 
