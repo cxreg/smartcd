@@ -37,13 +37,17 @@
 ################################################################################
 
 function stash() {
-    local stash_which=$1
-    if [[ -z $stash_which ]]; then
-        return
-    fi
+    while [[ -n $1 ]]; do
+        local stash_which=$1
+        if [[ -z $stash_which ]]; then
+            continue
+        fi
 
-    local stash_name=$(_mangle_var $stash_which)
-    eval export $stash_name='$'$stash_which
+        local stash_name=$(_mangle_var $stash_which)
+        eval export $stash_name='$'$stash_which
+
+        shift
+    done
 }
 
 function autostash () {
@@ -61,16 +65,20 @@ function autostash () {
 }
 
 function unstash() {
-    local unstash_which=$1
-    if [[ -z $unstash_which ]]; then
-        return
-    fi
+    while [[ -n $1 ]]; do
+        local unstash_which=$1
+        if [[ -z $unstash_which ]]; then
+            continue
+        fi
 
-    local unstash_name=$(_mangle_var $unstash_which)
-    if [[ ${!unstash_name} || ! ${!unstash_name-_} ]]; then
-        eval export $unstash_which='$'$unstash_name
-        unset $unstash_name
-    fi
+        local unstash_name=$(_mangle_var $unstash_which)
+        if [[ ${!unstash_name} || ! ${!unstash_name-_} ]]; then
+            eval export $unstash_which='$'$unstash_name
+            unset $unstash_name
+        fi
+
+        shift
+    done
 }
 
 function autounstash() {
