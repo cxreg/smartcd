@@ -34,6 +34,18 @@
 #       autostash PATH
 #       export PATH=/something/else
 #
+#   If you run stash, unstash, or varstash interactively, they will instruct
+#   you on how to create smartcd scripts for performing those actions
+#   automatically.  You can affect this behavior with several variables:
+#
+#     VARSTASH_QUIET       - Set if you'd rather not see these notices
+#
+#     VARSTASH_AUTOCONFIG  - Set if you want the suggested actions to be
+#                            performed automaticaly
+#
+#     VARSTASH_AUTOEDIT   - Set if you want it to set the values, but also
+#                           give you an opportunity to edit the file
+#
 ################################################################################
 
 function stash() {
@@ -42,7 +54,8 @@ function stash() {
         local help_action="stashing a variable"
         local help_dir=$smartcd_dir
         local help_cmd="echo stash $@ >> \"$smartcd_dir/bash_enter\""
-        _manual_stash_notify
+        local help_which="bash_enter"
+        _manual_stash_help
     fi
 
     while [[ -n $1 ]]; do
@@ -64,7 +77,8 @@ function autostash () {
         local help_action="autostashing a variable"
         local help_dir=$smartcd_dir
         local help_cmd="echo autostash $@ >> \"$smartcd_dir/bash_enter\""
-        _manual_stash_notify
+        local help_which="bash_enter"
+        _manual_stash_help
     fi
 
     local run_from_autostash=1
@@ -87,7 +101,8 @@ function unstash() {
         local help_action="unstashing a variable"
         local help_dir=$smartcd_dir
         local help_cmd="echo unstash $@ >> \"$smartcd_dir/bash_leave\""
-        _manual_stash_notify
+        local help_which="bash_leave"
+        _manual_stash_help
     fi
 
     while [[ -n $1 ]]; do
@@ -122,13 +137,48 @@ function _mangle_var() {
     echo "_tmp_${mangle_var_where}_$1"
 }
 
-function _manual_stash_notify() {
+function _manual_stash_help() {
     # instruct user how to create bash_enter or bash_leave
-    echo "# You are manually $help_action.  To automatically perform this"
-    echo "# whenever you enter this directory, paste the following command(s):"
+    if [[ -n $VARSTASH_AUTOEDIT || -n $VARSTASH_AUTOCONFIG ]]; then
+        if [[ -z $VARSTASH_QUIET ]]; then
+            echo "Automatically running $help_cmd"
+        fi
 
-    if [[ ! -d $help_dir ]]; then
-        echo "mkdir -p \"$help_dir\""
+        if [[ ! -d $help_dir ]]; then
+            mkdir -p "$help_dir"
+        fi
+        eval $help_cmd
+
+        if [[ -n $VARSTASH_AUTOEDIT ]]; then
+            varstash_edit $help_which
+        fi
+    elif [[ -z $VARSTASH_QUIET ]]; then
+        echo "# You are manually $help_action.  To automatically perform this"
+        echo "# whenever you enter this directory, paste the following command(s):"
+
+        if [[ ! -d $help_dir ]]; then
+            echo "mkdir -p \"$help_dir\""
+        fi
+        echo "$help_cmd"
     fi
-    echo "$help_cmd"
+}
+
+function varstash_edit() {
+    # Invoke the users editor (or vi) on the relevant file
+    if [[ $1 != "bash_enter" && $1 != "bash_leave" ]]; then
+        echo "Usage: varstash_edit ( bash_enter | bash_leave )"
+        return
+    fi
+
+    local smartcd_dir=$HOME/.smartcd$(pwd)
+    if [[ ! -d $smartcd_dir ]]; then
+        mkdir -p "$smartcd_dir"
+    fi
+
+    ${EDITOR:-vi} $smartcd_dir/$1
+}
+
+# Alias for varstash_edit
+function autostash_edit() {
+    varstash_edit $1
 }
