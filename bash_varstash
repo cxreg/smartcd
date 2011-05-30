@@ -37,6 +37,14 @@
 ################################################################################
 
 function stash() {
+    if [[ -z $run_from_smartcd && -z $run_from_autostash ]]; then
+        local smartcd_dir=$HOME/.smartcd$(pwd)
+        local help_action="stashing a variable"
+        local help_dir=$smartcd_dir
+        local help_cmd="echo stash $@ >> \"$smartcd_dir/bash_enter\""
+        _manual_stash_notify
+    fi
+
     while [[ -n $1 ]]; do
         local stash_which=$1
         if [[ -z $stash_which ]]; then
@@ -51,6 +59,15 @@ function stash() {
 }
 
 function autostash () {
+    if [[ -z $run_from_smartcd ]]; then
+        local smartcd_dir=$HOME/.smartcd$(pwd)
+        local help_action="autostashing a variable"
+        local help_dir=$smartcd_dir
+        local help_cmd="echo autostash $@ >> \"$smartcd_dir/bash_enter\""
+        _manual_stash_notify
+    fi
+
+    local run_from_autostash=1
     while [[ -n $1 ]]; do
         stash $1
         local autostash_name=$(_mangle_var AUTOSTASH)
@@ -65,6 +82,14 @@ function autostash () {
 }
 
 function unstash() {
+    if [[ -z $run_from_smartcd ]]; then
+        local smartcd_dir=$HOME/.smartcd$(pwd)
+        local help_action="unstashing a variable"
+        local help_dir=$smartcd_dir
+        local help_cmd="echo unstash $@ >> \"$smartcd_dir/bash_leave\""
+        _manual_stash_notify
+    fi
+
     while [[ -n $1 ]]; do
         local unstash_which=$1
         if [[ -z $unstash_which ]]; then
@@ -95,4 +120,15 @@ function autounstash() {
 function _mangle_var() {
     local mangle_var_where=$(pwd | /usr/bin/tr ' /-' '_')
     echo "_tmp_${mangle_var_where}_$1"
+}
+
+function _manual_stash_notify() {
+    # instruct user how to create bash_enter or bash_leave
+    echo "# You are manually $help_action.  To automatically perform this"
+    echo "# whenever you enter this directory, paste the following command(s):"
+
+    if [[ ! -d $help_dir ]]; then
+        echo "mkdir -p \"$help_dir\""
+    fi
+    echo "$help_cmd"
 }
