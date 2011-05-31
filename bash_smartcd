@@ -10,6 +10,10 @@
 #   may be redistributed under the terms of either.
 #
 #
+#   ###########
+#   # Summary #
+#   ###########
+#
 #   This replacement for bash's built-in cd function gives you the
 #   ability to run bash_enter and bash_leave scripts for each of
 #   the directories you are traveling between.  The scripts are run
@@ -20,7 +24,10 @@
 #
 #       /foo/bar/baz  ->  ~/.smartcd/foo/bar/baz
 #
-#   Basic usage:
+#   ###############
+#   # Basic usage #
+#   ###############
+#
 #       # Install the library
 #       cp .bash_smartcd ~
 #
@@ -47,6 +54,24 @@
 #
 #   When a script is run by smartcd, it will announce that it has done
 #   so unless SMARTCD_QUIET is set.
+#
+#   ########################
+#   # Legacy mode (unsafe) #
+#   ########################
+#
+#   The original version of this library was such that the scripts
+#   containing the commands to run were themselves located in the
+#   directory which they correspond to, named .bash_enter and
+#   .bash_leave:
+
+#       /foo/bar/baz  ->  /foo/bar/baz/.bash_enter
+#
+#   This was deemed unsafe, and the new scheme was adopted.  If you
+#   prefer the old system and wish to accept the risk in doing so, you
+#   can set SMARTCD_LEGACY to allow the old behavior.  If you do not do
+#   so, and a legacy script is found, it will *NOT* be invoked, and
+#   instructions for migrating it to the new location will be displayed
+#   (unless SMARTCD_QUIET is set).
 #
 ################################################################################
 
@@ -93,13 +118,20 @@ function smartcd() {
         builtin cd "$dir"
         local confdir="$HOME/.smartcd$dir"
         if [[ -f .bash_leave ]]; then
-            echo "# NOTICE!  Deprecated .bash_leave found, please migrate this file to the new"
-            echo "# format using the following (or similar) commands:"
-            if [[ ! -d $confdir ]]; then
-                echo "mkdir -p \"$confdir\""
+            if [[ -n $SMARTCD_LEGACY ]]; then
+                if [[ -z $SMARTCD_QUIET ]]; then
+                    echo "smartcd: running $dir/.bash_leave"
+                fi
+                . .bash_leave
+            elif [[ -z $SMARTCD_QUIET ]]; then
+                echo "# NOTICE!  Deprecated .bash_leave found, please migrate this file to the new"
+                echo "# format using the following (or similar) commands:"
+                if [[ ! -d $confdir ]]; then
+                    echo "mkdir -p \"$confdir\""
+                fi
+                echo "cat \"$dir/.bash_leave\" >> \"$confdir/bash_leave\""
+                echo "rm \"$dir/.bash_leave\""
             fi
-            echo "cat \"$dir/.bash_leave\" >> \"$confdir/bash_leave\""
-            echo "rm \"$dir/.bash_leave\""
         fi
         if [[ -f "$confdir/bash_leave" ]]; then
             if [[ -z $SMARTCD_QUIET ]]; then
@@ -120,13 +152,20 @@ function smartcd() {
         builtin cd "$dir"
         local confdir="$HOME/.smartcd$dir"
         if [[ -f .bash_enter ]]; then
-            echo "# NOTICE!  Deprecated .bash_enter found, please migrate this file to the new"
-            echo "# format using the following (or similar) commands:"
-            if [[ ! -d $confdir ]]; then
-                echo "mkdir -p \"$confdir\""
+            if [[ -n $SMARTCD_LEGACY ]]; then
+                if [[ -z $SMARTCD_QUIET ]]; then
+                    echo "smartcd: running $dir/.bash_enter"
+                fi
+                . .bash_enter
+            elif [[ -z $SMARTCD_QUIET ]]; then
+                echo "# NOTICE!  Deprecated .bash_enter found, please migrate this file to the new"
+                echo "# format using the following (or similar) commands:"
+                if [[ ! -d $confdir ]]; then
+                    echo "mkdir -p \"$confdir\""
+                fi
+                echo "cat \"$dir/.bash_enter\" >> \"$confdir/bash_enter\""
+                echo "rm \"$dir/.bash_enter\""
             fi
-            echo "cat \"$dir/.bash_enter\" >> \"$confdir/bash_enter\""
-            echo "rm \"$dir/.bash_enter\""
         fi
         if [[ -f "$confdir/bash_enter" ]]; then
             if [[ -z $SMARTCD_QUIET ]]; then
