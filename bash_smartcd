@@ -124,6 +124,7 @@ function smartcd() {
                 fi
                 . .bash_leave
             elif [[ -z $SMARTCD_QUIET ]]; then
+                echo "############################################################################"
                 echo "# NOTICE!  Deprecated .bash_leave found, please migrate this file to the new"
                 echo "# format using the following (or similar) commands:"
                 if [[ ! -d $confdir ]]; then
@@ -131,6 +132,7 @@ function smartcd() {
                 fi
                 echo "cat \"$dir/.bash_leave\" >> \"$confdir/bash_leave\""
                 echo "rm \"$dir/.bash_leave\""
+                echo "############################################################################"
             fi
         fi
         if [[ -f "$confdir/bash_leave" ]]; then
@@ -158,6 +160,7 @@ function smartcd() {
                 fi
                 . .bash_enter
             elif [[ -z $SMARTCD_QUIET ]]; then
+                echo "############################################################################"
                 echo "# NOTICE!  Deprecated .bash_enter found, please migrate this file to the new"
                 echo "# format using the following (or similar) commands:"
                 if [[ ! -d $confdir ]]; then
@@ -165,6 +168,7 @@ function smartcd() {
                 fi
                 echo "cat \"$dir/.bash_enter\" >> \"$confdir/bash_enter\""
                 echo "rm \"$dir/.bash_enter\""
+                echo "############################################################################"
             fi
         fi
         if [[ -f "$confdir/bash_enter" ]]; then
