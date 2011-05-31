@@ -24,12 +24,13 @@ alias cd=smartcd
 # variables when you enter, and set them back to their original
 # values when you leave
 
-echo >> some/directory/.bash_enter '
+mkdir -p ~/.smartcd/some/directory
+echo >> ~/.smartcd/some/directory/bash_enter '
 stash PATH
 export PATH=./temporary/path:$PATH
 '
 
-echo >> some/directory/.bash_leave '
+echo >> ~/.smartcd/some/directory/bash_leave '
 unstash PATH
 '
 
@@ -40,10 +41,10 @@ unstash PATH
 
   bash_arrays
 
-Bash added array support in version 2.0, but it doesn't have a very
-good set of supporting built-ins.  In particular, I find myself missing
-the Perl functions push, pop, shift, unshift, reverse.  So, here they
-are.  The provided functions are:
+Bash added array support in version 2.0, but it doesn't have a very good
+set of supporting built-ins.  In particular, I find myself missing the
+Perl functions push, pop, shift, unshift, reverse.  So, here they are.
+The provided functions are:
 
   apush    - Add an element to the end of your array
   apop     - Remove the last element from the array and print it
@@ -59,28 +60,44 @@ See the documentation included in the file for more detail.
 
   bash_varstash
 
-This provides a couple of simple functions for saving the value of
-an environment variable to a temporary location, so that you can
-edit the value of it and then later restore the original value.  The
-functions are called stash and unstash, and basic usage can be seen
-above, or in bash_smartcd.
+This provides a couple of simple functions for saving the value of an
+environment variable to a temporary location, so that you can edit the
+value of it and then later restore the original value.  The functions
+are called stash and unstash, and basic usage can be seen above, or in
+bash_smartcd.
+
+A variant of stash, primarily for use with smartcd, is called autostash.
+If you run this and smartcd is enabled, when you change out of the
+current directory, it will automatically unstash for you.
+
+If you run stash, unstash, or autostash interactively they will instruct
+you on how to create files for smartcd to run those commands for you.
+If you do not wish to see this advice, set VARSTASH_QUIET.  The library
+can automatically follow its own advice and configure these files if you
+set VARSTASH_AUTOCONFIG.  It can do so but give you an opportunity to
+make additional edits if you set VARSTASH_AUTOEDIT.  This edit function
+can be called manually with the function varstash_edit, if you prefer.
 
 
   bash_smartcd
 
-This is really the primary motivation for the above two libraries.
-What I wanted was environment variables that would set themselves
-when you go to a directory or its child, and then unset themselves
-when you leave.  This powerful alternative to the cd built-in gives
-you that, and more.
+This is really the primary motivation for the above two libraries.  What
+I wanted was environment variables that would set themselves when you go
+to a directory or its child, and then unset themselves when you leave.
+This powerful alternative to the cd built-in gives you that, and more.
 
-All you need to do is create .bash_enter and/or .bash_leave scripts
-in any directory, and alias cd to smartcd.  When you change between
-directories that have the relevant enter or leave scripts, they will
-be run as appropriate.
+All you need to do is create bash_enter and/or bash_leave scripts, and
+alias cd to smartcd.  When you change between directories that have the
+relevant enter or leave scripts, they will be run as appropriate.
+
+The commands that you want to run will live in a file under a directory
+structure in your home directory named .smartcd.  The structure under
+that should mirror the filesystem hierarchy you wish to configure.  For
+example, if you want to run a command when entering /foo/bar, you would
+put that command in ~/.smartcd/foo/bar/bash_enter
 
 One thing to note is that going from a directory to its child is not
-considered "leaving", so the .bash_leave will not be run until you go
+considered "leaving", so the bash_leave will not be run until you go
 to another directory that doesn't contain that same directory as part
 of its path.
 
