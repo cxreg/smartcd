@@ -45,6 +45,9 @@
 #       autostash PATH
 #       export PATH=/something/extra:$PATH
 #
+#   When a script is run by smartcd, it will announce that it has done
+#   so unless SMARTCD_QUIET is set.
+#
 ################################################################################
 
 # Load array functions
@@ -99,6 +102,9 @@ function smartcd() {
             echo "rm \"$dir/.bash_leave\""
         fi
         if [[ -f "$confdir/bash_leave" ]]; then
+            if [[ -z $SMARTCD_QUIET ]]; then
+                echo "smartcd: running $confdir/bash_leave"
+            fi
             . "$confdir/bash_leave"
         fi
         if [[ $(type -t autounstash) = "function" ]]; then
@@ -123,6 +129,9 @@ function smartcd() {
             echo "rm \"$dir/.bash_enter\""
         fi
         if [[ -f "$confdir/bash_enter" ]]; then
+            if [[ -z $SMARTCD_QUIET ]]; then
+                echo "smartcd: running $confdir/bash_enter"
+            fi
             . "$confdir/bash_enter"
         fi
     done
