@@ -75,13 +75,22 @@
 #
 ################################################################################
 
-# Load array functions
-. ~/.bash_arrays
-
 function smartcd() {
     # First, take note of where we're starting from
     local wherenow=$(pwd)
     local run_from_smartcd=1
+
+    if [[ -n $ZSH_VERSION ]]; then
+        if [[ $(type apush) != "apush is a shell function" ]]; then
+            echo "bash_arrays is not loaded, please ensure that it is installed before using smartcd"
+            return
+        fi
+    else
+        if [[ $(type -t autounstash) != "function" ]]; then
+            echo "bash_arrays is not loaded, please ensure that it is installed before using smartcd"
+            return
+        fi
+    fi
 
     # Go there and get the fully qualified path.  Also, fail first if it's an
     # invalid destination, before we do any more work.
@@ -91,7 +100,7 @@ function smartcd() {
 
     # Collect the list of directories we're leaving
     unset leave_stack
-    while [ "$wherenow" != "/" ]; do
+    while [[ $wherenow != "/" ]]; do
         apush leave_stack "$wherenow"
         wherenow=$(dirname "$wherenow")
     done
@@ -99,19 +108,19 @@ function smartcd() {
     # Collect the list of directories we're entering
     local wherenow=$where
     unset enter_stack
-    while [ "$wherenow" != "/" ]; do
+    while [[ $wherenow != "/" ]]; do
         apush enter_stack "$wherenow"
         wherenow=$(dirname "$wherenow")
     done
 
     # Pop off common elements
-    while [ -n "$(alast enter_stack)" ] && [ "$(alast enter_stack)" = "$(alast leave_stack)" ]; do
+    while [[ -n "$(alast enter_stack)" ]] && [[ "$(alast enter_stack)" = "$(alast leave_stack)" ]]; do
         apop enter_stack >/dev/null
         apop leave_stack >/dev/null
     done
 
     # Run leave_stack in lowest to highest
-    while (( "$(alen leave_stack)" >= 1 )); do
+    while (( $(alen leave_stack) >= 1 )); do
         # ashift in a sub-shell doesn't work
         local dir=$(afirst leave_stack);
         ashift leave_stack >/dev/null
@@ -141,13 +150,19 @@ function smartcd() {
             fi
             . "$confdir/bash_leave"
         fi
-        if [[ $(type -t autounstash) = "function" ]]; then
-            autounstash
+        if [[ -n $ZSH_VERSION ]]; then
+            if [[ $(type autounstash) = "autounstash is a shell function" ]]; then
+                autounstash
+            fi
+        else
+            if [[ $(type -t autounstash) = "function" ]]; then
+                autounstash
+            fi
         fi
     done
 
     # Run enter_stack in highest to lowest
-    while (( "$(alen enter_stack)" >= 1 )); do
+    while (( $(alen enter_stack) >= 1 )); do
         # apop in a sub-shell doesn't work
         local dir=$(alast enter_stack);
         apop enter_stack >/dev/null

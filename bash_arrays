@@ -56,81 +56,111 @@
 #   in Perl, and then finding it severely lacking in bash.
 ################################################################################
 
-function apush() {
-    var=$1; shift;
+# Set some variables for zsh vs bash
+if [[ -n $ZSH_VERSION ]]; then
+    array_len_to_last_elem=0
+    array_first_index=1
+    array_offset="+1"
+else
+    array_len_to_last_elem=1
+    array_first_index=0
+    array_offset="-1"
+fi
 
-    if [ -n "$var" ]; then
+function apush() {
+    local var=$1; shift
+
+    if [[ -n $var ]]; then
         eval "$var+=(\"\$@\")"
     fi
 }
 
 function apop() {
-    var=$1;
+    local var=$1
 
-    _apop_return=
+    local _apop_return=
 
-    if [ -n "$var" ] && (( $(eval "echo \${#$var[@]}") >= 1 )); then
-        eval "_apop_return=\$(echo \${$var[\${#$var[@]} - 1]})"
-        eval "unset $var[\$(( \${#$var[@]} - 1))]"
+    if [[ -n $var ]] && (( $(eval "echo \${#$var""[@]}") >= 1 )); then
+        if [[ -n $ZSH_VERSION ]]; then
+            eval "_apop_return=\"\$$var""[-1]\""
+            eval "$var""[-1]=()"
+        else
+            eval "_apop_return=\$(echo \${$var[\${#$var""[@]} - $array_len_to_last_elem]})"
+            eval "unset $var""[\$(( \${#$var""[@]} - $array_len_to_last_elem))]"
+        fi
     fi
 
     echo $_apop_return
 }
 
 function ashift() {
-    var=$1;
+    local var=$1
 
-    _ashift_return=
+    local _ashift_return=
 
-    if [ -n "$var" ] && (( $(eval "echo \${#$var[@]}") >= 1 )); then
-        eval "_ashift_return=\$(echo \${$var[0]})"
-        eval "unset $var[0]"
-        eval "$var=(\"\${$var[@]}\")"
+    if [[ -n $var ]] && (( $(eval "echo \${#$var[@]}") >= 1 )); then
+        eval "_ashift_return=\${$var""[$array_first_index]}"
+        if [[ -n $ZSH_VERSION ]]; then
+            eval "$var""[$array_first_index]=()"
+        else
+            eval "unset $var[0]"
+            eval "$var=(\"\${$var[@]}\")"
+        fi
     fi
 
     echo $_ashift_return
 }
 
+# Bash requires the array be quoted, zsh requires it not
 function aunshift() {
-    var=$1; shift;
+    local var=$1; shift
 
-    eval "$var=(\"\$@\" \"\${$var[@]}\")"
+    if [[ -n $ZSH_VERSION ]]; then
+        eval "$var=(\"\$@\" \${$var[@]})"
+    else
+        eval "$var=(\"\$@\" \"\${$var[@]}\")"
+    fi
 }
 
 function areverse() {
-    var=$1;
+    local var=$1
 
-    if [ -n "$var" ] && (( $(eval "echo \${#$var[@]}") >= 2 )); then
-        len=$(eval "echo \${#$var[@]}")
-        i=0;
-        while (( $i < $len/2 )); do
-            tmp=$(eval echo "\${$var[\$i]}");
-            eval "$var[\$i]=\"\${$var[\$len-\$i-1]}\"";
-            eval "$var[\$len-\$i-1]=\"\$tmp\"";
+    if [[ -n $var ]] && (( $(eval "echo \${#$var""[@]}") >= 2 )); then
+        len=$(eval "echo \${#$var""[@]}")
+        i=$array_first_index
+        if [[ -n $ZSH_VERSION ]]; then
+            local op='<='
+        else
+            local op='<'
+        fi
+        while (( $i $op $len/2 )); do
+            tmp=$(eval echo "\${$var""[\$i]}")
+
+            eval "$var""[\$i]=\"\${$var""[\$len-\$i$array_offset]}\""
+            eval "$var""[\$len-\$i$array_offset]=\"\$tmp\""
             (( i++ ))
         done
     fi
 }
 
 function afirst() {
-    var=$1;
+    local var=$1
 
-    if [ -n "$var" ] && (( $(eval "echo \${#$var[@]}") >= 1 )); then
-        eval "echo \${$var[0]}"
+    if [[ -n $var ]] && (( $(eval "echo \${#$var[@]}") >= 1 )); then
+        eval "echo \${$var""[$array_first_index]}"
     fi
 }
 
 function alast() {
-    var=$1;
+    local var=$1
 
-    if [ -n "$var" ] && (( $(eval "echo \${#$var[@]}") >= 1 )); then
-        eval "echo \${$var[\${#$var[@]} - 1]}"
+    if [[ -n $var ]] && (( $(eval "echo \${#$var[@]}") >= 1 )); then
+        eval "echo \${$var""[\${#$var[@]} - $array_len_to_last_elem]}"
     fi
 }
 
-
 function alen() {
-    var=$1;
+    local var=$1
 
     eval "echo \${#$var[@]}"
 }
