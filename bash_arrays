@@ -78,7 +78,7 @@ function apush() {
 function apop() {
     local var=$1
 
-    local _apop_return=
+    _apop_return=
 
     if [[ -n $var ]] && (( $(eval "echo \${#$var""[@]}") >= 1 )); then
         if [[ -n $ZSH_VERSION ]]; then
@@ -96,7 +96,7 @@ function apop() {
 function ashift() {
     local var=$1
 
-    local _ashift_return=
+    _ashift_return=
 
     if [[ -n $var ]] && (( $(eval "echo \${#$var[@]}") >= 1 )); then
         eval "_ashift_return=\${$var""[$array_first_index]}"

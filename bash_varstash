@@ -49,7 +49,7 @@
 ################################################################################
 
 function stash() {
-    if [[ -z $run_from_smartcd && -z $run_from_autostash ]]; then
+    if [[ -z $run_from_smartcd ]] && [[ -z $run_from_autostash ]]; then
         local smartcd_dir=$HOME/.smartcd$(pwd)
         local help_action="stashing a variable"
         local help_dir=$smartcd_dir
@@ -96,7 +96,7 @@ function autostash () {
 }
 
 function unstash() {
-    if [[ -z $run_from_smartcd ]]; then
+    if [[ -z $run_from_smartcd ]] && [[ -z $run_from_autounstash ]]; then
         local smartcd_dir=$HOME/.smartcd$(pwd)
         local help_action="unstashing a variable"
         local help_dir=$smartcd_dir
@@ -125,6 +125,7 @@ function autounstash() {
     # If there is anything in (mangled) variable AUTOSTASH, then unstash it
     local autounstash_name=$(_mangle_var AUTOSTASH)
     if [[ -n $(eval echo '$'$autounstash_name) ]]; then
+        local run_from_autounstash=1
         for autounstash_var in $(eval echo '$'$autounstash_name); do
             unstash $autounstash_var
         done

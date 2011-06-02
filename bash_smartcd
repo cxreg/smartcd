@@ -86,7 +86,7 @@ function smartcd() {
             return
         fi
     else
-        if [[ $(type -t autounstash) != "function" ]]; then
+        if [[ $(type -t apush) != "function" ]]; then
             echo "bash_arrays is not loaded, please ensure that it is installed before using smartcd"
             return
         fi
