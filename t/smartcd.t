@@ -3,7 +3,7 @@ source t/tap-functions
 source bash_arrays
 source bash_smartcd
 
-plan_tests 6
+plan_tests 8
 
 # Set up smartcd
 mkdir tmphome
@@ -27,14 +27,20 @@ cat >$smartcd_dir/bash_enter <<EOF
 echo this is a test
 EOF
 output=$(smartcd $dir)
-is "${output-_}" "this is a test" "bash_enter executed successfully"
+is "${output-_}" "this is a test" "bash_enter executed successfully using smartcd"
+
+output=$(smartpushd $dir)
+like "${output-_}" "this is a test" "bash_enter executed successfully using smartpushd"
 
 rm $smartcd_dir/bash_enter
 cat >$smartcd_dir/bash_leave <<EOF
 echo this is a leaving test
 EOF
 output=$(smartcd $dir; smartcd ..)
-is "${output-_}" "this is a leaving test" "bash_leave executed successfully"
+is "${output-_}" "this is a leaving test" "bash_leave executed successfully using smartcd"
+
+output=$(smartpushd $dir; smartpopd)
+like "${output-_}" "this is a leaving test" "bash_leave executed successfully using smartpopd"
 
 dir2=$dir/another_dir
 smartcd_dir2=$smartcd_dir/another_dir

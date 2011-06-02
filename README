@@ -18,6 +18,8 @@ echo >> ~/.profile '
 . ~/.bash_varstash
 . ~/.bash_smartcd
 alias cd=smartcd
+alias pushd=smartpushd
+alias popd=smartpopd
 '
 
 # Create some scripts for a directory that set up environment
@@ -88,7 +90,9 @@ This powerful alternative to the cd built-in gives you that, and more.
 
 All you need to do is create bash_enter and/or bash_leave scripts, and
 alias cd to smartcd.  When you change between directories that have the
-relevant enter or leave scripts, they will be run as appropriate.
+relevant enter or leave scripts, they will be run as appropriate.  This also
+works with push and popd, which can be aliased to smartpushd and smartpopd
+repectively.
 
 The commands that you want to run will live in a file under a directory
 structure in your home directory named .smartcd.  The structure under

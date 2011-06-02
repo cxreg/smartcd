@@ -35,6 +35,10 @@
 #       . ~/.bash_smartcd
 #       alias cd=smartcd
 #
+#       # And it works with pushd/popd too
+#       alias pushd=smartpushd
+#       alias popd=smartpopd
+#
 #       # Create some custom directives
 #       echo 'echo "hi!"' > ~/.smartcd/somedir/bash_enter
 #
@@ -63,7 +67,7 @@
 #   containing the commands to run were themselves located in the
 #   directory which they correspond to, named .bash_enter and
 #   .bash_leave:
-
+#
 #       /foo/bar/baz  ->  /foo/bar/baz/.bash_enter
 #
 #   This was deemed unsafe, and the new scheme was adopted.  If you
@@ -76,6 +80,21 @@
 ################################################################################
 
 function smartcd() {
+    local action="builtin cd"
+    _smartcd "$@"
+}
+
+function smartpushd() {
+    local action="builtin pushd"
+    _smartcd "$@"
+}
+
+function smartpopd() {
+    local action="builtin popd"
+    _smartcd "$@"
+}
+
+function _smartcd() {
     # First, take note of where we're starting from
     local wherenow=$(pwd)
     local run_from_smartcd=1
@@ -94,11 +113,20 @@ function smartcd() {
 
     # Go there and get the fully qualified path.  Also, fail first if it's an
     # invalid destination, before we do any more work.
-    builtin cd "$@"
+
+    # This goofy eval syntax doesn't make a lot of sense, but it seems to work
+    # correctly in both bash (4.1.5) and zsh (4.3.11).  The eval is needed
+    # because "builtin cd" won't work from a zsh variable, sadly.
+    if [[ -n $1 ]] || [[ -z ${1-_} ]]; then
+        eval "$action \"$@\""
+    else
+        eval $action
+    fi
+
     if (( $? != 0 )); then return; fi;
     local whereto=$(pwd)
 
-    # If zsh, and autopushd is set, turn it off temporarily to avoid extra stack pushes
+    # If zsh and autopushd is set, turn it off temporarily to avoid extra pushes
     if [[ -n $ZSH_VERSION ]] && [[ -n "$(setopt | grep autopushd)" ]]; then
         local reset_autopushd="setopt autopushd"
         setopt noautopushd
@@ -205,6 +233,6 @@ function smartcd() {
     # Go and be happy
     builtin cd "$whereto"
 
-    # Turn autopushd back on, if needed
+    # Turn autopushd back on, if needed.  Again, eval needed due to zsh oddness
     eval $reset_autopushd
 }
