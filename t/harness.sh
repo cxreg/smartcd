@@ -1,5 +1,7 @@
 #!/bin/bash
 
+echo "Testing with SHELL=$SHELL"
+
 # Test array
 $SHELL t/arrays.t
 
