@@ -96,7 +96,15 @@ function smartcd() {
     # invalid destination, before we do any more work.
     builtin cd "$@"
     if (( $? != 0 )); then return; fi;
-    local where=$(pwd)
+    local whereto=$(pwd)
+
+    # If zsh, and autopushd is set, turn it off temporarily to avoid extra stack pushes
+    if [[ -n $ZSH_VERSION ]] && [[ -n "$(setopt | grep autopushd)" ]]; then
+        local reset_autopushd="setopt autopushd"
+        setopt noautopushd
+    else
+        local reset_autopushd=:
+    fi
 
     # Collect the list of directories we're leaving
     unset leave_stack
@@ -106,7 +114,7 @@ function smartcd() {
     done
 
     # Collect the list of directories we're entering
-    local wherenow=$where
+    local wherenow=$whereto
     unset enter_stack
     while [[ $wherenow != "/" ]]; do
         apush enter_stack "$wherenow"
@@ -195,5 +203,8 @@ function smartcd() {
     done
 
     # Go and be happy
-    builtin cd "$where"
+    builtin cd "$whereto"
+
+    # Turn autopushd back on, if needed
+    eval $reset_autopushd
 }
