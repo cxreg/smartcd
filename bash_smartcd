@@ -236,3 +236,22 @@ function _smartcd() {
     # Turn autopushd back on, if needed.  Again, eval needed due to zsh oddness
     eval $reset_autopushd
 }
+
+function smartcd_edit() {
+    # Invoke the users editor (or vi) on the relevant file
+    file=$1
+    if [[ $file = "enter" || $file = "leave" ]]; then
+        file="bash_$file"
+    fi
+    if [[ $file != "bash_enter" && $file != "bash_leave" ]]; then
+        echo "Usage: smartcd_edit ( bash_enter | bash_leave )"
+        return
+    fi
+
+    local smartcd_dir=$HOME/.smartcd$(pwd)
+    if [[ ! -d $smartcd_dir ]]; then
+        mkdir -p "$smartcd_dir"
+    fi
+
+    ${EDITOR:-vi} $smartcd_dir/$file
+}

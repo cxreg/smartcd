@@ -167,22 +167,25 @@ function _manual_stash_help() {
     fi
 }
 
-function varstash_edit() {
-    # Invoke the users editor (or vi) on the relevant file
-    if [[ $1 != "bash_enter" && $1 != "bash_leave" ]]; then
-        echo "Usage: varstash_edit ( bash_enter | bash_leave )"
-        return
-    fi
-
-    local smartcd_dir=$HOME/.smartcd$(pwd)
-    if [[ ! -d $smartcd_dir ]]; then
-        mkdir -p "$smartcd_dir"
-    fi
-
-    ${EDITOR:-vi} $smartcd_dir/$1
+# A couple convenient aliases for smartcd_edit
+function autostash_edit() {
+    smartcd_edit "$@"
 }
 
-# Alias for varstash_edit
-function autostash_edit() {
-    varstash_edit $1
+function varstash_edit() {
+    if [[ -n $ZSH_VERSION ]]; then
+        if [[ $(type smartcd_edit) = "smartcd_edit is a shell function" ]]; then
+            local can_run=1
+        fi
+    else
+        if [[ $(type -t smartcd_edit) = "function" ]]; then
+            local can_run=1
+        fi
+    fi
+
+    if [[ $can_run ]]; then
+        smartcd_edit "$@"
+    else
+        echo "smartcd not loaded, cannot run smartcd_edit"
+    fi
 }
