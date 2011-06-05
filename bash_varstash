@@ -134,7 +134,7 @@ function autounstash() {
 }
 
 function _mangle_var() {
-    local mangle_var_where=$(pwd | /usr/bin/tr ' /-' '_')
+    local mangle_var_where=$(pwd | tr ' /-' '_')
     echo "_tmp_${mangle_var_where}_$1"
 }
 
