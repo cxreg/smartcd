@@ -41,7 +41,7 @@
 #     VARSTASH_QUIET       - Set if you'd rather not see these notices
 #
 #     VARSTASH_AUTOCONFIG  - Set if you want the suggested actions to be
-#                            performed automaticaly
+#                            performed automatically
 #
 #     VARSTASH_AUTOEDIT   - Set if you want it to set the values, but also
 #                           give you an opportunity to edit the file
@@ -60,7 +60,8 @@ function stash() {
 
     while [[ -n $1 ]]; do
         local stash_which=$1
-        if [[ -z $stash_which ]]; then
+        if [[ -z $stash_which || ( -z "$(eval echo '$'$stash_which)" && -n "$(eval echo '${'$stash_which'-_}')" ) ]]; then
+            shift
             continue
         fi
 
@@ -115,6 +116,8 @@ function unstash() {
         if [[ -n $(eval echo '$'$unstash_name) ]] || [[ -z $(eval echo '${'$unstash_name'-_}') ]]; then
             eval export $unstash_which='$'$unstash_name
             unset $unstash_name
+        else
+            unset $unstash_which
         fi
 
         shift
