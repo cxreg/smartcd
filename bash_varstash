@@ -4,7 +4,7 @@
 # bash_varstash - Stash/unstash support for per-directory variables
 #
 #   Copyright (c) 2009-10 Dave Olszewski <cxreg@pobox.com>
-#   http://github.com/cxreg/cxregs-bash-tools
+#   http://github.com/cxreg/smartcd
 #
 #   This code is released under GPL v2 and the Artistic License, and
 #   may be redistributed under the terms of either.
