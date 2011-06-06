@@ -140,6 +140,7 @@ function _smartcd() {
         apush leave_stack "$wherenow"
         wherenow=$(dirname "$wherenow")
     done
+    apush leave_stack "/"
 
     # Collect the list of directories we're entering
     local wherenow=$whereto
@@ -148,9 +149,20 @@ function _smartcd() {
         apush enter_stack "$wherenow"
         wherenow=$(dirname "$wherenow")
     done
+    apush enter_stack "/"
 
     # Pop off common elements
     while [[ -n "$(alast enter_stack)" ]] && [[ "$(alast enter_stack)" = "$(alast leave_stack)" ]]; do
+
+        # Special cases for /, otherwise it would never be possible to run enter/leave for it
+        if [[ "$(alen enter_stack)" = "1" ]] && [[ "$(afirst enter_stack)" = "/" ]]; then
+            apop leave_stack >/dev/null
+            break
+        elif [[ "$(alen leave_stack)" = "1" ]] && [[ "$(afirst leave_stack)" = "/" ]]; then
+            apop enter_stack >/dev/null
+            break
+        fi
+
         apop enter_stack >/dev/null
         apop leave_stack >/dev/null
     done
