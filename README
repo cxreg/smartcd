@@ -22,18 +22,19 @@ alias pushd=smartpushd
 alias popd=smartpopd
 '
 
-# Create some scripts for a directory that set up environment
-# variables when you enter, and set them back to their original
-# values when you leave
+# Create a script for a directory that set up environment variables when
+# you enter, and set them back to their original values when you leave
 
 mkdir -p ~/.smartcd/some/directory
 echo >> ~/.smartcd/some/directory/bash_enter '
-stash PATH
+autostash PATH
 export PATH=./temporary/path:$PATH
 '
 
+# And you can run things explicitly on leave, as well
+
 echo >> ~/.smartcd/some/directory/bash_leave '
-unstash PATH
+echo "bye!"
 '
 
 
