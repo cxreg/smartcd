@@ -66,6 +66,12 @@ function stash() {
         local stash_expression=$1
         local stash_which=${stash_expression%%=*}
         if [[ -z $stash_which || ( -z "$(eval echo '$'$stash_which)" && -n "$(eval echo '${'$stash_which'-_}')" ) ]]; then
+
+            # Don't forget to do the assignment
+            if [[ $stash_which != $stash_expression ]]; then
+                eval "export $stash_expression"
+            fi
+
             shift
             continue
         fi
