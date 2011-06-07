@@ -25,7 +25,7 @@
 #       unstash PATH
 #
 #   Note that this was written for use with, and works very well with,
-#   .bash_smartcd.  See the documentation there for examples.
+#   bash_smartcd.  See the documentation there for examples.
 #
 #   An alternate usage is `autostash' which will trigger autounstash when
 #   leaving the directory, if combined with smartcd.  This reduces the amount
@@ -33,6 +33,10 @@
 #
 #       autostash PATH
 #       export PATH=/something/else
+#
+#   You may also do both operations on line line, leaving only the very succinct
+#
+#       autostash PATH=/something/else
 #
 #   If you run stash, unstash, or varstash interactively, they will instruct
 #   you on how to create smartcd scripts for performing those actions
@@ -59,7 +63,8 @@ function stash() {
     fi
 
     while [[ -n $1 ]]; do
-        local stash_which=$1
+        local stash_expression=$1
+        local stash_which=${stash_expression%%=*}
         if [[ -z $stash_which || ( -z "$(eval echo '$'$stash_which)" && -n "$(eval echo '${'$stash_which'-_}')" ) ]]; then
             shift
             continue
@@ -67,6 +72,10 @@ function stash() {
 
         local stash_name=$(_mangle_var $stash_which)
         eval export $stash_name='$'$stash_which
+
+        if [[ $stash_which != $stash_expression ]]; then
+            eval "export $stash_expression"
+        fi
 
         shift
     done
@@ -86,10 +95,11 @@ function autostash () {
     while [[ -n $1 ]]; do
         stash $1
         local autostash_name=$(_mangle_var AUTOSTASH)
+        local varname=${1%%=*}
         if [[ -n $(eval echo '$'$autostash_name) ]]; then
-            eval export $autostash_name='"''$'$autostash_name' '$1'"'
+            eval export $autostash_name='"''$'$autostash_name' '$varname'"'
         else
-            eval export $autostash_name=$1
+            eval export $autostash_name=$varname
         fi
 
         shift

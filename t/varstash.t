@@ -2,7 +2,7 @@
 source t/tap-functions
 source bash_varstash
 
-plan_tests 16
+plan_tests 20
 
 thing=value
 
@@ -33,6 +33,15 @@ VARSTASH_QUIET=1
 output=$(stash thing)
 like "_${output}_" "__" "quieted warning"
 
+stash thing=newvalue
+is "${thing-_}" "newvalue" "stash-assigned value"
+unstash thing
+is "${thing-_}" "value" "could unstash from stash-assignment"
+autostash thing=newvalue
+is "${thing-_}" "newvalue" "autostash-assigned value"
+autounstash thing
+is "${thing-_}" "value" "could unstash from autostash-assignment"
+
 oldhome=$HOME
 stash HOME
 mkdir tmphome
@@ -58,7 +67,6 @@ source bash_smartcd
 rm $config_file
 output=$(autostash RANDOM_VARIABLE)
 is "${output-_}" "autostash RANDOM_VARIABLE" "autoedit seems to work"
-
 
 VARSTASH_AUTOEDIT=
 unstash HOME
