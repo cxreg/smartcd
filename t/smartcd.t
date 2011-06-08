@@ -1,18 +1,19 @@
 # Load testing library
 source t/tap-functions
 source bash_arrays
+source bash_varstash
 source bash_smartcd
 
-plan_tests 8
+plan_tests 10
 
 # Set up smartcd
-mkdir tmphome
+mkdir -p tmphome
 oldhome=$HOME
 export HOME=$(pwd)/tmphome
 
 # One tier
 dir=tmp_dir
-mkdir $dir
+mkdir -p $dir
 smartcd_dir=$HOME/.smartcd$(pwd)/$dir
 mkdir -p $smartcd_dir
 
@@ -42,6 +43,25 @@ is "${output-_}" "this is a leaving test" "bash_leave executed successfully usin
 output=$(smartpushd $dir; smartpopd)
 like "${output-_}" "this is a leaving test" "bash_leave executed successfully using smartpopd"
 
+spacedir="dir with a space"
+mkdir -p "$spacedir"
+smartcd_spacedir="$HOME/.smartcd$(pwd)/$spacedir"
+mkdir -p "$smartcd_spacedir"
+echo 'echo -n "1 "' > "$smartcd_spacedir/bash_enter"
+echo 'echo 2' > "$smartcd_spacedir/bash_leave"
+output=$(smartcd "$spacedir"; smartcd ..)
+is "${output-_}" "1 2" "could enter and leave a directory with a space"
+
+echo 'echo 4' > "$smartcd_spacedir/bash_leave"
+spacedir="dir with a space/subdir"
+mkdir -p "$spacedir"
+smartcd_spacedir="$HOME/.smartcd$(pwd)/$spacedir"
+mkdir -p "$smartcd_spacedir"
+echo 'echo -n "2 "' > "$smartcd_spacedir/bash_enter"
+echo 'echo -n "3 "' > "$smartcd_spacedir/bash_leave"
+output=$(smartcd "$spacedir"; smartcd ../..)
+is "${output-_}" "1 2 3 4" "could enter and leave a subdirectory of a directory with a space"
+
 dir2=$dir/another_dir
 smartcd_dir2=$smartcd_dir/another_dir
 mkdir -p $dir2
@@ -61,5 +81,6 @@ is "${output-_}" "2 1" "ran two bash_leave scripts in correct order"
 
 # Clean up
 rm -rf $dir
+rm -rf "$spacedir"
 rm -rf tmphome
 export HOME=$oldhome

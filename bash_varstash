@@ -54,7 +54,7 @@
 
 function stash() {
     if [[ -z $run_from_smartcd ]] && [[ -z $run_from_autostash ]]; then
-        local smartcd_dir=$HOME/.smartcd$(pwd)
+        local smartcd_dir="$HOME/.smartcd$(pwd)"
         local help_action="stashing a variable"
         local help_dir=$smartcd_dir
         local help_cmd="echo stash $@ >> \"$smartcd_dir/bash_enter\""
@@ -96,7 +96,7 @@ function stash() {
 
 function autostash () {
     if [[ -z $run_from_smartcd ]]; then
-        local smartcd_dir=$HOME/.smartcd$(pwd)
+        local smartcd_dir="$HOME/.smartcd$(pwd)"
         local help_action="autostashing a variable"
         local help_dir=$smartcd_dir
         local help_cmd="echo autostash $@ >> \"$smartcd_dir/bash_enter\""
@@ -121,7 +121,7 @@ function autostash () {
 
 function unstash() {
     if [[ -z $run_from_smartcd ]] && [[ -z $run_from_autounstash ]]; then
-        local smartcd_dir=$HOME/.smartcd$(pwd)
+        local smartcd_dir="$HOME/.smartcd$(pwd)"
         local help_action="unstashing a variable"
         local help_dir=$smartcd_dir
         local help_cmd="echo unstash $@ >> \"$smartcd_dir/bash_leave\""
@@ -160,7 +160,7 @@ function autounstash() {
 }
 
 function _mangle_var() {
-    local mangle_var_where=$(pwd)
+    local mangle_var_where="$(pwd)"
     # the non-tr version of tr ' /-' '_'
     mangle_var_where=${mangle_var_where// /_}
     mangle_var_where=${mangle_var_where//\//_}

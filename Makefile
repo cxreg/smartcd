@@ -5,6 +5,15 @@ all:
 test:
 	t/harness.sh
 
+test_bash:
+	t/harness.sh /bin/bash
+
+test_zsh:
+	t/harness.sh /usr/bin/zsh
+
+test_all: test_bash test_zsh
+
+
 install:
 	cp bash_arrays ~/.bash_arrays
 	cp bash_varstash ~/.bash_varstash

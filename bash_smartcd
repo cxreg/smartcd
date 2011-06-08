@@ -96,7 +96,7 @@ function smartpopd() {
 
 function _smartcd() {
     # First, take note of where we're starting from
-    local wherenow=$(pwd)
+    local wherenow="$(pwd)"
     local run_from_smartcd=1
 
     if [[ -n $ZSH_VERSION ]]; then
@@ -124,7 +124,7 @@ function _smartcd() {
     fi
 
     if (( $? != 0 )); then return; fi;
-    local whereto=$(pwd)
+    local whereto="$(pwd)"
 
     # If zsh and autopushd is set, turn it off temporarily to avoid extra pushes
     local reset_autopushd=:
@@ -142,12 +142,12 @@ function _smartcd() {
     unset leave_stack
     while [[ -n $wherenow ]]; do
         apush leave_stack "$wherenow"
-        wherenow=${wherenow%/*}
+        wherenow="${wherenow%/*}"
     done
     apush leave_stack "/"
 
     # Collect the list of directories we're entering
-    local wherenow=$whereto
+    local wherenow="$whereto"
     unset enter_stack
     while [[ -n $wherenow ]]; do
         apush enter_stack "$wherenow"
@@ -174,7 +174,7 @@ function _smartcd() {
     # Run leave_stack in lowest to highest
     while (( $(alen leave_stack) >= 1 )); do
         # ashift in a sub-shell doesn't work
-        local dir=$(afirst leave_stack);
+        local dir="$(afirst leave_stack)"
         ashift leave_stack >/dev/null
         builtin cd "$dir"
         local confdir="$HOME/.smartcd$dir"
@@ -216,7 +216,7 @@ function _smartcd() {
     # Run enter_stack in highest to lowest
     while (( $(alen enter_stack) >= 1 )); do
         # apop in a sub-shell doesn't work
-        local dir=$(alast enter_stack);
+        local dir="$(alast enter_stack)"
         apop enter_stack >/dev/null
         builtin cd "$dir"
         local confdir="$HOME/.smartcd$dir"

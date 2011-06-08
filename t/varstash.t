@@ -48,14 +48,16 @@ unstash thing
 
 oldhome=$HOME
 stash HOME
-mkdir tmphome
+mkdir -p tmphome
 export HOME=$(pwd)/tmphome
 
 VARSTASH_AUTOCONFIG=1
 oldshell=$SHELL
 autostash SHELL
-config_file=$(find $HOME/.smartcd -name bash_enter)
-like "${config_file-_}" "bash_enter" "created smartcd file"
+config_file="$HOME/.smartcd$(pwd)/bash_enter"
+config_file_exists=$([[ -f $config_file ]] && echo "yes")
+
+like "${config_file_exists-_}" "yes" "created smartcd file"
 is "$(cat ${config_file-_})" "autostash SHELL" "correctly configured autostash"
 SHELL=temp
 autounstash
