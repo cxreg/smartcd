@@ -2,7 +2,7 @@
 source t/tap-functions
 source bash_varstash
 
-plan_tests 20
+plan_tests 21
 
 thing=value
 
@@ -41,6 +41,10 @@ autostash thing=newvalue
 is "${thing-_}" "newvalue" "autostash-assigned value"
 autounstash thing
 is "${thing-_}" "value" "could unstash from autostash-assignment"
+
+stash thing='complex"value(with) lots of"strange"things'
+is "${thing-_}" 'complex"value(with) lots of"strange"things' "could stash-assign complex quoted expression"
+unstash thing
 
 oldhome=$HOME
 stash HOME
