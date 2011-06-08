@@ -127,27 +127,31 @@ function _smartcd() {
     local whereto=$(pwd)
 
     # If zsh and autopushd is set, turn it off temporarily to avoid extra pushes
-    if [[ -n $ZSH_VERSION ]] && [[ -n "$(setopt | grep autopushd)" ]]; then
-        local reset_autopushd="setopt autopushd"
-        setopt noautopushd
-    else
-        local reset_autopushd=:
+    local reset_autopushd=:
+    if [[ -n $ZSH_VERSION ]]; then
+        for opt in $(setopt); do
+            if [[ $opt = "autopushd" ]]; then
+                local reset_autopushd="setopt autopushd"
+                setopt noautopushd
+                break
+            fi
+        done
     fi
 
     # Collect the list of directories we're leaving
     unset leave_stack
-    while [[ $wherenow != "/" ]]; do
+    while [[ -n $wherenow ]]; do
         apush leave_stack "$wherenow"
-        wherenow=$(dirname "$wherenow")
+        wherenow=${wherenow%/*}
     done
     apush leave_stack "/"
 
     # Collect the list of directories we're entering
     local wherenow=$whereto
     unset enter_stack
-    while [[ $wherenow != "/" ]]; do
+    while [[ -n $wherenow ]]; do
         apush enter_stack "$wherenow"
-        wherenow=$(dirname "$wherenow")
+        wherenow=${wherenow%/*}
     done
     apush enter_stack "/"
 

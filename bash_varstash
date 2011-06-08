@@ -153,7 +153,11 @@ function autounstash() {
 }
 
 function _mangle_var() {
-    local mangle_var_where=$(pwd | tr ' /-' '_')
+    local mangle_var_where=$(pwd)
+    # the non-tr version of tr ' /-' '_'
+    mangle_var_where=${mangle_var_where// /_}
+    mangle_var_where=${mangle_var_where//\//_}
+    mangle_var_where=${mangle_var_where//-/_}
     echo "_tmp_${mangle_var_where}_$1"
 }
 
