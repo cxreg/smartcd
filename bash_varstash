@@ -172,7 +172,7 @@ function _manual_stash_help() {
     # instruct user how to create bash_enter or bash_leave
     if [[ -n $VARSTASH_AUTOEDIT || -n $VARSTASH_AUTOCONFIG ]]; then
         if [[ -z $VARSTASH_QUIET ]]; then
-            echo "Automatically running $help_cmd"
+            echo "varstash: Automatically running $help_cmd"
         fi
 
         if [[ ! -d $help_dir ]]; then
@@ -184,6 +184,7 @@ function _manual_stash_help() {
             varstash_edit $help_which
         fi
     elif [[ -z $VARSTASH_QUIET ]]; then
+        echo "############################################################################"
         echo "# You are manually $help_action.  To automatically perform this"
         echo "# whenever you enter this directory, paste the following command(s):"
 
@@ -191,6 +192,7 @@ function _manual_stash_help() {
             echo "mkdir -p \"$help_dir\""
         fi
         echo "$help_cmd"
+        echo "############################################################################"
     fi
 }
 
