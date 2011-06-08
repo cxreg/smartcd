@@ -8,15 +8,18 @@
 ##############
 
 # Install the files
+make install
+make setup
+
+# Or, you can set it up manually if you prefer
 cp bash_arrays ~/.bash_arrays
 cp bash_varstash ~/.bash_varstash
 cp bash_smartcd ~/.bash_smartcd
 
-# Load them when you log in
-echo >> ~/.profile '
-. ~/.bash_arrays
-. ~/.bash_varstash
-. ~/.bash_smartcd
+echo >> ~/.bash_profile '
+source ~/.bash_arrays
+source ~/.bash_varstash
+source ~/.bash_smartcd
 alias cd=smartcd
 alias pushd=smartpushd
 alias popd=smartpopd
