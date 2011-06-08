@@ -64,7 +64,7 @@ function stash() {
 
     while [[ -n $1 ]]; do
         local stash_expression=$1
-        local stash_which=${stash_expression%%=*}
+        local stash_which=${stash_expression%%'='*}
         if [[ -z $stash_which || ( -z "$(eval echo '$'$stash_which)" && -n "$(eval echo '${'$stash_which'-_}')" ) ]]; then
 
             # Don't forget to do the assignment
@@ -101,7 +101,7 @@ function autostash () {
     while [[ -n $1 ]]; do
         stash $1
         local autostash_name=$(_mangle_var AUTOSTASH)
-        local varname=${1%%=*}
+        local varname=${1%%'='*}
         if [[ -n $(eval echo '$'$autostash_name) ]]; then
             eval export $autostash_name='"''$'$autostash_name' '$varname'"'
         else
