@@ -65,11 +65,18 @@ function stash() {
     while [[ -n $1 ]]; do
         local stash_expression=$1
         local stash_which=${stash_expression%%'='*}
+
+        # Extract the value and make it double-quote safe
+        local stash_value=${stash_expression#*'='}
+        stash_value=${stash_value//\\/\\\\}
+        stash_value=${stash_value//\"/\\\"}
+        stash_value=${stash_value//\$/\\\$}
+
         if [[ -z $stash_which || ( -z "$(eval echo '$'$stash_which)" && -n "$(eval echo '${'$stash_which'-_}')" ) ]]; then
 
             # Don't forget to do the assignment
             if [[ $stash_which != $stash_expression ]]; then
-                eval "export $stash_expression"
+                eval "export $stash_which=\"$stash_value\""
             fi
 
             shift
@@ -80,7 +87,7 @@ function stash() {
         eval export $stash_name='$'$stash_which
 
         if [[ $stash_which != $stash_expression ]]; then
-            eval "export $stash_expression"
+            eval "export $stash_which=\"$stash_value\""
         fi
 
         shift
@@ -99,7 +106,7 @@ function autostash () {
 
     local run_from_autostash=1
     while [[ -n $1 ]]; do
-        stash $1
+        stash "$1"
         local autostash_name=$(_mangle_var AUTOSTASH)
         local varname=${1%%'='*}
         if [[ -n $(eval echo '$'$autostash_name) ]]; then
