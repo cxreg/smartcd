@@ -98,6 +98,8 @@ function _smartcd() {
     # First, take note of where we're starting from
     local wherenow="$(pwd)"
     local run_from_smartcd=1
+    local _ashift_return
+    local _apop_return
 
     if [[ -n $ZSH_VERSION ]]; then
         if [[ $(type apush) != "apush is a shell function" ]]; then
@@ -147,7 +149,7 @@ function _smartcd() {
     apush leave_stack "/"
 
     # Collect the list of directories we're entering
-    local wherenow="$whereto"
+    wherenow="$whereto"
     unset enter_stack
     while [[ -n $wherenow ]]; do
         apush enter_stack "$wherenow"
@@ -255,7 +257,7 @@ function _smartcd() {
 
 function smartcd_edit() {
     # Invoke the users editor (or vi) on the relevant file
-    file=$1
+    local file="$1"
     if [[ $file = "enter" || $file = "leave" ]]; then
         file="bash_$file"
     fi
@@ -264,10 +266,10 @@ function smartcd_edit() {
         return
     fi
 
-    local smartcd_dir=$HOME/.smartcd$(pwd)
+    local smartcd_dir="$HOME/.smartcd$(pwd)"
     if [[ ! -d $smartcd_dir ]]; then
         mkdir -p "$smartcd_dir"
     fi
 
-    ${EDITOR:-vi} $smartcd_dir/$file
+    ${EDITOR:-vi} "$smartcd_dir/$file"
 }

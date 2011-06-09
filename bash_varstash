@@ -152,6 +152,7 @@ function autounstash() {
     local autounstash_name=$(_mangle_var AUTOSTASH)
     if [[ -n $(eval echo '$'$autounstash_name) ]]; then
         local run_from_autounstash=1
+        local autounstash_var
         for autounstash_var in $(eval echo '$'$autounstash_name); do
             unstash $autounstash_var
         done
