@@ -1,5 +1,6 @@
 all:
 	@echo "Run \"make install\" to install to your home directory"
+	@echo "To set up your shell configuration, run \"make setup\""
 	@echo "See README for instructions on installation or configuration"
 
 test:
