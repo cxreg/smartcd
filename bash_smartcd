@@ -97,6 +97,7 @@ function smartpopd() {
 function _smartcd() {
     # First, take note of where we're starting from
     local wherenow="$(pwd)"
+    local wherestarted="$wherenow"
     local run_from_smartcd=1
     local _ashift_return
     local _apop_return
@@ -248,7 +249,8 @@ function _smartcd() {
         fi
     done
 
-    # Go and be happy
+    # First go to starting directory and then jump to final directory to make "cd -" happy!
+    builtin cd "$wherestarted"
     builtin cd "$whereto"
 
     # Turn autopushd back on, if needed.  Again, eval needed due to zsh oddness
