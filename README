@@ -2,16 +2,15 @@
 # smartcd #
 ###########
 
-
 ##############
 # Quickstart #
 ##############
 
-# Install the files
+# Install the files and configure your shell
 make install
 make setup
 
-# Or, you can set it up manually if you prefer
+# Or, you can set it up manually
 cp bash_arrays ~/.bash_arrays
 cp bash_varstash ~/.bash_varstash
 cp bash_smartcd ~/.bash_smartcd
@@ -25,8 +24,17 @@ alias pushd=smartpushd
 alias popd=smartpopd
 '
 
-# Create a script for a directory that set up environment variables when
-# you enter, and set them back to their original values when you leave
+# Go to a directory with special needs
+user@host:~$ cd project
+
+# And set a variable, temporarily.  It will revert to its prior value
+# when you leave the directory.
+user@host:~/project$ autostash PATH=./bin:$PATH
+
+# Or edit the "enter" script
+user@host:~/project$ smartcd_edit enter
+
+# If you like doing things by hand, you may prefer
 mkdir -p ~/.smartcd/some/directory
 echo 'autostash PATH=./temporary/path:$PATH' >> ~/.smartcd/some/directory/bash_enter
 
@@ -37,6 +45,87 @@ echo 'echo "bye!"' >> ~/.smartcd/some/directory/bash_leave
 ####################
 # More information #
 ####################
+
+  bash_smartcd
+
+The main motivation for this library was that I wanted was environment
+variables that would set themselves when you go to a directory or its
+child, and then unset themselves when you leave.  This powerful
+alternative to the cd built-in gives you that, and more.
+
+It works by running scripts which correspond to particular directories
+on your computer.  When you change between directories that have the
+relevant enter or leave scripts, they will be run as appropriate.  This
+also works with push and popd, which can be aliased to smartpushd and
+smartpopd repectively.
+
+The commands that you want to run will live in a file under a directory
+structure in your home directory named .smartcd.  The structure under
+that should mirror the filesystem hierarchy you wish to configure.  For
+example:
+
+      Path         Action      Script
+    ------------------------------------------------------------
+     /foo/bar       enter     ~/.smartcd/foo/bar/bash_enter
+     /foo/bar/baz   leave     ~/.smartcd/foo/bar/baz/bash_leave
+
+A function, smartcd_edit, is provided which will compute the path to the
+files that correspond to your current working directory and open them
+using your preferred editor:
+
+    user@host:/usr/local/bin$ smartcd_edit enter
+
+        edits ~/.smartcd/usr/local/bin/smartcd_enter
+
+    user@host:/usr/local/bin$ smartcd_edit leave
+
+        edits ~/.smartcd/usr/local/bin/smartcd_leave
+
+One thing to note is that going from a directory to its child is not
+considered "leaving", so the bash_leave will not be run until you go to
+another directory that doesn't contain that same directory as part of
+its path.  The scripts are run as appropriate if they exist for each
+level going back to the common element between the paths:
+
+If you cd from /foo/bar/baz to /foo/quux/biff
+
+    1) bash_leave for /foo/bar/baz
+    2) bash_leave for /foo/bar
+    3) bash_enter for /foo/quux
+    4) bash_enter for /foo/quux/biff
+
+These scripts are run in the interactive shell by using the "source"
+builtin, so any variables or other environment effects will take place
+in the user's shell directly.
+
+Any action you can take in the shell can be done in these scripts; you
+are certainly not limited to varstash.  Other examples might include a
+VCS update or even attaching to a particular screen session!
+
+For more information, see the documentation in bash_smartcd itself.
+
+
+  bash_varstash
+
+This provides several functions for saving the value of an environment
+variable to a temporary location so that you can edit the value of it,
+and then later restore the original value.  The main functions are
+called stash and unstash.
+
+A variant of stash is provided called autostash.  If you run this and
+smartcd is enabled, when you change out of the current directory, it
+will automatically unstash for you, by calling autounstash.  You may
+also manually run autounstash at any time whether or not you have
+changed directories.
+
+If you run stash, unstash, or autostash interactively, they will
+instruct you on how to create files for smartcd to run those commands
+for you.  If you do not wish to see this advice, set VARSTASH_QUIET=1.
+The library can automatically follow its own advice and configure these
+files if you set VARSTASH_AUTOCONFIG=1.  It can do so, but also give you
+an opportunity to make additional edits to the relevant file, if you set
+VARSTASH_AUTOEDIT=1.
+
 
   bash_arrays
 
@@ -56,53 +145,6 @@ The provided functions are:
 
 See the documentation included in the file for more detail.
 
-
-  bash_varstash
-
-This provides a couple of simple functions for saving the value of an
-environment variable to a temporary location, so that you can edit the
-value of it and then later restore the original value.  The functions
-are called stash and unstash, and basic usage can be seen above, or in
-bash_smartcd.
-
-A variant of stash, primarily for use with smartcd, is called autostash.
-If you run this and smartcd is enabled, when you change out of the
-current directory, it will automatically unstash for you.
-
-If you run stash, unstash, or autostash interactively they will instruct
-you on how to create files for smartcd to run those commands for you.
-If you do not wish to see this advice, set VARSTASH_QUIET.  The library
-can automatically follow its own advice and configure these files if you
-set VARSTASH_AUTOCONFIG.  It can do so but give you an opportunity to
-make additional edits if you set VARSTASH_AUTOEDIT.  This edit function
-can be called manually with the function varstash_edit, if you prefer.
-
-
-  bash_smartcd
-
-This is really the primary motivation for the above two libraries.  What
-I wanted was environment variables that would set themselves when you go
-to a directory or its child, and then unset themselves when you leave.
-This powerful alternative to the cd built-in gives you that, and more.
-
-All you need to do is create bash_enter and/or bash_leave scripts, and
-alias cd to smartcd.  When you change between directories that have the
-relevant enter or leave scripts, they will be run as appropriate.  This also
-works with push and popd, which can be aliased to smartpushd and smartpopd
-repectively.
-
-The commands that you want to run will live in a file under a directory
-structure in your home directory named .smartcd.  The structure under
-that should mirror the filesystem hierarchy you wish to configure.  For
-example, if you want to run a command when entering /foo/bar, you would
-put that command in ~/.smartcd/foo/bar/bash_enter
-
-One thing to note is that going from a directory to its child is not
-considered "leaving", so the bash_leave will not be run until you go
-to another directory that doesn't contain that same directory as part
-of its path.
-
-For more information, see the documentation in bash_smartcd.
 
 
 ###########

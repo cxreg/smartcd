@@ -12,7 +12,7 @@
 #
 #   While bash gives you support for using variables as arrays, which is a
 #   great improvement over using a space-delimited list, it still leaves it
-#   difficult to make use of this feature.  This library aimes to improve
+#   difficult to make use of this feature.  This library aims to improve
 #   the situation.
 #
 #   The provided functions are as follows:
@@ -22,11 +22,13 @@
 #         Usage:       $ apush var_name elem1 [elem2...]
 #
 #       apop
-#         Description: Remove the last element from the array and print it
+#         Description: Remove the last element from the array and print it.
+#                      The value is also set to the variable _apop_return.
 #         Usage:       $ apop var_name
 #
 #       ashift
 #         Description: Remove the first element from the array and print it
+#                      The value is also set to the variable _ashift_return.
 #         Usage:       $ ashift var_name
 #
 #       aunshift
