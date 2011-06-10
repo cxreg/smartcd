@@ -2,7 +2,7 @@
 source t/tap-functions
 source bash_varstash
 
-plan_tests 21
+plan_tests 22
 
 thing=value
 
@@ -18,6 +18,9 @@ like "${output-_}" "You are manually unstashing a variable" "manual unstash warn
 unstash thing>/dev/null
 is "$thing" value "unstashed variable successfully"
 is "_$(eval echo \${$varname-_})_" "___" "stash variable unset"
+
+unstash thing>/dev/null
+is "$thing" value "double unstash did not delete value"
 
 output=$(autostash thing)
 like "${output-_}" "You are manually autostashing a variable" "manual autostash warned"

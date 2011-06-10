@@ -73,18 +73,14 @@ function stash() {
         stash_value=${stash_value//\$/\\\$}
 
         if [[ -z $stash_which || ( -z "$(eval echo '$'$stash_which)" && -n "$(eval echo '${'$stash_which'-_}')" ) ]]; then
-
-            # Don't forget to do the assignment
-            if [[ $stash_which != $stash_expression ]]; then
-                eval "export $stash_which=\"$stash_value\""
-            fi
-
-            shift
-            continue
+            # Nothing in the variable we're stashing, but make a note that we stashed so we
+            # do the right thing when unstashing.  Without this, we take no action on unstash
+            local stash_name=$(_mangle_var $stash_which)__nostash
+            export $stash_name=1
+        else
+            local stash_name=$(_mangle_var $stash_which)
+            eval export $stash_name='$'$stash_which
         fi
-
-        local stash_name=$(_mangle_var $stash_which)
-        eval export $stash_name='$'$stash_which
 
         if [[ $stash_which != $stash_expression ]]; then
             eval "export $stash_which=\"$stash_value\""
@@ -139,8 +135,9 @@ function unstash() {
         if [[ -n $(eval echo '$'$unstash_name) ]] || [[ -z $(eval echo '${'$unstash_name'-_}') ]]; then
             eval export $unstash_which='$'$unstash_name
             unset $unstash_name
-        else
+        elif [[ -n $(eval echo '$'$unstash_name'__nostash' ) ]]; then
             unset $unstash_which
+            unset ${unstash_name}__nostash
         fi
 
         shift
