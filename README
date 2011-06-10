@@ -24,6 +24,11 @@ alias pushd=smartpushd
 alias popd=smartpopd
 '
 
+# And if you are an "autocd" user, you may want
+echo >> ~/.bash_profile '
+setup_smartcd_prompt_hook
+'
+
 # Go to a directory with special needs
 user@host:~$ cd project
 
@@ -55,9 +60,17 @@ alternative to the cd built-in gives you that, and more.
 
 It works by running scripts which correspond to particular directories
 on your computer.  When you change between directories that have the
-relevant enter or leave scripts, they will be run as appropriate.  This
-also works with push and popd, which can be aliased to smartpushd and
-smartpopd repectively.
+relevant enter or leave scripts, they will be run as appropriate.
+
+The primary way of doing this is to alias the "cd" command to "smartcd"
+This also works with push and popd, which can be aliased to smartpushd
+and smartpopd repectively.
+
+If you prefer (or in addition), you can hook the prompt command
+This sets PROMPT_COMMAND in bash, or precmd in zsh.  After calling
+smartcd, it will call any preexisting command for those hooks.  This
+allows users with the "autocd" option set in their shell to also
+benefit from smartcd.
 
 The commands that you want to run will live in a file under a directory
 structure in your home directory named .smartcd.  The structure under

@@ -39,6 +39,9 @@
 #       alias pushd=smartpushd
 #       alias popd=smartpopd
 #
+#       And if you are an "autocd" user, you may want
+#       setup_smartcd_prompt_hook
+#
 #       # Create some custom directives
 #       echo 'echo "hi!"' > ~/.smartcd/somedir/bash_enter
 #
@@ -94,9 +97,14 @@ function smartpopd() {
     _smartcd "$@"
 }
 
+_smartcd_last_run_for=
 function _smartcd() {
     # First, take note of where we're starting from
-    local wherenow="$(pwd)"
+    if [[ -n $_smartcd_last_run_for ]]; then
+        local wherenow="$_smartcd_last_run_for"
+    else
+        local wherenow="$(pwd)"
+    fi
     local wherestarted="$wherenow"
     local run_from_smartcd=1
     local _ashift_return
@@ -128,6 +136,7 @@ function _smartcd() {
 
     if (( $? != 0 )); then return; fi;
     local whereto="$(pwd)"
+    _smartcd_last_run_for="$whereto"
 
     # If zsh and autopushd is set, turn it off temporarily to avoid extra pushes
     local reset_autopushd=:
@@ -274,4 +283,42 @@ function smartcd_edit() {
     fi
 
     ${EDITOR:-vi} "$smartcd_dir/$file"
+}
+
+function _smartcd_prompt_hook() {
+    cwd=$(pwd)
+
+    # Skip this if we already ran smartcd for this directory
+    if [[ "$cwd" != "$_smartcd_last_run_for" ]]; then
+        local action="builtin cd"
+        _smartcd "$cwd"
+    fi
+
+    eval $_smartcd_original_prompt_command
+}
+
+function setup_smartcd_prompt_hook() {
+    # Save the current position so that the next prompt does not trigger smartcd
+    _smartcd_last_run_for="$(pwd)"
+
+    if [[ -n $ZSH_VERSION ]]; then
+        _smartcd_prior_precmd_definition=$(functions precmd)
+        if [[ -n $_smartcd_prior_precmd_definition ]]; then
+            _smartcd_prior_precmd_definition=${_smartcd_prior_precmd_definition/#precmd/_smartcd_prior_precmd}
+            eval $_smartcd_prior_precmd_definition
+            export _smartcd_original_prompt_command=_smartcd_prior_precmd
+        else
+            export _smartcd_original_prompt_command=:
+        fi
+
+        function precmd() { _smartcd_prompt_hook "$@"; }
+    else
+        if [[ -n $PROMPT_COMMAND && -z $_smartcd_original_prompt_command ]]; then
+            export _smartcd_original_prompt_command=$PROMPT_COMMAND
+        else
+            export _smartcd_original_prompt_command=:
+        fi
+
+        export PROMPT_COMMAND=_smartcd_prompt_hook
+    fi
 }
