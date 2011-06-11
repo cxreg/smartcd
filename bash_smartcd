@@ -101,7 +101,7 @@ _smartcd_last_run_for=
 function _smartcd() {
     # First, take note of where we're starting from
     if [[ -n $_smartcd_last_run_for ]]; then
-        local wherenow="$_smartcd_last_run_for"
+        local wherenow="${_smartcd_last_run_for#x}"
     else
         local wherenow="$(pwd)"
     fi
@@ -136,7 +136,7 @@ function _smartcd() {
 
     if (( $? != 0 )); then return; fi;
     local whereto="$(pwd)"
-    _smartcd_last_run_for="$whereto"
+    _smartcd_last_run_for="x$whereto"
 
     # If zsh and autopushd is set, turn it off temporarily to avoid extra pushes
     local reset_autopushd=:
@@ -286,10 +286,10 @@ function smartcd_edit() {
 }
 
 function _smartcd_prompt_hook() {
-    cwd=$(pwd)
+    local cwd="$(pwd)"
 
     # Skip this if we already ran smartcd for this directory
-    if [[ "$cwd" != "$_smartcd_last_run_for" ]]; then
+    if [[ "x$cwd" != "$_smartcd_last_run_for" ]]; then
         local action="builtin cd"
         _smartcd "$cwd"
     fi
@@ -299,7 +299,7 @@ function _smartcd_prompt_hook() {
 
 function setup_smartcd_prompt_hook() {
     # Save the current position so that the next prompt does not trigger smartcd
-    _smartcd_last_run_for="$(pwd)"
+    _smartcd_last_run_for="x$(pwd)"
 
     if [[ -n $ZSH_VERSION ]]; then
         _smartcd_prior_precmd_definition=$(functions precmd)
