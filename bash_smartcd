@@ -97,6 +97,8 @@ function smartpopd() {
     _smartcd "$@"
 }
 
+# This variable should always have a leading "x" on it to prevent it from being
+# snarfed up by autonamedirs (zsh, you crazy)
 _smartcd_last_run_for="x$(pwd)"
 function _smartcd() {
     # First, take note of where we're starting from
