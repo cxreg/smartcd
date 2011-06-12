@@ -97,14 +97,10 @@ function smartpopd() {
     _smartcd "$@"
 }
 
-_smartcd_last_run_for=
+_smartcd_last_run_for="x$(pwd)"
 function _smartcd() {
     # First, take note of where we're starting from
-    if [[ -n $_smartcd_last_run_for ]]; then
-        local wherenow="${_smartcd_last_run_for#x}"
-    else
-        local wherenow="$(pwd)"
-    fi
+    local wherenow="${_smartcd_last_run_for#x}"
     local wherestarted="$wherenow"
     local run_from_smartcd=1
     local _ashift_return
@@ -128,10 +124,12 @@ function _smartcd() {
     # This goofy eval syntax doesn't make a lot of sense, but it seems to work
     # correctly in both bash (4.1.5) and zsh (4.3.11).  The eval is needed
     # because "builtin cd" won't work from a zsh variable, sadly.
-    if [[ -n $1 ]] || [[ -z ${1-_} ]]; then
-        eval "$action \"$@\""
-    else
-        eval $action
+    if [[ -z $smartcd_run_from_prompt ]]; then
+        if [[ -n $1 ]] || [[ -z ${1-_} ]]; then
+            eval "$action \"$@\""
+        else
+            eval $action
+        fi
     fi
 
     if (( $? != 0 )); then return; fi;
@@ -290,7 +288,7 @@ function _smartcd_prompt_hook() {
 
     # Skip this if we already ran smartcd for this directory
     if [[ "x$cwd" != "$_smartcd_last_run_for" ]]; then
-        local action="builtin cd"
+        local smartcd_run_from_prompt=1
         _smartcd "$cwd"
     fi
 
