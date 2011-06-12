@@ -138,12 +138,16 @@ function _smartcd() {
 
     # If zsh and autopushd is set, turn it off temporarily to avoid extra pushes
     local reset_autopushd=:
+    local reset_pushdignoredups=:
     if [[ -n $ZSH_VERSION ]]; then
         for opt in $(setopt); do
             if [[ $opt = "autopushd" ]]; then
-                local reset_autopushd="setopt autopushd"
+                reset_autopushd="setopt autopushd"
                 setopt noautopushd
-                break
+            fi
+            if [[ $opt = "pushdignoredups" ]]; then
+                reset_pushdignoredups="setopt pushdignoredups"
+                setopt nopushdignoredups
             fi
         done
     fi
@@ -262,6 +266,7 @@ function _smartcd() {
 
     # Turn autopushd back on, if needed.  Again, eval needed due to zsh oddness
     eval $reset_autopushd
+    eval $reset_pushdignoredups
 }
 
 function smartcd_edit() {
