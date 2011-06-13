@@ -37,7 +37,7 @@ user@host:~$ cd project
 user@host:~/project$ autostash PATH=./bin:$PATH
 
 # Or edit the "enter" script
-user@host:~/project$ smartcd_edit enter
+user@host:~/project$ bash_enter -e
 
 # If you like doing things by hand, you may prefer
 mkdir -p ~/.smartcd/some/directory
@@ -82,17 +82,27 @@ example:
      /foo/bar       enter     ~/.smartcd/foo/bar/bash_enter
      /foo/bar/baz   leave     ~/.smartcd/foo/bar/baz/bash_leave
 
-A function, smartcd_edit, is provided which will compute the path to the
-files that correspond to your current working directory and open them
-using your preferred editor:
+Convenience functions, named bash_enter and bash_leave, are provided
+which inform you if the file exists.  If you call it with "-l", it will
+also display the file's contents.  Calling with -e will instead open it
+with your preferrred editor, creating the file if necessary.  And
+calling it with "-f" will simply list the filename, whether it exists or
+not.
 
-    user@host:/usr/local/bin$ smartcd_edit enter
+    user@host:/usr/local/bin$ bash_leave
+    /home/user/.smartcd/usr/local/bin/bash_leave does not exist
 
-        edits ~/.smartcd/usr/local/bin/smartcd_enter
+    user@host:/usr/local/bin$ bash_enter
+    /home/user/.smartcd/usr/local/bin/bash_enter exists
 
-    user@host:/usr/local/bin$ smartcd_edit leave
+    user@host:/usr/local/bin$ bash_enter -l
+    /home/user/.smartcd/usr/local/bin/bash_enter exists
+    -------------------------------------------------------------------------
+    echo "testing"
+    -------------------------------------------------------------------------
 
-        edits ~/.smartcd/usr/local/bin/smartcd_leave
+    user@host:/usr/local/bin$ bash_enter -e
+    --> edits ~/.smartcd/usr/local/bin/bash_enter
 
 One thing to note is that going from a directory to its child is not
 considered "leaving", so the bash_leave will not be run until you go to
