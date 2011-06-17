@@ -1,8 +1,9 @@
 # Load testing library
 source t/tap-functions
 source bash_varstash
+source bash_arrays
 
-plan_tests 26
+plan_tests 27
 
 thing=value
 
@@ -70,6 +71,11 @@ unalias test_cmd
 output=$(test_cmd)
 is "${output-_}" "test function" "unstashed function at the same time as alias"
 
+thing=(one two "three four")
+stash thing
+thing="not an array"
+unstash thing
+is "_$(alast thing)" "_three four" "unstashed array"
 
 oldhome=$HOME
 stash HOME

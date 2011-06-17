@@ -105,7 +105,8 @@ function stash() {
             fi
             if [[ $vartype =~ $pattern" -a" ]]; then
                 # varible is an array
-                eval "__varstash_array__$stash_name=(\"${'$stash_which'[@]}\")"
+                eval "__varstash_array__$stash_name=(\"\${$stash_which""[@]}\")"
+
             elif [[ $vartype =~ $pattern" -x" ]]; then
                 # variable is exported
                 eval "__varstash_export__$stash_name=\"\$$stash_which\""
@@ -200,7 +201,7 @@ function unstash() {
 
         # Unstash any variable
         if [[ -n "$(declare -p __varstash_array__$unstash_name 2>/dev/null)" ]]; then
-            eval "$unstash_which=(\"\${__varstash_array__$unstash_name'[@]}'\")"
+            eval "$unstash_which=(\"\${__varstash_array__$unstash_name""[@]}\")"
             unset __varstash_array__$unstash_name
             local unstashed=1
             local unstashed_variable=1
