@@ -53,7 +53,7 @@
 ################################################################################
 
 function stash() {
-    if [[ -z $run_from_smartcd ]] && [[ -z $run_from_autostash ]]; then
+    if [[ -n $1 ]] && [[ -z $run_from_smartcd ]] && [[ -z $run_from_autostash ]]; then
         local smartcd_dir="$HOME/.smartcd$(pwd)"
         local help_action="stashing a variable"
         local help_dir=$smartcd_dir
@@ -134,7 +134,7 @@ function stash() {
 }
 
 function autostash () {
-    if [[ -z $run_from_smartcd ]]; then
+    if [[ -n $1 ]] && [[ -z $run_from_smartcd ]]; then
         local smartcd_dir="$HOME/.smartcd$(pwd)"
         local help_action="autostashing a variable"
         local help_dir=$smartcd_dir
@@ -159,7 +159,7 @@ function autostash () {
 }
 
 function unstash() {
-    if [[ -z $run_from_smartcd ]] && [[ -z $run_from_autounstash ]]; then
+    if [[ -n $1 ]] && [[ -z $run_from_smartcd ]] && [[ -z $run_from_autounstash ]]; then
         local smartcd_dir="$HOME/.smartcd$(pwd)"
         local help_action="unstashing a variable"
         local help_dir=$smartcd_dir
