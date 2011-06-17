@@ -315,6 +315,11 @@ function smartcd_edit() {
     fi
 
     ${EDITOR:-vi} "$smartcd_dir/$file"
+
+    if [[ -f "$smartcd_dir/$file" && ! -s "$smartcd_dir/$file" ]]; then
+        # Delete any file that is left empty
+        rm "$smartcd_dir/$file"
+    fi
 }
 
 function _smartcd_prompt_hook() {
