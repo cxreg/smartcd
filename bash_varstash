@@ -72,18 +72,61 @@ function stash() {
         stash_value=${stash_value//\"/\\\"}
         stash_value=${stash_value//\$/\\\$}
 
-        if [[ -z $stash_which || ( -z "$(eval echo '$'$stash_which)" && -n "$(eval echo '${'$stash_which'-_}')" ) ]]; then
-            # Nothing in the variable we're stashing, but make a note that we stashed so we
-            # do the right thing when unstashing.  Without this, we take no action on unstash
-            local stash_name=$(_mangle_var $stash_which)__nostash
-            export $stash_name=1
-        else
-            local stash_name=$(_mangle_var $stash_which)
-            eval export $stash_name='$'$stash_which
+        # Handle any alias that may exist under this name
+        local alias_def="$(eval alias $stash_which 2>/dev/null)"
+        if [[ -n $alias_def ]]; then
+            alias_def=${alias_def#alias }
+            local alias_stash=$(_mangle_var $stash_which)
+            eval "__varstash_alias__$alias_stash=\"$alias_def\""
+            local stashed=1
         fi
 
-        if [[ $stash_which != $stash_expression ]]; then
-            eval "export $stash_which=\"$stash_value\""
+        local stash_name=$(_mangle_var $stash_which)
+
+        # Handle any function that may exist under this name
+        local function_def="$(declare -f $stash_which)"
+        if [[ -n $function_def ]]; then
+            # make function definition quote-safe.  because we are going to evaluate the
+            # source with "echo -e", we need to double-escape the backslashes (so 1 -> 4)
+            function_def=${function_def//\\/\\\\\\\\}
+            function_def=${function_def//\"/\\\"}
+            function_def=${function_def//\$/\\\$}
+            eval "__varstash_function__$stash_name=\"$function_def\""
+            local stashed=1
+        fi
+
+        # Handle any variable that may exist under this name
+        local vartype="$(declare -p $stash_which 2>/dev/null)"
+        if [[ -n $vartype ]]; then
+            if [[ -n $ZSH_VERSION ]]; then
+                local pattern="^typeset"
+            else
+                local pattern="^declare"
+            fi
+            if [[ $vartype =~ $pattern" -a" ]]; then
+                # varible is an array
+                eval "__varstash_array__$stash_name=(\"${'$stash_which'[@]}\")"
+            elif [[ $vartype =~ $pattern" -x" ]]; then
+                # variable is exported
+                eval "__varstash_export__$stash_name=\"\$$stash_which\""
+                if [[ $stash_which != $stash_expression ]]; then
+                    eval "export $stash_which=\"$stash_value\""
+                fi
+            else
+                # regular variable
+                eval "__varstash_variable__$stash_name=\"\$$stash_which\""
+                if [[ $stash_which != $stash_expression ]]; then
+                    eval "$stash_which=\"$stash_value\""
+                fi
+
+            fi
+            local stashed=1
+        fi
+
+        if [[ -z $stashed ]]; then
+            # Nothing in the variable we're stashing, but make a note that we stashed so we
+            # do the right thing when unstashing.  Without this, we take no action on unstash
+            eval "set __varstash_nostash__$stash_name=1"
         fi
 
         shift
@@ -106,9 +149,9 @@ function autostash () {
         local autostash_name=$(_mangle_var AUTOSTASH)
         local varname=${1%%'='*}
         if [[ -n $(eval echo '$'$autostash_name) ]]; then
-            eval export $autostash_name='"''$'$autostash_name' '$varname'"'
+            eval $autostash_name='"''$'$autostash_name' '$varname'"'
         else
-            eval export $autostash_name=$varname
+            eval $autostash_name=$varname
         fi
 
         shift
@@ -132,12 +175,60 @@ function unstash() {
         fi
 
         local unstash_name=$(_mangle_var $unstash_which)
-        if [[ -n $(eval echo '$'$unstash_name) ]] || [[ -z $(eval echo '${'$unstash_name'-_}') ]]; then
-            eval export $unstash_which='$'$unstash_name
-            unset $unstash_name
-        elif [[ -n $(eval echo '$'$unstash_name'__nostash' ) ]]; then
+
+        # This bit is a little tricky.  Here are the rules:
+        #   1) unstash any alias, function, or variable which matches
+        #   2) if one or more matches, but not all, delete any that did not
+        #   3) if none match but nostash is found, delete all
+        #   4) if none match and nostash not found, do nothing
+
+        # Unstash any alias
+        if [[ -n "$(eval echo \$__varstash_alias__$unstash_name)" ]]; then
+            eval "alias $(eval echo \$__varstash_alias__$unstash_name)"
+            unset __varstash_alias__$unstash_name
+            local unstashed=1
+            local unstashed_alias=1
+        fi
+
+        # Unstash any function
+        if [[ -n "$(eval echo \$__varstash_function__$unstash_name)" ]]; then
+            eval "function $(eval echo -e \"\$__varstash_function__$unstash_name\")"
+            unset __varstash_function__$unstash_name
+            local unstashed=1
+            local unstashed_function=1
+        fi
+
+        # Unstash any variable
+        if [[ -n "$(declare -p __varstash_array__$unstash_name 2>/dev/null)" ]]; then
+            eval "$unstash_which=(\"\${__varstash_array__$unstash_name'[@]}'\")"
+            unset __varstash_array__$unstash_name
+            local unstashed=1
+            local unstashed_variable=1
+        elif [[ -n "$(declare -p __varstash_export__$unstash_name 2>/dev/null)" ]]; then
+            eval "export $unstash_which=\"\$__varstash_export__$unstash_name\""
+            unset __varstash_export__$unstash_name
+            local unstashed=1
+            local unstashed_variable=1
+        elif [[ -n "$(declare -p __varstash_variable__$unstash_name 2>/dev/null)" ]]; then
+            # Unset variable first to reset export
             unset $unstash_which
-            unset ${unstash_name}__nostash
+            eval "$unstash_which=\"\$__varstash_variable__$unstash_name\""
+            unset __varstash_variable__$unstash_name
+            local unstashed=1
+            local unstashed_variable=1
+        fi
+
+        # Unset any values which did not exist at time of stash
+        local nostash="$(eval echo \$__varstash_nostash__$unstash_name)"
+        unset __varstash_nostash__$unstash_name
+        if [[ ( -n "$nostash" && -z "$unstashed" ) || ( -n "$unstashed" && -z "$unstashed_alias" ) ]]; then
+            unalias $unstash_which 2>/dev/null
+        fi
+        if [[ ( -n "$nostash" && -z "$unstashed" ) || ( -n "$unstashed" && -z "$unstashed_function" ) ]]; then
+            unset -f $unstash_which 2>/dev/null
+        fi
+        if [[ ( -n "$nostash" && -z "$unstashed" ) || ( -n "$unstashed" && -z "$unstashed_variable" ) ]]; then
+            unset -v $unstash_which
         fi
 
         shift

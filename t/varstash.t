@@ -2,22 +2,24 @@
 source t/tap-functions
 source bash_varstash
 
-plan_tests 22
+plan_tests 26
 
 thing=value
 
 output=$(stash thing)
 like "${output-_}" "You are manually stashing a variable" "manual stash warned"
 stash thing>/dev/null
-thing=newvalue
-varname=$(_mangle_var thing)
-is "$(eval echo \$$varname)" value "stashed variable"
+export thing=newvalue
+varname=__varstash_variable__$(_mangle_var thing)
+is "_$(eval echo \$$varname)" _value "stashed variable"
 
 output=$(unstash thing)
 like "${output-_}" "You are manually unstashing a variable" "manual unstash warned"
 unstash thing>/dev/null
 is "$thing" value "unstashed variable successfully"
 is "_$(eval echo \${$varname-_})_" "___" "stash variable unset"
+declare="$(declare -p thing)"
+unlike "${declare-_}" "-x" "unexported on unstash"
 
 unstash thing>/dev/null
 is "$thing" value "double unstash did not delete value"
@@ -48,6 +50,26 @@ is "${thing-_}" "value" "could unstash from autostash-assignment"
 stash thing='complex"value(with) lots of"strange"things'
 is "${thing-_}" 'complex"value(with) lots of"strange"things' "could stash-assign complex quoted expression"
 unstash thing
+
+export thing
+stash thing
+unset thing
+unstash thing
+declare=$(declare -p thing)
+like "${declare-_}" "-x" "variable exported on unstash"
+
+alias test_cmd="echo test alias"
+function test_cmd() { echo "test function"; }
+stash test_cmd
+alias test_cmd="echo broken alias"
+function test_cmd() { echo "broken function"; }
+unstash test_cmd
+output=$(alias test_cmd)
+like "${output-_}" "test alias" "unstashed alias"
+unalias test_cmd
+output=$(test_cmd)
+is "${output-_}" "test function" "unstashed function at the same time as alias"
+
 
 oldhome=$HOME
 stash HOME

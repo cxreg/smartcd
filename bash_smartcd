@@ -334,7 +334,7 @@ function setup_smartcd_prompt_hook() {
     _smartcd_last_run_for="x$(pwd)"
 
     if [[ -n $ZSH_VERSION ]]; then
-        _smartcd_prior_precmd_definition=$(functions precmd)
+        _smartcd_prior_precmd_definition=$(declare -f precmd)
         if [[ -n $_smartcd_prior_precmd_definition ]]; then
             _smartcd_prior_precmd_definition=${_smartcd_prior_precmd_definition/#precmd/_smartcd_prior_precmd}
             eval $_smartcd_prior_precmd_definition

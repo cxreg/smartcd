@@ -201,24 +201,27 @@ ok(){
 		local func=
 		local line=
 
-		local i=0
-		local bt=$(caller $i)
-		while _matches "$bt" "tap-functions$" ; do
-			i=$(( $i + 1 ))
-			bt=$(caller $i)
-		done
-		local backtrace=
-		eval $(caller $i | (read line func file ; echo "backtrace=\"$file:$func() at line $line.\""))
+                # not in zsh
+                if [[ -n $BASH_VERSION ]]; then
+                    local i=0
+                    local bt=$(caller $i)
+                    while _matches "$bt" "tap-functions$" ; do
+                            i=$(( $i + 1 ))
+                            bt=$(caller $i)
+                    done
+                    local backtrace=
+                    eval $(caller $i | (read line func file ; echo "backtrace=\"$file:$func() at line $line.\""))
 
-		local t=
-		[[ -n "$TODO" ]] && t="(TODO) "
+                    local t=
+                    [[ -n "$TODO" ]] && t="(TODO) "
 
-		if [[ -n "$name" ]] ; then
-			diag "  Failed ${t}test '$name'"
-			diag "  in $backtrace"
-		else
-			diag "  Failed ${t}test in $backtrace"
-		fi
+                    if [[ -n "$name" ]] ; then
+                            diag "  Failed ${t}test '$name'"
+                            diag "  in $backtrace"
+                    else
+                            diag "  Failed ${t}test in $backtrace"
+                    fi
+                fi
 	fi
 
 	return $result
@@ -259,7 +262,7 @@ _matches(){
 	if [[ -z "$result" || -z "$pattern" ]] ; then
 		return 1
 	else
-		if (( _bash_major_version >= 3 )) ; then
+		if (( _bash_major_version >= 3 )) || [[ -n $ZSH_VERSION ]]; then
 			eval '[[ "$result" =~ "$pattern" ]]'
 		else
 			echo "$result" | egrep -q "$pattern"
