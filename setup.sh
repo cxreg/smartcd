@@ -1,33 +1,34 @@
 #!/bin/bash
 #
+
 function setup_file() {
     local file="$1"
+
+    function _setup_conditionally() {
+        cond=$1
+        shift
+        if [[ ! $cond =~ $yes ]]; then
+            local comment="# "
+        fi
+        config="$config\n${comment}$*"
+    }
 
     local config=
 
     config="\n# Load and configure smartcd\nsource ~/.bash_arrays\nsource ~/.bash_varstash\nsource ~/.bash_smartcd"
 
-    if [[ $alias_cd =~ $yes ]]; then
-        config="$config\nalias cd=smartcd"
-    fi
-    if [[ $alias_pushd =~ $yes ]]; then
-        config="$config\nalias popd=smartpopd\nalias pushd=smartpushd"
-    fi
-    if [[ $enable_hook =~ $yes ]]; then
-        config="$config\nsetup_smartcd_prompt_hook"
-    fi
-    if [[ $autoconfigure =~ $yes ]]; then
-        config="$config\nVARSTASH_AUTOCONFIGURE=1"
-    fi
-    if [[ $autoedit =~ $yes ]]; then
-        config="$config\nVARSTASH_AUTOEDIT=1"
-    fi
-    if [[ $automigrate =~ $yes ]]; then
-        config="$config\nSMARTCD_AUTOMIGRATE=1"
-    fi
-    if [[ $legacy =~ $yes ]]; then
-        config="$config\nSMARTCD_LEGACY=1"
-    fi
+    _setup_conditionally "$alias_cd"       "alias cd=smartcd"
+    _setup_conditionally "$alias_pushd"    "alias pushd=smartpushd"
+    _setup_conditionally "$alias_pushd"    "alias popd=smartpopd"
+    _setup_conditionally "$enable_hook"    "setup_smartcd_prompt_hook"
+    _setup_conditionally "$autoconfigure"  "VARSTASH_AUTOCONFIGURE=1"
+    _setup_conditionally "$autoedit"       "VARSTASH_AUTOEDIT=1"
+    _setup_conditionally "$automigrate"    "SMARTCD_AUTOMIGRATE=1"
+    _setup_conditionally "$legacy"         "SMARTCD_LEGACY=1"
+
+    # Add commented-out quiet settings so the user can enable them later
+    _setup_conditionally ""                "SMARTCD_QUIET=1"
+    _setup_conditionally ""                "VARSTASH_QUIET=1"
 
     if ! grep "alias cd=smartcd" "$file" >/dev/null 2>&1; then
         echo "Configuring $file"
@@ -37,6 +38,8 @@ function setup_file() {
         echo "This is what you configured:"
         echo -e $config
     fi
+
+    unset -f _setup_conditionally
 }
 
 yes="^y"
