@@ -1,3 +1,8 @@
+# Set up smartcd
+mkdir -p tmphome
+oldhome=$HOME
+export HOME=$(pwd)/tmphome
+
 # Load testing library
 source t/tap-functions
 source bash_arrays
@@ -5,11 +10,6 @@ source bash_varstash
 source bash_smartcd
 
 plan_tests 10
-
-# Set up smartcd
-mkdir -p tmphome
-oldhome=$HOME
-export HOME=$(pwd)/tmphome
 
 # One tier
 dir=tmp_dir

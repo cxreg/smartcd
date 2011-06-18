@@ -104,25 +104,22 @@ function smartpopd() {
 
 # This variable should always have a leading "x" on it to prevent it from being
 # snarfed up by autonamedirs (zsh, you crazy)
-_smartcd_last_run_for="x$(pwd)"
+_smartcd_last_run_for=
 function _smartcd() {
     # First, take note of where we're starting from
     local wherenow="${_smartcd_last_run_for#x}"
     local wherestarted="$wherenow"
+    if [[ -z "$wherestarted" ]]; then
+        wherestarted=/
+        local initial_mode=1
+    fi
     local run_from_smartcd=1
     local _ashift_return
     local _apop_return
 
-    if [[ -n $ZSH_VERSION ]]; then
-        if [[ $(type apush) != "apush is a shell function" ]]; then
-            echo "bash_arrays is not loaded, please ensure that it is installed before using smartcd"
-            return
-        fi
-    else
-        if [[ $(type -t apush) != "function" ]]; then
-            echo "bash_arrays is not loaded, please ensure that it is installed before using smartcd"
-            return
-        fi
+    if [[ -z "$(fn_exists apush)" ]]; then
+        echo "bash_arrays is not loaded, please ensure that it is installed before using smartcd"
+        return
     fi
 
     # Go there and get the fully qualified path.  Also, fail first if it's an
@@ -131,7 +128,7 @@ function _smartcd() {
     # This goofy eval syntax doesn't make a lot of sense, but it seems to work
     # correctly in both bash (4.1.5) and zsh (4.3.11).  The eval is needed
     # because "builtin cd" won't work from a zsh variable, sadly.
-    if [[ -z $smartcd_run_from_prompt ]]; then
+    if [[ -z $smartcd_skip_action ]]; then
         if [[ -n $1 ]] || [[ -z ${1-_} ]]; then
             eval "$action \"$@\""
         else
@@ -165,7 +162,9 @@ function _smartcd() {
         apush leave_stack "$wherenow"
         wherenow="${wherenow%/*}"
     done
-    apush leave_stack "/"
+    if [[ -z $initial_mode ]]; then
+        apush leave_stack "/"
+    fi
 
     # Collect the list of directories we're entering
     wherenow="$whereto"
@@ -234,14 +233,8 @@ function _smartcd() {
             fi
             . "$confdir/bash_leave"
         fi
-        if [[ -n $ZSH_VERSION ]]; then
-            if [[ $(type autounstash) = "autounstash is a shell function" ]]; then
-                autounstash
-            fi
-        else
-            if [[ $(type -t autounstash) = "function" ]]; then
-                autounstash
-            fi
+        if [[ -n "$(fn_exists autounstash)" ]]; then
+            autounstash
         fi
     done
 
@@ -327,7 +320,7 @@ function _smartcd_prompt_hook() {
 
     # Skip this if we already ran smartcd for this directory
     if [[ "x$cwd" != "$_smartcd_last_run_for" ]]; then
-        local smartcd_run_from_prompt=1
+        local smartcd_skip_action=1
         _smartcd "$cwd"
     fi
 
@@ -335,9 +328,6 @@ function _smartcd_prompt_hook() {
 }
 
 function setup_smartcd_prompt_hook() {
-    # Save the current position so that the next prompt does not trigger smartcd
-    _smartcd_last_run_for="x$(pwd)"
-
     if [[ -n $ZSH_VERSION ]]; then
         _smartcd_prior_precmd_definition=$(declare -f precmd)
         if [[ -n $_smartcd_prior_precmd_definition ]]; then
@@ -393,3 +383,18 @@ function _smartcd_file_check() {
         fi
     fi
 }
+
+function fn_exists() {
+    if [[ -n "$(declare -f $1)" ]]; then
+        echo 1
+    fi
+}
+
+# Run on load if all the necessary libraries are loaded, otherwise let them do it
+if [[ -n "$(fn_exists apush)" && -n "$(fn_exists autostash)" && -z "$SMARTCD_NOINITIAL" ]]; then
+    smartcd_skip_action=1
+    smartcd
+    unset smartcd_skip_action
+else
+    smartcd_initially_deferred=1
+fi
