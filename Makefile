@@ -19,6 +19,7 @@ install:
 	cp bash_arrays ~/.bash_arrays
 	cp bash_varstash ~/.bash_varstash
 	cp bash_smartcd ~/.bash_smartcd
+	@echo "smartcd installed, run \"make setup\" to configure your shell"
 
 setup:
 	./setup.sh
