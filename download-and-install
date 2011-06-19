@@ -26,7 +26,7 @@ working_dir=$(mktemp -d)
 cd $working_dir
 $download "$baseurl/bash_smartcd" > ~/.bash_smartcd
 $download "$baseurl/bash_varstash" > ~/.bash_varstash
-$download "$baseurl/bash_arrayas" > ~/.bash_arrays
+$download "$baseurl/bash_arrays" > ~/.bash_arrays
 $download "$baseurl/setup.sh" > setup.sh
 bash ./setup.sh
 
