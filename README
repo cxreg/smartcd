@@ -178,3 +178,32 @@ This code is Copyright (c) 2009-10 Dave Olszewski <cxreg@pobox.com>
 
 You may distribute under the terms of either the GNU General Public
 License v2 or the Artistic License.
+
+############
+# See also #
+############
+
+As with most ideas worth doing, there are other implementations of some
+of the things provided by smartcd.  Here are a few of them, and how they
+differ from this library.
+
+ondir - http://swapoff.org/ondir.html
+  * Written in C, and is executed by a "cd" function
+  * Does not walk directory hierarchy the way smartcd does
+  * Requires manual and explicit variable setting and unsetting
+
+direnv - https://github.com/zimbatm/direnv/
+  * Requires ruby
+  * Works only with PROMPT_COMMAND or precmd
+  * Does not walk directory hierarchy
+  * Does not support functions or aliases
+  * Is entirely "snapshot" based
+  * Runs files directly out of local directory, similar to "legacy mode"
+
+EnvWatcher - https://github.com/MrMasterplan/EnvWatcher
+  * Requires python
+  * Only supports bash
+  * Is triggered manually, not automatically
+  * Does not walk directory hierarchy
+  * Is entirely "snapshot" based
+  * Does not allow other actions besides environment variable switching
