@@ -16,9 +16,9 @@ test_all: test_bash test_zsh
 
 
 install:
-	cp bash_arrays ~/.bash_arrays
-	cp bash_varstash ~/.bash_varstash
-	cp bash_smartcd ~/.bash_smartcd
+	cp bash_arrays $(HOME)/.bash_arrays
+	cp bash_varstash $(HOME)/.bash_varstash
+	cp bash_smartcd $(HOME)/.bash_smartcd
 	@echo "smartcd installed, run \"make setup\" to configure your shell"
 
 setup:
