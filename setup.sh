@@ -60,39 +60,39 @@ fi
 echo
 echo "[ alias cd=smartcd ]"
 echo -n "Would you like to alias cd to smartcd?  This is the recommended way to run smartcd [Y/n] "
-declare -l alias_cd
 read alias_cd < /dev/tty
+alias_cd=$(echo $alias_cd | tr 'A-Z' 'a-z')
 : ${alias_cd:=y}
 
 echo
 echo "[ alias pushd=smartpushd ]"
 echo "[ alias popd=smartpopd   ]"
 echo -n "Would you like to alias pushd and popd? [Y/n] "
-declare -l alias_pushd
 read alias_pushd < /dev/tty
+alias_pushd=$(echo $alias_pushd | tr 'A-Z' 'a-z')
 : ${alias_pushd:=y}
 
 echo
 echo "[ setup_smartcd_prompt_hook ]"
 echo "Would you like to enable prompt-command hooks?  (This is only recommended if you are an"
 echo -n "\"autocd\" user, say no if you are unsure [y/N] "
-declare -l enable_hook
 read enable_hook < /dev/tty
+enable_hook=$(echo $enable_hook | tr 'A-Z' 'a-z')
 : ${enable_hook:=n}
 
 echo
 echo "[ VARSTASH_AUTOCONFIGURE=1 ]"
 echo -n "Would you like to automatically configure smartcd when you run stash or autostash manually? [y/N] "
-declare -l autoconfigure
 read autoconfigure < /dev/tty
+autoconfigure=$(echo $autoconfigure | tr 'A-Z' 'a-z')
 : ${autoconfigure:=n}
 
 if [[ $autoconfigure =~ $yes ]]; then
     echo
     echo "[ VARSTASH_AUTOEDIT=1 ]"
     echo -n "Would you also like to edit the smartcd config after it is automatically configured? [y/N] "
-    declare -l autoedit
     read autoedit < /dev/tty
+    autoedit=$(echo $autoedit | tr 'A-Z' 'a-z')
     : ${autoedit:=n}
 fi
 
@@ -102,23 +102,23 @@ echo "[ADVANCED USAGE]"
 echo
 echo "[ SMARTCD_AUTOMIGRATE=1 ]"
 echo -n "Would you like to automigrate legacy smartcd scripts? [y/N] "
-declare -l automigrate
 read automigrate < /dev/tty
+automigrate=$(echo $automigrate | tr 'A-Z' 'a-z')
 : ${automigrate:=n}
 
 echo
 echo "[ SMARTCD_LEGACY=1 ]"
 echo -n "Would you like to allow legacy scripts to run in-place? (DISCOURAGED) [y/N] "
-declare -l legacy
 read legacy < /dev/tty
+legacy=$(echo $legacy | tr 'A-Z' 'a-z')
 : ${legacy:=n}
 
 echo
 for file in $possible_files; do
     if [[ -f "$HOME/$file" ]]; then
         echo -n "I see you have a $file, would you like to set that up? [Y/n] "
-        declare -l answer
         read answer < /dev/tty
+        answer=$(echo $answer | tr 'A-Z' 'a-z')
         : ${answer:=y}
         if [[ $answer =~ $yes ]]; then
             setup_file "$HOME/$file"
