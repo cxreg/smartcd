@@ -45,7 +45,7 @@ function setup_file() {
 yes="^y"
 echo "It looks like you're running $SHELL"
 echo -n "Which shell would you like to configure? [$SHELL] "
-read which_shell
+read which_shell < /dev/tty
 which_shell=${which_shell:=$SHELL}
 
 if [[ $which_shell =~ 'bash' ]]; then
@@ -61,7 +61,7 @@ echo
 echo "[ alias cd=smartcd ]"
 echo -n "Would you like to alias cd to smartcd?  This is the recommended way to run smartcd [Y/n] "
 declare -l alias_cd
-read alias_cd
+read alias_cd < /dev/tty
 : ${alias_cd:=y}
 
 echo
@@ -69,7 +69,7 @@ echo "[ alias pushd=smartpushd ]"
 echo "[ alias popd=smartpopd   ]"
 echo -n "Would you like to alias pushd and popd? [Y/n] "
 declare -l alias_pushd
-read alias_pushd
+read alias_pushd < /dev/tty
 : ${alias_pushd:=y}
 
 echo
@@ -77,14 +77,14 @@ echo "[ setup_smartcd_prompt_hook ]"
 echo "Would you like to enable prompt-command hooks?  (This is only recommended if you are an"
 echo -n "\"autocd\" user, say no if you are unsure [y/N] "
 declare -l enable_hook
-read enable_hook
+read enable_hook < /dev/tty
 : ${enable_hook:=n}
 
 echo
 echo "[ VARSTASH_AUTOCONFIGURE=1 ]"
 echo -n "Would you like to automatically configure smartcd when you run stash or autostash manually? [y/N] "
 declare -l autoconfigure
-read autoconfigure
+read autoconfigure < /dev/tty
 : ${autoconfigure:=n}
 
 if [[ $autoconfigure =~ $yes ]]; then
@@ -92,7 +92,7 @@ if [[ $autoconfigure =~ $yes ]]; then
     echo "[ VARSTASH_AUTOEDIT=1 ]"
     echo -n "Would you also like to edit the smartcd config after it is automatically configured? [y/N] "
     declare -l autoedit
-    read autoedit
+    read autoedit < /dev/tty
     : ${autoedit:=n}
 fi
 
@@ -103,14 +103,14 @@ echo
 echo "[ SMARTCD_AUTOMIGRATE=1 ]"
 echo -n "Would you like to automigrate legacy smartcd scripts? [y/N] "
 declare -l automigrate
-read automigrate
+read automigrate < /dev/tty
 : ${automigrate:=n}
 
 echo
 echo "[ SMARTCD_LEGACY=1 ]"
 echo -n "Would you like to allow legacy scripts to run in-place? (DISCOURAGED) [y/N] "
 declare -l legacy
-read legacy
+read legacy < /dev/tty
 : ${legacy:=n}
 
 echo
@@ -118,7 +118,7 @@ for file in $possible_files; do
     if [[ -f "$HOME/$file" ]]; then
         echo -n "I see you have a $file, would you like to set that up? [Y/n] "
         declare -l answer
-        read answer
+        read answer < /dev/tty
         : ${answer:=y}
         if [[ $answer =~ $yes ]]; then
             setup_file "$HOME/$file"
@@ -129,7 +129,7 @@ done
 
 if [[ -z $setup ]]; then
     echo -n "You did not configure any files, which file would you like to set up? "
-    read filename
+    read filename < /dev/tty
     if [[ -n "$filename" ]]; then
         real_filename=$(readlink -f $(eval echo $filename))
         if [[ -f "$real_filename" ]]; then
