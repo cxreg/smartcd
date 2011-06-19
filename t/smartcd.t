@@ -53,13 +53,13 @@ output=$(smartcd "$spacedir"; smartcd ..)
 is "${output-_}" "1 2" "could enter and leave a directory with a space"
 
 echo 'echo 4' > "$smartcd_spacedir/bash_leave"
-spacedir="dir with a space/subdir"
-mkdir -p "$spacedir"
-smartcd_spacedir="$HOME/.smartcd$(pwd)/$spacedir"
-mkdir -p "$smartcd_spacedir"
-echo 'echo -n "2 "' > "$smartcd_spacedir/bash_enter"
-echo 'echo -n "3 "' > "$smartcd_spacedir/bash_leave"
-output=$(smartcd "$spacedir"; smartcd ../..)
+spacedir2="dir with a space/subdir"
+mkdir -p "$spacedir2"
+smartcd_spacedir2="$HOME/.smartcd$(pwd)/$spacedir2"
+mkdir -p "$smartcd_spacedir2"
+echo 'echo -n "2 "' > "$smartcd_spacedir2/bash_enter"
+echo 'echo -n "3 "' > "$smartcd_spacedir2/bash_leave"
+output=$(smartcd "$spacedir2"; smartcd ../..)
 is "${output-_}" "1 2 3 4" "could enter and leave a subdirectory of a directory with a space"
 
 dir2=$dir/another_dir
