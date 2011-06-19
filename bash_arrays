@@ -103,7 +103,11 @@ function apush() {
     local var=$1; shift
 
     if [[ -n $var ]]; then
-        eval "$var+=(\"\$@\")"
+        if [[ -n $ZSH_VERSION ]]; then
+            eval "$var=(\${$var[@]} \"\$@\")"
+        else
+            eval "$var=(\"\${$var[@]}\" \"\$@\")"
+        fi
     fi
 }
 
