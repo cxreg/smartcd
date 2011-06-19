@@ -10,9 +10,12 @@
 # For more details about this program, visit http://github.com/cxreg/smartcd
 
 baseurl="https://raw.github.com/cxreg/smartcd/master"
+lwp=$(which lwp-request)
 curl=$(which curl)
 wget=$(which wget)
-if [[ -n $curl ]]; then
+if [[ -n $lwp ]]; then
+    download="lwp-request"
+elif [[ -n $curl ]]; then
     download="curl -L"
 elif [[ -n $wget ]]; then
     download="wget -O -"
