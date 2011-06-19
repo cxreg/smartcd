@@ -125,6 +125,25 @@ Any action you can take in the shell can be done in these scripts; you
 are certainly not limited to varstash.  Other examples might include a
 VCS update or even attaching to a particular screen session!
 
+In addition to configuring these scripts individually, smartcd supports
+a template system, which can be set up to re-use common configuration
+among many directories.  This is controlled with the "smartcd_template"
+function.
+
+To create a new template based on the current directory, run:
+
+    smartcd_template create some_template_name
+
+Then to install it, from some other directory run:
+
+    smartcd_template install some_template_name
+
+This will prepopulate the template from the bash_enter and bash_leave
+files corresponding to the working directory.  You can then edit the
+contents and save it.  Anywhere you place the string __PATH__ will be
+replaced with the destination directory when installing.  The template
+editor has other commands, "edit", "show", "list", and "delete".
+
 For more information, see the documentation in bash_smartcd itself.
 
 

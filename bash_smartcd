@@ -85,6 +85,37 @@
 #   the migration steps will be executed for you whenever a legacy script
 #   is found.
 #
+#   #############
+#   # Templates #
+#   #############
+#
+#   One advanced feature of smartcd is the ability to configure and use
+#   templates for your enter and leave scripts.  If you often find yourself
+#   creating very similar scripts with only minor differences, templates can
+#   help.  This is primarily handled with a function named "smartcd_template".
+#
+#   To create a template based on the current directory, run:
+#
+#       smartcd_template create template_name
+#
+#   The name can be any arbitrary value, but should be meaningful to you and
+#   should not contain special characters.  This will create a new template
+#   named what you have chosen, and prepopulate it with the contents from
+#   your current bash_enter and bash_leave scripts.  You can then edit the
+#   file and save it.  When you install the template, anywhere you inserted
+#   the string "__PATH__" will be replaced with the directory being set up.
+#
+#   To install the template, cd to a destination and run:
+#
+#       smartcd_template install template_name
+#
+#   The other available commands are:
+#
+#       smartcd_template list
+#       smartcd_template show <name>
+#       smartcd_template edit <name>
+#       smartcd_template delete <name>
+#
 ################################################################################
 
 function smartcd() {
@@ -104,6 +135,7 @@ function smartpopd() {
 
 # This variable should always have a leading "x" on it to prevent it from being
 # snarfed up by autonamedirs (zsh, you crazy)
+
 _smartcd_last_run_for=
 function _smartcd() {
     # First, take note of where we're starting from
@@ -392,6 +424,134 @@ function _smartcd_file_check() {
             echo "$confdir/$file does not exist"
         fi
     fi
+}
+
+function smartcd_template() {
+    local action=$1
+    shift
+
+    local confdir="$HOME/.smartcd"
+
+    case $action in
+          _init)    local name="$1"; shift
+                    local from="$1"
+                    if [[ -f "$confdir/$from/bash_enter" ]]; then
+                        local enter_orig="$(eval cat \"$confdir/$from/bash_enter\")"
+                    fi
+                    if [[ -f "$confdir/$from/bash_leave" ]]; then
+                        local leave_orig="$(eval cat \"$confdir/$from/bash_leave\")"
+                    fi
+
+                    if [[ ! -f "$confdir/template_$name" ]]; then
+                        cat <<EOF >> "$confdir/template_$name"
+########################################################################
+# This is a smartcd template.  Edit this file to create a named
+# configuration you can copy to any number of directories.  This is
+# useful if you often use the same settings in different directories
+# but with minor differences.
+#
+# The string __PATH__ will be replaced with the directory being
+# configured when this template is installed, so you can set variables:
+#
+#    autostash PATH=__PATH__/bin:\$PATH
+#
+########################################################################
+
+# Enter any bash_enter commands below here: (leave this line!)
+$enter_orig
+
+# Enter any bash_leave commands below here: (leave this line!)
+$leave_orig
+EOF
+                    fi
+                    ;;
+           edit)    local name="$1"; shift
+                    if [[ -n $name ]]; then
+                        smartcd_template _init "$name"
+                        ${EDITOR:-vi} "$confdir/template_$name"
+                    else
+                        echo "Usage: smartcd_template edit <name>"
+                    fi
+                    ;;
+         create)    local name="$1"; shift
+                    if [[ -n $name ]]; then
+                        if [[ -f "$confdir/template_$name" ]]; then
+                            echo "Template $name already exists, run \"smartcd_template edit $name\" to modify it"
+                        else
+                            smartcd_template _init "$name" "$(pwd)"
+                            smartcd_template edit "$name"
+                        fi
+                    else
+                        echo "Usage: smartcd_template create <name>"
+                    fi
+                    ;;
+           list)    for file in $confdir/template_*; do
+                        echo ${file#*template_}
+                    done
+                    ;;
+           show)    local name="$1"; shift
+                    if [[ -n $name ]]; then
+                        if [[ -f "$confdir/template_$name" ]]; then
+                            cat "$confdir/template_$name"
+                        else
+                            echo "Template $name not found"
+                        fi
+                    else
+                        echo "Usage: smartcd_template show <name>"
+                    fi
+                    ;;
+        install)    local name="$1"; shift
+                    if [[ -n $name ]]; then
+                        if [[ -f "$confdir/template_$name" ]]; then
+                            local current_dir=$(pwd)
+                            local smartcd_dir="$confdir$current_dir"
+                            mkdir -p "$smartcd_dir"
+                            local mode=
+                            while read line; do
+                                if [[ $line =~ "Enter any bash_enter commands" ]]; then
+                                    mode=enter
+                                    continue
+                                fi
+                                if [[ $line =~ "Enter any bash_leave commands" ]]; then
+                                    mode=leave
+                                    continue
+                                fi
+                                if [[ "$mode" = "enter" ]]; then
+                                    if [[ -z "$notified_enter" ]]; then
+                                        echo "Configuring $smartcd_dir/bash_enter from template $name"
+                                        local notified_enter=1
+                                    fi
+                                    echo ${line//__PATH__/$current_dir} >> "$smartcd_dir/bash_enter"
+                                elif [[ "$mode" = "leave" ]]; then
+                                    if [[ -z "$notified_leave" ]]; then
+                                        echo "Configuring $smartcd_dir/bash_leave from template $name"
+                                        local notified_leave=1
+                                    fi
+                                    echo ${line//__PATH__/$current_dir} >> "$smartcd_dir/bash_leave"
+                                fi
+                            done < "$confdir/template_$name"
+                        else
+                            echo "Template $name not found"
+                        fi
+                    else
+                        echo "Usage: smartcd_template install <name>"
+                    fi
+                    ;;
+         delete|rm) local name="$1"; shift
+                    if [[ -n $name ]]; then
+                        if [[ -f "$confdir/template_$name" ]]; then
+                            rm "$confdir/template_$name"
+                        else
+                            echo "Template $name not found"
+                        fi
+                    else
+                        echo "Usage: smartcd_template delete <name>"
+                    fi
+                    ;;
+              *)    echo "Unknown action $action."
+                    echo "Usage: smartcd_template ( edit | create | list | show | install | delete ) [args]"
+                    ;;
+    esac
 }
 
 function fn_exists() {
