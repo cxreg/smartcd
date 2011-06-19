@@ -51,6 +51,10 @@
 #         Description: Print the current number of elements in the array
 #         Usage:       $ alen var_name
 #
+#       acopy
+#         Description: Copy the contents of an array into a new variable.
+#         Usage:       $ alen var_name new_variable
+#
 #   If the incorrect number of arguments are supplied, all functions exit
 #   silently.  This is subject to change in the future.
 #
@@ -69,6 +73,32 @@ else
     array_offset="-1"
 fi
 
+function is_array() {
+    local var=$1
+
+    if [[ -n $ZSH_VERSION ]]; then
+        local pattern="^typeset"
+    else
+        local pattern="^declare"
+    fi
+
+    type=$(declare -p $var 2>/dev/null)
+    if [[ $type =~ $pattern" -a" ]]; then
+        echo 1
+    fi
+}
+
+# It's not really possible to "echo" an array copy and catch it correctly
+# so instead we'll ask for the destination
+function acopy() {
+    local var=$1; shift
+    local dest=$1; shift
+
+    if [[ -n $(is_array $var) && -n $dest ]]; then
+        eval "$dest=(\"\${$var""[@]}\")"
+    fi
+}
+
 function apush() {
     local var=$1; shift
 
@@ -82,7 +112,7 @@ function apop() {
 
     _apop_return=
 
-    if [[ -n $var ]] && (( $(eval "echo \${#$var""[@]}") >= 1 )); then
+    if [[ -n $(is_array $var) ]] && (( $(eval "echo \${#$var""[@]}") >= 1 )); then
         if [[ -n $ZSH_VERSION ]]; then
             eval "_apop_return=\"\$$var""[-1]\""
             eval "$var""[-1]=()"
@@ -90,9 +120,9 @@ function apop() {
             eval "_apop_return=\$(echo \${$var[\${#$var""[@]} - $array_len_to_last_elem]})"
             eval "unset $var""[\$(( \${#$var""[@]} - $array_len_to_last_elem))]"
         fi
-    fi
 
-    echo $_apop_return
+        echo $_apop_return
+    fi
 }
 
 function ashift() {
@@ -100,7 +130,7 @@ function ashift() {
 
     _ashift_return=
 
-    if [[ -n $var ]] && (( $(eval "echo \${#$var[@]}") >= 1 )); then
+    if [[ -n $(is_array $var) ]] && (( $(eval "echo \${#$var[@]}") >= 1 )); then
         eval "_ashift_return=\${$var""[$array_first_index]}"
         if [[ -n $ZSH_VERSION ]]; then
             eval "$var""[$array_first_index]=()"
@@ -108,26 +138,28 @@ function ashift() {
             eval "unset $var[0]"
             eval "$var=(\"\${$var[@]}\")"
         fi
-    fi
 
-    echo $_ashift_return
+        echo $_ashift_return
+    fi
 }
 
 # Bash requires the array be quoted, zsh requires it not
 function aunshift() {
     local var=$1; shift
 
-    if [[ -n $ZSH_VERSION ]]; then
-        eval "$var=(\"\$@\" \${$var[@]})"
-    else
-        eval "$var=(\"\$@\" \"\${$var[@]}\")"
+    if [[ -n $var ]]; then
+        if [[ -n $ZSH_VERSION ]]; then
+            eval "$var=(\"\$@\" \${$var[@]})"
+        else
+            eval "$var=(\"\$@\" \"\${$var[@]}\")"
+        fi
     fi
 }
 
 function areverse() {
     local var=$1
 
-    if [[ -n $var ]] && (( $(eval "echo \${#$var""[@]}") >= 2 )); then
+    if [[ -n $(is_array $var) ]] && (( $(eval "echo \${#$var""[@]}") >= 2 )); then
         len=$(eval "echo \${#$var""[@]}")
         i=$array_first_index
         if [[ -n $ZSH_VERSION ]]; then
@@ -148,7 +180,7 @@ function areverse() {
 function afirst() {
     local var=$1
 
-    if [[ -n $var ]] && (( $(eval "echo \${#$var[@]}") >= 1 )); then
+    if [[ -n $(is_array $var) ]] && (( $(eval "echo \${#$var[@]}") >= 1 )); then
         eval "echo \${$var""[$array_first_index]}"
     fi
 }
@@ -156,7 +188,7 @@ function afirst() {
 function alast() {
     local var=$1
 
-    if [[ -n $var ]] && (( $(eval "echo \${#$var[@]}") >= 1 )); then
+    if [[ -n $(is_array $var) ]] && (( $(eval "echo \${#$var[@]}") >= 1 )); then
         eval "echo \${$var""[\${#$var[@]} - $array_len_to_last_elem]}"
     fi
 }
@@ -164,7 +196,9 @@ function alast() {
 function alen() {
     local var=$1
 
-    eval "echo \${#$var[@]}"
+    if [[ -n $(is_array $var) ]]; then
+        eval "echo \${#$var[@]}"
+    fi
 }
 
 # Run deferred smartcd if we're waiting for it, and varstash is also loaded

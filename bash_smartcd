@@ -192,7 +192,9 @@ function _smartcd() {
     done
 
     # Run leave_stack in lowest to highest
-    while (( $(alen leave_stack) >= 1 )); do
+    local stack_size=$(alen leave_stack)
+    : ${stack_size:=0}
+    while (( $stack_size >= 1 )); do
         # ashift in a sub-shell doesn't work
         local dir="$(afirst leave_stack)"
         ashift leave_stack >/dev/null
@@ -236,10 +238,15 @@ function _smartcd() {
         if [[ -n "$(fn_exists autounstash)" ]]; then
             autounstash
         fi
+
+        stack_size=$(alen leave_stack)
+        : ${stack_size:=0}
     done
 
     # Run enter_stack in highest to lowest
-    while (( $(alen enter_stack) >= 1 )); do
+    local stack_size=$(alen enter_stack)
+    : ${stack_size:=0}
+    while (( $stack_size >= 1 )); do
         # apop in a sub-shell doesn't work
         local dir="$(alast enter_stack)"
         apop enter_stack >/dev/null
@@ -280,6 +287,9 @@ function _smartcd() {
             fi
             . "$confdir/bash_enter"
         fi
+
+        stack_size=$(alen enter_stack)
+        : ${stack_size:=0}
     done
 
     # First go to starting directory and then jump to final directory to make "cd -" happy!

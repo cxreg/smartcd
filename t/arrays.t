@@ -2,7 +2,7 @@
 source t/tap-functions
 source bash_arrays
 
-plan_tests 12
+plan_tests 15
 
 apush foo 1 2 3
 is "$(alen foo)" 3 "created 3 element array"
@@ -28,3 +28,10 @@ is "${_ashift_return-_}" 0 "got correct element from shift"
 areverse foo
 is "$(afirst foo)" 3 "array reversed, last is now first"
 is "$(alast foo)" 1 "array reversed, first is now last"
+
+acopy foo bar
+is "x${foo[*]}" "x${bar[*]}" "copied array"
+
+is "x$(is_array foo)" "x1" "array detected"
+non_array=test
+is "x$(is_array non_array)" "x" "non-array detected"

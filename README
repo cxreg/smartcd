@@ -165,6 +165,7 @@ The provided functions are:
   afirst   - Like ashift, but doesn't remove anything.
   alast    - Like apop, but doesn't remove anything.
   alen     - Print the current number of elements in the array
+  acopy    - Copy an array into a new variable
 
 See the documentation included in the file for more detail.
 
