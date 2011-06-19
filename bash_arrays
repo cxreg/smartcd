@@ -112,7 +112,7 @@ function apop() {
 
     _apop_return=
 
-    if [[ -n $(is_array $var) ]] && (( $(eval "echo \${#$var""[@]}") >= 1 )); then
+    if [[ -n $var ]] && (( $(eval "echo \${#$var""[@]}") >= 1 )); then
         if [[ -n $ZSH_VERSION ]]; then
             eval "_apop_return=\"\$$var""[-1]\""
             eval "$var""[-1]=()"
@@ -130,7 +130,7 @@ function ashift() {
 
     _ashift_return=
 
-    if [[ -n $(is_array $var) ]] && (( $(eval "echo \${#$var[@]}") >= 1 )); then
+    if [[ -n $var ]] && (( $(eval "echo \${#$var[@]}") >= 1 )); then
         eval "_ashift_return=\${$var""[$array_first_index]}"
         if [[ -n $ZSH_VERSION ]]; then
             eval "$var""[$array_first_index]=()"
@@ -159,7 +159,7 @@ function aunshift() {
 function areverse() {
     local var=$1
 
-    if [[ -n $(is_array $var) ]] && (( $(eval "echo \${#$var""[@]}") >= 2 )); then
+    if [[ -n $var ]] && (( $(eval "echo \${#$var""[@]}") >= 2 )); then
         len=$(eval "echo \${#$var""[@]}")
         i=$array_first_index
         if [[ -n $ZSH_VERSION ]]; then
@@ -180,7 +180,7 @@ function areverse() {
 function afirst() {
     local var=$1
 
-    if [[ -n $(is_array $var) ]] && (( $(eval "echo \${#$var[@]}") >= 1 )); then
+    if [[ -n $var ]] && (( $(eval "echo \${#$var[@]}") >= 1 )); then
         eval "echo \${$var""[$array_first_index]}"
     fi
 }
@@ -188,7 +188,7 @@ function afirst() {
 function alast() {
     local var=$1
 
-    if [[ -n $(is_array $var) ]] && (( $(eval "echo \${#$var[@]}") >= 1 )); then
+    if [[ -n $var ]] && (( $(eval "echo \${#$var[@]}") >= 1 )); then
         eval "echo \${$var""[\${#$var[@]} - $array_len_to_last_elem]}"
     fi
 }
@@ -196,7 +196,7 @@ function alast() {
 function alen() {
     local var=$1
 
-    if [[ -n $(is_array $var) ]]; then
+    if [[ -n $var ]]; then
         eval "echo \${#$var[@]}"
     fi
 }
