@@ -31,7 +31,15 @@ $download "$baseurl/bash_smartcd" > ~/.bash_smartcd
 $download "$baseurl/bash_varstash" > ~/.bash_varstash
 $download "$baseurl/bash_arrays" > ~/.bash_arrays
 $download "$baseurl/setup.sh" > setup.sh
-bash ./setup.sh
+
+echo "Installation complete"
+echo -n "Run setup? [Y/n] "
+read setup < /dev/tty
+setup=$(echo $setup | tr 'A-Z' 'a-z')
+: ${setup:=y}
+if [[ $setup =~ "y" ]]; then
+    bash ./setup.sh
+fi
 
 cd ~
 rm -rf $working_dir
