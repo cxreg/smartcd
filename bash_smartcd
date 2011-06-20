@@ -435,11 +435,13 @@ function smartcd_template() {
     case $action in
           _init)    local name="$1"; shift
                     local from="$1"
-                    if [[ -f "$confdir/$from/bash_enter" ]]; then
-                        local enter_orig="$(eval cat \"$confdir/$from/bash_enter\")"
-                    fi
-                    if [[ -f "$confdir/$from/bash_leave" ]]; then
-                        local leave_orig="$(eval cat \"$confdir/$from/bash_leave\")"
+                    if [[ -n "$from" ]]; then
+                        if [[ -f "$confdir/$from/bash_enter" ]]; then
+                            local enter_orig="$(eval cat \"$confdir/$from/bash_enter\")"
+                        fi
+                        if [[ -f "$confdir/$from/bash_leave" ]]; then
+                            local leave_orig="$(eval cat \"$confdir/$from/bash_leave\")"
+                        fi
                     fi
 
                     if [[ ! -f "$confdir/template_$name" ]]; then
@@ -486,6 +488,12 @@ EOF
                     fi
                     ;;
            list)    for file in $confdir/template_*; do
+                        # if the user has shell options that leave us with a literal asterisk here
+                        # in the event of no matches, we'll want to skip it.  rather than check and
+                        # twiddle shell options, let's just see if that's what happened
+                        if [[ "$file" = "$confdir/template_*" ]]; then
+                            break
+                        fi
                         echo ${file#*template_}
                     done
                     ;;
