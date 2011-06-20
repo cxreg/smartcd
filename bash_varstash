@@ -127,7 +127,11 @@ function stash() {
         if [[ -z $stashed ]]; then
             # Nothing in the variable we're stashing, but make a note that we stashed so we
             # do the right thing when unstashing.  Without this, we take no action on unstash
-            eval "set __varstash_nostash__$stash_name=1"
+
+            # This is crazy.  sometimes zsh errors with:
+            # (eval):1: command not found: __varstash_nostash___tmp__home_dolszewski_src_smartcd_RANDOM_VARIABLE=1
+            # but sometimes it doesn't.  phase of the moon?  or what?
+            eval "__varstash_nostash__$stash_name=1"
         fi
 
         shift

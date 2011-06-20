@@ -3,7 +3,7 @@ source t/tap-functions
 source bash_varstash
 source bash_arrays
 
-plan_tests 27
+plan_tests 28
 
 thing=value
 
@@ -38,6 +38,10 @@ is "_$(eval echo \${$autostash_var-_})_" "___" "autostash variable unset"
 VARSTASH_QUIET=1
 output=$(stash thing)
 like "_${output}_" "__" "quieted warning"
+
+stash unset_variable
+varname=__varstash_nostash__$(_mangle_var unset_variable)
+is "_$(eval echo \$$varname)" _1 "stashed unset variable"
 
 stash thing=newvalue
 is "${thing-_}" "newvalue" "stash-assigned value"
