@@ -47,3 +47,5 @@ cd ~
 rm -rf $working_dir
 
 echo "Congratulations, you have installed smartcd!"
+echo
+echo "To get started, ..."
