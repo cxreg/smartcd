@@ -3,7 +3,7 @@ source t/tap-functions
 source bash_varstash
 source bash_arrays
 
-plan_tests 28
+plan_tests 32
 
 thing=value
 
@@ -49,8 +49,17 @@ unstash thing
 is "${thing-_}" "value" "could unstash from stash-assignment"
 autostash thing=newvalue
 is "${thing-_}" "newvalue" "autostash-assigned value"
-autounstash thing
+autounstash
 is "${thing-_}" "value" "could unstash from autostash-assignment"
+
+stash newvar=newvalue
+is "${newvar-_}" "newvalue" "stash-assigned previously unset variable"
+unstash newvar
+is "${newvar-_}" "_" "unset previously unset variable on unstash"
+autostash newvar=newvalue
+is "${newvar-_}" "newvalue" "autostash-assigned previously unset variable"
+autounstash
+is "${newvar-_}" "_" "unset previously unset variable on autounstash"
 
 stash thing='complex"value(with) lots of"strange"things'
 is "${thing-_}" 'complex"value(with) lots of"strange"things' "could stash-assign complex quoted expression"

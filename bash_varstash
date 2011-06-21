@@ -132,6 +132,11 @@ function stash() {
             # (eval):1: command not found: __varstash_nostash___tmp__home_dolszewski_src_smartcd_RANDOM_VARIABLE=1
             # but sometimes it doesn't.  phase of the moon?  or what?
             eval "__varstash_nostash__$stash_name=1"
+
+            # In the case of a previously unset variable that we're assigning too, export it
+            if [[ $stash_which != $stash_expression ]]; then
+                eval "export $stash_which=\"$stash_value\""
+            fi
         fi
 
         shift
