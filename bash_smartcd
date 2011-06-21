@@ -459,6 +459,7 @@ function smartcd_template() {
 #
 #    autostash PATH=__PATH__/bin:\$PATH
 #
+# This template is named '$name'
 ########################################################################
 
 # Enter any bash_enter commands below here: (leave this line!)
