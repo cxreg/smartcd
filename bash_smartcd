@@ -408,14 +408,16 @@ function _smartcd_file_check() {
     local file=$1
     shift
 
-    if [[ $1 = "-f" ]]; then
+    if [[ $1 = '-h' || $1 = 'help' ]]; then
+        echo "Usage: $file [ edit | show | filename ]"
+    elif [[ $1 = '-f' || $1 = 'filename' ]]; then
         echo "$confdir/$file"
-    elif [[ $1 = '-e' ]]; then
+    elif [[ $1 = '-e' || $1 = 'edit' ]]; then
         smartcd_edit $file
     else
         if [[ -f "$confdir/$file" ]]; then
             echo "$confdir/$file exists"
-            if [[ $1 = "-l" ]]; then
+            if [[ $1 = '-l' || $1 = 'show' ]]; then
                 echo "-------------------------------------------------------------------------"
                 cat "$confdir/$file"
                 echo "-------------------------------------------------------------------------"
@@ -467,7 +469,7 @@ $leave_orig
 EOF
                     fi
                     ;;
-           edit)    local name="$1"; shift
+        edit|-e)    local name="$1"; shift
                     if [[ -n $name ]]; then
                         smartcd_template _init "$name"
                         ${EDITOR:-vi} "$confdir/template_$name"
@@ -475,7 +477,7 @@ EOF
                         echo "Usage: smartcd_template edit <name>"
                     fi
                     ;;
-         create)    local name="$1"; shift
+      create|-c)    local name="$1"; shift
                     if [[ -n $name ]]; then
                         if [[ -f "$confdir/template_$name" ]]; then
                             echo "Template $name already exists, run \"smartcd_template edit $name\" to modify it"
@@ -487,7 +489,7 @@ EOF
                         echo "Usage: smartcd_template create <name>"
                     fi
                     ;;
-           list)    for file in $confdir/template_*; do
+        list|-l)    for file in $confdir/template_*; do
                         # if the user has shell options that leave us with a literal asterisk here
                         # in the event of no matches, we'll want to skip it.  rather than check and
                         # twiddle shell options, let's just see if that's what happened
@@ -497,7 +499,7 @@ EOF
                         echo ${file#*template_}
                     done
                     ;;
-           show)    local name="$1"; shift
+        show|-s)    local name="$1"; shift
                     if [[ -n $name ]]; then
                         if [[ -f "$confdir/template_$name" ]]; then
                             cat "$confdir/template_$name"
@@ -508,7 +510,7 @@ EOF
                         echo "Usage: smartcd_template show <name>"
                     fi
                     ;;
-        install)    local name="$1"; shift
+     install|-i)    local name="$1"; shift
                     if [[ -n $name ]]; then
                         if [[ -f "$confdir/template_$name" ]]; then
                             local current_dir=$(pwd)
@@ -545,7 +547,7 @@ EOF
                         echo "Usage: smartcd_template install <name>"
                     fi
                     ;;
-         delete|rm) local name="$1"; shift
+      delete|rm|-d) local name="$1"; shift
                     if [[ -n $name ]]; then
                         if [[ -f "$confdir/template_$name" ]]; then
                             rm "$confdir/template_$name"
