@@ -168,6 +168,16 @@ function _smartcd() {
         return
     fi
 
+    # If this is zsh and the user has chpwd enabled, it will fire a whole lot of times
+    # during this.  Stash it and disable it until we're done.
+    if [[ -n $ZSH_VERSION && -n "$(fn_exists stash)" ]]; then
+        stash -f chpwd
+        stash -f chpwd_functions
+        unset -f chpwd 2>/dev/null
+        unset chpwd_functions 2>/dev/null
+        local stashed_chpwd=1
+    fi
+
     # Go there and get the fully qualified path.  Also, fail first if it's an
     # invalid destination, before we do any more work.
 
@@ -338,8 +348,16 @@ function _smartcd() {
         : ${stack_size:=0}
     done
 
-    # First go to starting directory and then jump to final directory to make "cd -" happy!
+    # First go to starting directory...
     builtin cd "$wherestarted"
+
+    # ...restoring any chpwd hooks in the process, and allow them to fire once (now)...
+    if [[ -n $stashed_chpwd ]]; then
+        unstash chpwd
+        unstash chpwd_functions
+    fi
+
+    # ... and then jump to final directory to stay
     builtin cd "$whereto"
 
     # Turn autopushd back on, if needed.  Again, eval needed due to zsh oddness
