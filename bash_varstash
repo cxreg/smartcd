@@ -172,7 +172,7 @@ function stash() {
     done
 }
 
-function autostash () {
+function autostash() {
     if [[ -n $1 ]] && [[ -z $run_from_smartcd ]]; then
         local working_dir="${varstash_dir:-$(pwd)}"
         local smartcd_dir="$HOME/.smartcd$working_dir"
@@ -188,12 +188,7 @@ function autostash () {
         stash "$1"
         local autostash_name=$(_mangle_var AUTOSTASH)
         local varname=${1%%'='*}
-        if [[ -n $(eval echo '$'$autostash_name) ]]; then
-            eval $autostash_name='"''$'$autostash_name' '$varname'"'
-        else
-            eval $autostash_name=$varname
-        fi
-
+        apush $autostash_name "$varname"
         shift
     done
 }
@@ -279,10 +274,11 @@ function unstash() {
 function autounstash() {
     # If there is anything in (mangled) variable AUTOSTASH, then unstash it
     local autounstash_name=$(_mangle_var AUTOSTASH)
-    if [[ -n $(eval echo '$'$autounstash_name) ]]; then
+    if (( $(alen $autounstash_name) > 0 )); then
         local run_from_autounstash=1
-        local autounstash_var
-        for autounstash_var in $(eval echo '$'$autounstash_name); do
+        while (( $(alen $autounstash_name) > 0 )); do
+            local autounstash_var=$(afirst $autounstash_name)
+            ashift $autounstash_name >/dev/null
             unstash $autounstash_var
         done
         unset $autounstash_name
