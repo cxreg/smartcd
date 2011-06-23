@@ -399,7 +399,7 @@ function smartcd_edit() {
     fi
 }
 
-function _smartcd_prompt_hook() {
+function _smartcd_hook() {
     local cwd="$(pwd)"
 
     # Skip this if we already ran smartcd for this directory
@@ -408,21 +408,36 @@ function _smartcd_prompt_hook() {
         _smartcd "$cwd"
     fi
 
-    eval $_smartcd_original_prompt_command
+    eval $_smartcd_original_command
 }
 
 function setup_smartcd_prompt_hook() {
     if [[ -n $ZSH_VERSION ]]; then
-        _smartcd_original_prompt_command=:
-        apush precmd_functions _smartcd_prompt_hook
+        if [[ -z "$(fn_exists apush)" ]]; then
+            echo "bash_arrays is not loaded, please ensure that it is installed before using smartcd"
+            return
+        fi
+        _smartcd_original_command=:
+        apush precmd_functions _smartcd_hook
     else
-        if [[ -n $PROMPT_COMMAND && -z $_smartcd_original_prompt_command ]]; then
-            _smartcd_original_prompt_command=$PROMPT_COMMAND
+        if [[ -n $PROMPT_COMMAND && -z $_smartcd_original_command ]]; then
+            _smartcd_original_command=$PROMPT_COMMAND
         else
-            _smartcd_original_prompt_command=:
+            _smartcd_original_command=:
         fi
 
-        PROMPT_COMMAND=_smartcd_prompt_hook
+        PROMPT_COMMAND=_smartcd_hook
+    fi
+}
+
+function setup_smartcd_chpwd_hook() {
+    if [[ -n $ZSH_VERSION ]]; then
+        if [[ -z "$(fn_exists apush)" ]]; then
+            echo "bash_arrays is not loaded, please ensure that it is installed before using smartcd"
+            return
+        fi
+        _smartcd_original_command=:
+        apush chpwd_functions _smartcd_hook
     fi
 }
 
