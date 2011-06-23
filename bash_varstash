@@ -318,6 +318,7 @@ function varstash_edit() {
 # Run deferred smartcd if we're waiting for it, and arrays is also loaded
 if [[ -n "$smartcd_initially_deferred" && -n "$(fn_exists apush)" ]]; then
     smartcd_skip_action=1
+    smartcd_run_mainline=1
     smartcd
     unset smartcd_skip_action
     unset smartcd_initially_deferred

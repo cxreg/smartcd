@@ -138,6 +138,21 @@ function smartpopd() {
 
 _smartcd_last_run_for=
 function _smartcd() {
+    # Don't run this twice consecutively from being sourced.  If the user double-sources
+    # then it could result in scripts being run twice which may have undesirable or
+    # unpredictable effects, so don't do that
+    if [[ -n $smartcd_run_mainline ]]; then
+        if [[ -n $smartcd_last_run_mainline ]]; then
+            unset smartcd_run_mainline
+            return
+        else
+            smartcd_last_run_mainline=1
+        fi
+    else
+        unset smartcd_last_run_mainline
+    fi
+    unset smartcd_run_mainline
+
     # First, take note of where we're starting from
     local wherenow="${_smartcd_last_run_for#x}"
     local wherestarted="$wherenow"
@@ -574,6 +589,7 @@ function fn_exists() {
 # Run on load if all the necessary libraries are loaded, otherwise let them do it
 if [[ -n "$(fn_exists apush)" && -n "$(fn_exists autostash)" && -z "$SMARTCD_NOINITIAL" ]]; then
     smartcd_skip_action=1
+    smartcd_run_mainline=1
     smartcd
     unset smartcd_skip_action
 else
