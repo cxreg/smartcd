@@ -386,24 +386,16 @@ function _smartcd_prompt_hook() {
 
 function setup_smartcd_prompt_hook() {
     if [[ -n $ZSH_VERSION ]]; then
-        _smartcd_prior_precmd_definition=$(declare -f precmd)
-        if [[ -n $_smartcd_prior_precmd_definition ]]; then
-            _smartcd_prior_precmd_definition=${_smartcd_prior_precmd_definition/#precmd/_smartcd_prior_precmd}
-            eval $_smartcd_prior_precmd_definition
-            export _smartcd_original_prompt_command=_smartcd_prior_precmd
-        else
-            export _smartcd_original_prompt_command=:
-        fi
-
-        function precmd() { _smartcd_prompt_hook "$@"; }
+        _smartcd_original_prompt_command=:
+        apush precmd_functions _smartcd_prompt_hook
     else
         if [[ -n $PROMPT_COMMAND && -z $_smartcd_original_prompt_command ]]; then
-            export _smartcd_original_prompt_command=$PROMPT_COMMAND
+            _smartcd_original_prompt_command=$PROMPT_COMMAND
         else
-            export _smartcd_original_prompt_command=:
+            _smartcd_original_prompt_command=:
         fi
 
-        export PROMPT_COMMAND=_smartcd_prompt_hook
+        PROMPT_COMMAND=_smartcd_prompt_hook
     fi
 }
 
