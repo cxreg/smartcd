@@ -50,9 +50,24 @@
 #     VARSTASH_AUTOEDIT   - Set if you want it to set the values, but also
 #                           give you an opportunity to edit the file
 #
+#   If you attempt to stash the same value twice, a warning will be displayed
+#   and the second stash will not occur.  To make it happen anyway, pass -f
+#   as the first argument to stash.
+#
+#       $ stash FOO
+#       $ stash FOO
+#       You have already stashed FOO, please specify "-f" if you want to overwrite another stashed value
+#       $ stash -f FOO
+#       $
+#
 ################################################################################
 
 function stash() {
+    if [[ $1 = "-f" ]]; then
+        local force=1
+        shift
+    fi
+
     if [[ -n $1 ]] && [[ -z $run_from_smartcd ]] && [[ -z $run_from_autostash ]]; then
         local smartcd_dir="$HOME/.smartcd$(pwd)"
         local help_action="stashing a variable"
@@ -62,9 +77,25 @@ function stash() {
         _manual_stash_help
     fi
 
+
     while [[ -n $1 ]]; do
         local stash_expression=$1
         local stash_which=${stash_expression%%'='*}
+
+        local stash_name=$(_mangle_var $stash_which)
+
+        if [[ ( -n "$(eval echo '$__varstash_alias__'$stash_name)"    ||
+                -n "$(eval echo '$__varstash_function__'$stash_name)" ||
+                -n "$(eval echo '$__varstash_array__'$stash_name)"    ||
+                -n "$(eval echo '$__varstash_export__'$stash_name)"   ||
+                -n "$(eval echo '$__varstash_variable__'$stash_name)" ||
+                -n "$(eval echo '$__varstash_nostash__'$stash_name)" )
+                && -z $force ]]; then
+            echo "You have already stashed $stash_which, please specify \"-f\" if you want to overwrite another stashed value"
+            shift
+            continue
+        fi
+
 
         # Extract the value and make it double-quote safe
         local stash_value=${stash_expression#*'='}
@@ -76,12 +107,9 @@ function stash() {
         local alias_def="$(eval alias $stash_which 2>/dev/null)"
         if [[ -n $alias_def ]]; then
             alias_def=${alias_def#alias }
-            local alias_stash=$(_mangle_var $stash_which)
-            eval "__varstash_alias__$alias_stash=\"$alias_def\""
+            eval "__varstash_alias__$stash_name=\"$alias_def\""
             local stashed=1
         fi
-
-        local stash_name=$(_mangle_var $stash_which)
 
         # Handle any function that may exist under this name
         local function_def="$(declare -f $stash_which)"
