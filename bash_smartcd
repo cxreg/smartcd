@@ -136,7 +136,6 @@ function smartpopd() {
 # This variable should always have a leading "x" on it to prevent it from being
 # snarfed up by autonamedirs (zsh, you crazy)
 
-_smartcd_last_run_for=
 function _smartcd() {
     # Don't run this twice consecutively from being sourced.  If the user double-sources
     # then it could result in scripts being run twice which may have undesirable or
