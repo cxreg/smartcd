@@ -121,11 +121,11 @@ function apop() {
             eval "_apop_return=\"\$$var""[-1]\""
             eval "$var""[-1]=()"
         else
-            eval "_apop_return=\$(echo \${$var[\${#$var""[@]} - $array_len_to_last_elem]})"
+            eval "_apop_return=\"\$(echo \"\${$var[\${#$var""[@]} - $array_len_to_last_elem]}\")\""
             eval "unset $var""[\$(( \${#$var""[@]} - $array_len_to_last_elem))]"
         fi
 
-        echo $_apop_return
+        echo "$_apop_return"
     fi
 }
 
@@ -135,7 +135,7 @@ function ashift() {
     _ashift_return=
 
     if [[ -n $var ]] && (( $(eval "echo \${#$var[@]}") >= 1 )); then
-        eval "_ashift_return=\${$var""[$array_first_index]}"
+        eval "_ashift_return=\"\${$var""[$array_first_index]}\""
         if [[ -n $ZSH_VERSION ]]; then
             eval "$var""[$array_first_index]=()"
         else
@@ -143,7 +143,7 @@ function ashift() {
             eval "$var=(\"\${$var[@]}\")"
         fi
 
-        echo $_ashift_return
+        echo "$_ashift_return"
     fi
 }
 
@@ -185,7 +185,7 @@ function afirst() {
     local var=$1
 
     if [[ -n $var ]] && (( $(eval "echo \${#$var[@]}") >= 1 )); then
-        eval "echo \${$var""[$array_first_index]}"
+        eval "echo \"\${$var""[$array_first_index]}\""
     fi
 }
 
@@ -193,7 +193,7 @@ function alast() {
     local var=$1
 
     if [[ -n $var ]] && (( $(eval "echo \${#$var[@]}") >= 1 )); then
-        eval "echo \${$var""[\${#$var[@]} - $array_len_to_last_elem]}"
+        eval "echo \"\${$var""[\${#$var[@]} - $array_len_to_last_elem]}\""
     fi
 }
 

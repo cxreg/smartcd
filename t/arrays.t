@@ -2,7 +2,7 @@
 source t/tap-functions
 source bash_arrays
 
-plan_tests 15
+plan_tests 19
 
 apush foo 1 2 3
 is "$(alen foo)" 3 "created 3 element array"
@@ -35,3 +35,9 @@ is "x${foo[*]}" "x${bar[*]}" "copied array"
 is "x$(is_array foo)" "x1" "array detected"
 non_array=test
 is "x$(is_array non_array)" "x" "non-array detected"
+
+foo=("bar  baz")
+is "x$(afirst foo)" "xbar  baz" "afirst works with element with double-space"
+is "x$(alast foo)" "xbar  baz" "alast works with element with double-space"
+is "x$(apop foo)" "xbar  baz" "apop works with element with double-space"
+is "x$(ashift foo)" "xbar  baz" "ashift works with element with double-space"
