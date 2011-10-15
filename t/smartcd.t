@@ -9,7 +9,7 @@ source bash_arrays
 source bash_varstash
 source bash_smartcd
 
-plan_tests 10
+plan_tests 11
 
 # One tier
 dir=tmp_dir
@@ -42,6 +42,15 @@ is "${output-_}" "this is a leaving test" "bash_leave executed successfully usin
 
 output=$(smartpushd $dir; smartpopd)
 like "${output-_}" "this is a leaving test" "bash_leave executed successfully using smartpopd"
+rm $smartcd_dir/bash_leave
+
+linkdest="$(pwd)/$dir/destination"
+link="$dir/symlink"
+mkdir -p "$linkdest"
+ln -s destination "$link"
+smartcd -P $link
+is "_$(pwd)" "_$linkdest" "cd -P still works"
+smartcd ../..
 
 spacedir="dir with a space"
 mkdir -p "$spacedir"
@@ -66,18 +75,17 @@ dir2=$dir/another_dir
 smartcd_dir2=$smartcd_dir/another_dir
 mkdir -p $dir2
 mkdir -p $smartcd_dir2
-rm $smartcd_dir/bash_leave
 echo "echo -n \"1 \"" > $smartcd_dir/bash_enter
 echo "echo 2" > $smartcd_dir2/bash_enter
 output=$(smartcd $dir2; smartcd ../..)
-is "${output-_}" "1 2" "ran two bash_enter scripts in correct order"
+is "_${output-_}" "_1 2" "ran two bash_enter scripts in correct order"
 
 rm $smartcd_dir/bash_enter
 rm $smartcd_dir2/bash_enter
 echo "echo 1" > $smartcd_dir/bash_leave
 echo "echo -n \"2 \"" > $smartcd_dir2/bash_leave
 output=$(smartcd $dir2; smartcd ../..)
-is "${output-_}" "2 1" "ran two bash_leave scripts in correct order"
+is "_${output-_}" "_2 1" "ran two bash_leave scripts in correct order"
 
 # Clean up
 rm -rf $dir

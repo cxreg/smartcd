@@ -181,13 +181,13 @@ function _smartcd() {
 
     # Go there and get the fully qualified path.  Also, fail first if it's an
     # invalid destination, before we do any more work.
-
-    # This goofy eval syntax doesn't make a lot of sense, but it seems to work
-    # correctly in both bash (4.1.5) and zsh (4.3.11).  The eval is needed
-    # because "builtin cd" won't work from a zsh variable, sadly.
     if [[ -z $smartcd_skip_action ]]; then
         if [[ -n $1 ]] || [[ -z ${1-_} ]]; then
-            eval "$action \"$@\""
+            if [[ -n $ZSH_VERSION ]]; then
+                ${=action} "$@"
+            else
+                $action "$@"
+            fi
         else
             eval $action
         fi
