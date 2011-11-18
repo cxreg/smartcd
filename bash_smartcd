@@ -495,6 +495,7 @@ function smartcd_template() {
                         fi
                     fi
 
+                    mkdir -p "$confdir"
                     if [[ ! -f "$confdir/template_$name" ]]; then
                         cat <<EOF >> "$confdir/template_$name"
 ########################################################################
