@@ -9,7 +9,7 @@ source bash_arrays
 source bash_varstash
 source bash_smartcd
 
-plan_tests 11
+plan_tests 12
 
 # One tier
 dir=tmp_dir
@@ -86,6 +86,10 @@ echo "echo 1" > $smartcd_dir/bash_leave
 echo "echo -n \"2 \"" > $smartcd_dir2/bash_leave
 output=$(smartcd $dir2; smartcd ../..)
 is "_${output-_}" "_2 1" "ran two bash_leave scripts in correct order"
+
+mkdir deleted_dir
+output=$(smartcd deleted_dir; rmdir ../deleted_dir; smartcd .. 2>&1)
+unlike "_$output" "No such file or directory" "smartcd doens't try to re-enter a deleted directory"
 
 # Clean up
 rm -rf $dir

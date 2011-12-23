@@ -171,7 +171,7 @@ function _smartcd() {
     # If this is zsh and the user has chpwd enabled, it will fire a whole lot of times
     # during this.  Stash it and disable it until we're done.
     if [[ -n $ZSH_VERSION && -n "$(fn_exists stash)" ]]; then
-        local varstash_dir=$wherestarted
+        local varstash_dir="$wherestarted"
         stash -f chpwd
         stash -f chpwd_functions
         unset -f chpwd 2>/dev/null
@@ -255,37 +255,47 @@ function _smartcd() {
         # ashift in a sub-shell doesn't work
         local dir="$(afirst leave_stack)"
         ashift leave_stack >/dev/null
-        builtin cd "$dir"
+
+        # Set this just in case we are not able to actualy chdir to $dir
+        local varstash_dir="$dir"
+
         local confdir="$HOME/.smartcd$dir"
-        if [[ -f .bash_leave ]]; then
-            if [[ -n $SMARTCD_LEGACY ]]; then
-                if [[ -z $SMARTCD_QUIET ]]; then
-                    echo "smartcd: running $dir/.bash_leave"
+        if [[ -d "$dir" ]]; then
+            builtin cd "$dir"
+            if [[ -f .bash_leave ]]; then
+                if [[ -n $SMARTCD_LEGACY ]]; then
+                    if [[ -z $SMARTCD_QUIET ]]; then
+                        echo "smartcd: running $dir/.bash_leave"
+                    fi
+                    . .bash_leave
+                elif [[ -n $SMARTCD_AUTOMIGRATE ]]; then
+                    echo "Automatically migrating \"$dir/.bash_leave\" to \"$confdir/bash_leave\""
+                    mkdir -p "$confdir"
+                    cat "$dir/.bash_leave" >> "$confdir/bash_leave"
+                    rm "$dir/.bash_leave"
+                elif [[ -z $SMARTCD_QUIET ]]; then
+                    echo "############################################################################"
+                    echo "# NOTICE!  Deprecated .bash_leave found, please migrate this file to the new"
+                    echo "# format using the following (or similar) commands:"
+                    if [[ ! -d $confdir ]]; then
+                        echo "mkdir -p \"$confdir\""
+                    fi
+                    echo "cat \"$dir/.bash_leave\" >> \"$confdir/bash_leave\""
+                    echo "rm \"$dir/.bash_leave\""
+                    echo "#"
+                    echo "# If you would like smartcd to perform this migration for you whenever"
+                    echo "# possible, set SMARTCD_AUTOMIGRATE=1"
+                    echo "#"
+                    echo "# If you wish to accept the risks of the old style of operation and run"
+                    echo "# them as-is, you may set SMARTCD_LEGACY=1 instead."
+                    echo "############################################################################"
                 fi
-                . .bash_leave
-            elif [[ -n $SMARTCD_AUTOMIGRATE ]]; then
-                echo "Automatically migrating \"$dir/.bash_leave\" to \"$confdir/bash_leave\""
-                mkdir -p "$confdir"
-                cat "$dir/.bash_leave" >> "$confdir/bash_leave"
-                rm "$dir/.bash_leave"
-            elif [[ -z $SMARTCD_QUIET ]]; then
-                echo "############################################################################"
-                echo "# NOTICE!  Deprecated .bash_leave found, please migrate this file to the new"
-                echo "# format using the following (or similar) commands:"
-                if [[ ! -d $confdir ]]; then
-                    echo "mkdir -p \"$confdir\""
-                fi
-                echo "cat \"$dir/.bash_leave\" >> \"$confdir/bash_leave\""
-                echo "rm \"$dir/.bash_leave\""
-                echo "#"
-                echo "# If you would like smartcd to perform this migration for you whenever"
-                echo "# possible, set SMARTCD_AUTOMIGRATE=1"
-                echo "#"
-                echo "# If you wish to accept the risks of the old style of operation and run"
-                echo "# them as-is, you may set SMARTCD_LEGACY=1 instead."
-                echo "############################################################################"
             fi
+        else
+            echo "smartcd: leaving non-existent directory $dir"
         fi
+        # We will run this even if we were not able to chdir there, but
+        # the user is notified that this occurred so they can check things out
         if [[ -f "$confdir/bash_leave" ]]; then
             if [[ -z $SMARTCD_QUIET ]]; then
                 echo "smartcd: running $confdir/bash_leave"
@@ -349,8 +359,10 @@ function _smartcd() {
         : ${stack_size:=0}
     done
 
-    # First go to starting directory...
-    builtin cd "$wherestarted"
+    # First go to starting directory, as long as it still exists...
+    if [[ -d "$wherestarted" ]]; then
+        builtin cd "$wherestarted"
+    fi
 
     # ...restoring any chpwd hooks in the process, and allow them to fire once (now)...
     if [[ -n $stashed_chpwd ]]; then
