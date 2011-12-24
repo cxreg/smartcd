@@ -46,6 +46,10 @@ echo 'autostash PATH=./temporary/path:$PATH' >> ~/.smartcd/some/directory/bash_e
 # And you can run things explicitly on leave, as well
 echo 'echo "bye!"' >> ~/.smartcd/some/directory/bash_leave
 
+# When a shell is started enter scripts will be run from / up to your current
+# directory.  If you want the inverse to occur as well, having leave scripts run
+# on shell exit, you'll want to hook the shell's EXIT trap like this:
+setup_smartcd_exit_hook
 
 ####################
 # More information #

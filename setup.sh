@@ -21,6 +21,7 @@ function setup_file() {
     _setup_conditionally "$alias_pushd"    "alias pushd=smartpushd"
     _setup_conditionally "$alias_pushd"    "alias popd=smartpopd"
     _setup_conditionally "$enable_hook"    "setup_smartcd_prompt_hook"
+    _setup_conditionally "$enable_exit"    "setup_smartcd_exit_hook"
     _setup_conditionally "$autoconfigure"  "VARSTASH_AUTOCONFIGURE=1"
     _setup_conditionally "$autoedit"       "VARSTASH_AUTOEDIT=1"
     _setup_conditionally "$automigrate"    "SMARTCD_AUTOMIGRATE=1"
@@ -79,6 +80,14 @@ echo -n "\"autocd\" user, say no if you are unsure [y/N] "
 read enable_hook < /dev/tty
 enable_hook=$(echo $enable_hook | tr 'A-Z' 'a-z')
 : ${enable_hook:=n}
+
+echo
+echo "[ setup_smartcd_exit_hook ]"
+echo "Would you like to enable the shell exit hook?  This will cause bash_leave scripts to run"
+echo -n "from your current directory down to / when exiting your shell [y/N] "
+read enable_exit < /dev/tty
+enable_exit=$(echo $enable_exit | tr 'A-Z' 'a-z')
+: ${enable_exit:=n}
 
 echo
 echo "[ VARSTASH_AUTOCONFIGURE=1 ]"

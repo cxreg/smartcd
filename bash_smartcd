@@ -48,6 +48,12 @@
 #       # Or done manually
 #       echo 'echo "hi!"' > ~/.smartcd/somedir/bash_enter
 #
+#       # When a shell is started enter scripts will be run from / up to your
+#       # current directory.  If you want the inverse to occur as well, having
+#       # leave scripts run on shell exit, you'll want to hook the shell's EXIT
+#       # trap like this:
+#       setup_smartcd_exit_hook
+#
 #   This library combines very nicely with .bash_varstash to allow
 #   you to set per-directory environment variables:
 #
@@ -223,14 +229,17 @@ function _smartcd() {
         apush leave_stack "/"
     fi
 
-    # Collect the list of directories we're entering
-    wherenow="$whereto"
-    unset enter_stack
-    while [[ -n $wherenow ]]; do
-        apush enter_stack "$wherenow"
-        wherenow=${wherenow%/*}
-    done
-    apush enter_stack "/"
+    # Collect the list of directories we're entering, but enter nothing if
+    # we're in "exit mode" which just runs all leave scripts
+    if [[ -z $smartcd_exiting ]]; then
+        wherenow="$whereto"
+        unset enter_stack
+        while [[ -n $wherenow ]]; do
+            apush enter_stack "$wherenow"
+            wherenow=${wherenow%/*}
+        done
+        apush enter_stack "/"
+    fi
 
     # Pop off common elements
     while [[ -n "$(alast enter_stack)" ]] && [[ "$(alast enter_stack)" = "$(alast leave_stack)" ]]; do
@@ -451,6 +460,46 @@ function setup_smartcd_chpwd_hook() {
         _smartcd_original_command=:
         apush chpwd_functions _smartcd_hook
     fi
+}
+
+function setup_smartcd_exit_hook() {
+    # Both bash and zsh support "trap command EXIT" syntax, however zsh
+    # also supports a "TRAPEXIT()" function, which is mutually exclusive
+    # with the trap string
+    if [[ -n $_smartcd_exit_trap_setup ]]; then
+        return
+    fi
+
+    if [[ -n $ZSH_VERSION ]]; then
+        local _smartcd_prior_TRAPEXIT_def=$(declare -f TRAPEXIT)
+        if [[ -n $_smartcd_prior_exit_trap_def ]]; then
+            _smartcd_prior_TRAPEXIT_def=${_smartcd_prior_TRAPEXIT_def/#TRAPEXIT/_smartcd_prior_TRAPEXIT}
+            eval $_smartcd_prior_exit_trap_def
+            _smartcd_original_exit_trap=_smartcd_prior_TRAPEXIT
+        else
+            # This is not completely safe but it's the best I could do for zsh
+            # which does not allow you to ask for a specific trap definition
+            _smartcd_original_exit_trap=$(trap | sed -e':a' -e 'N' -e'$!ba' -e 's/.*trap -- \(.*\) EXIT.*/\1/')
+        fi
+    else
+        # Bash supports this, which is much cleaner
+        _smartcd_original_exit_trap=$(trap -p EXIT)
+        _smartcd_original_exit_trap=${_smartcd_original_exit_trap#trap -- }
+        _smartcd_original_exit_trap=${_smartcd_original_exit_trap% EXIT}
+    fi
+
+    if [[ -z $_smartcd_original_exit_trap ]]; then
+        _smartcd_original_exit_trap=:
+    fi
+
+    trap _smartcd_exit_trap EXIT
+    _smartcd_exit_trap_setup=1
+}
+
+function _smartcd_exit_trap() {
+    local smartcd_exiting=1
+    smartcd /
+    eval $_smartcd_original_exit_trap
 }
 
 function bash_enter() {
