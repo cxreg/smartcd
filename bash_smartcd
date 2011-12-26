@@ -412,7 +412,12 @@ function smartcd_edit() {
         mkdir -p "$smartcd_dir"
     fi
 
-    ${EDITOR:-vi} "$smartcd_dir/$file"
+    # Edit the file if interactive, otherwise write standard input to it
+    if [[ -t 0 ]]; then
+        ${EDITOR:-vi} "$smartcd_dir/$file"
+    else
+        cat > "$smartcd_dir/$file"
+    fi
 
     if [[ -f "$smartcd_dir/$file" && ! -s "$smartcd_dir/$file" ]]; then
         # Delete any file that is left empty
