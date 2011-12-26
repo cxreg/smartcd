@@ -18,39 +18,39 @@ smartcd_dir=$HOME/.smartcd$(pwd)/$dir
 mkdir -p $smartcd_dir
 
 echo -n >$smartcd_dir/bash_enter
-output=$(smartcd $dir)
+output=$(smartcd cd $dir)
 like "${output-_}" "smartcd: running" "smartcd informed user of script execution"
 SMARTCD_QUIET=1
-output=$(smartcd $dir)
+output=$(smartcd cd $dir)
 is "_${output-_}_" "__" "quieted output"
 
 cat >$smartcd_dir/bash_enter <<EOF
 echo this is a test
 EOF
-output=$(smartcd $dir)
+output=$(smartcd cd $dir)
 is "${output-_}" "this is a test" "bash_enter executed successfully using smartcd"
 
-output=$(smartpushd $dir)
-like "${output-_}" "this is a test" "bash_enter executed successfully using smartpushd"
+output=$(smartcd pushd $dir)
+like "${output-_}" "this is a test" "bash_enter executed successfully using smartcd pushd"
 
 rm $smartcd_dir/bash_enter
 cat >$smartcd_dir/bash_leave <<EOF
 echo this is a leaving test
 EOF
-output=$(smartcd $dir; smartcd ..)
+output=$(smartcd cd $dir; smartcd cd ..)
 is "${output-_}" "this is a leaving test" "bash_leave executed successfully using smartcd"
 
-output=$(smartpushd $dir; smartpopd)
-like "${output-_}" "this is a leaving test" "bash_leave executed successfully using smartpopd"
+output=$(smartcd pushd $dir; smartcd popd)
+like "${output-_}" "this is a leaving test" "bash_leave executed successfully using smartcd popd"
 rm $smartcd_dir/bash_leave
 
 linkdest="$(pwd)/$dir/destination"
 link="$dir/symlink"
 mkdir -p "$linkdest"
 ln -s destination "$link"
-smartcd -P $link
+smartcd cd -P $link
 is "_$(pwd)" "_$linkdest" "cd -P still works"
-smartcd ../..
+smartcd cd ../..
 
 spacedir="dir with a space"
 mkdir -p "$spacedir"
@@ -58,7 +58,7 @@ smartcd_spacedir="$HOME/.smartcd$(pwd)/$spacedir"
 mkdir -p "$smartcd_spacedir"
 echo 'echo -n "1 "' > "$smartcd_spacedir/bash_enter"
 echo 'echo 2' > "$smartcd_spacedir/bash_leave"
-output=$(smartcd "$spacedir"; smartcd ..)
+output=$(smartcd cd "$spacedir"; smartcd cd ..)
 is "${output-_}" "1 2" "could enter and leave a directory with a space"
 
 echo 'echo 4' > "$smartcd_spacedir/bash_leave"
@@ -68,7 +68,7 @@ smartcd_spacedir2="$HOME/.smartcd$(pwd)/$spacedir2"
 mkdir -p "$smartcd_spacedir2"
 echo 'echo -n "2 "' > "$smartcd_spacedir2/bash_enter"
 echo 'echo -n "3 "' > "$smartcd_spacedir2/bash_leave"
-output=$(smartcd "$spacedir2"; smartcd ../..)
+output=$(smartcd cd "$spacedir2"; smartcd cd ../..)
 is "${output-_}" "1 2 3 4" "could enter and leave a subdirectory of a directory with a space"
 
 dir2=$dir/another_dir
@@ -77,18 +77,18 @@ mkdir -p $dir2
 mkdir -p $smartcd_dir2
 echo "echo -n \"1 \"" > $smartcd_dir/bash_enter
 echo "echo 2" > $smartcd_dir2/bash_enter
-output=$(smartcd $dir2; smartcd ../..)
+output=$(smartcd cd $dir2; smartcd cd ../..)
 is "_${output-_}" "_1 2" "ran two bash_enter scripts in correct order"
 
 rm $smartcd_dir/bash_enter
 rm $smartcd_dir2/bash_enter
 echo "echo 1" > $smartcd_dir/bash_leave
 echo "echo -n \"2 \"" > $smartcd_dir2/bash_leave
-output=$(smartcd $dir2; smartcd ../..)
+output=$(smartcd cd $dir2; smartcd cd ../..)
 is "_${output-_}" "_2 1" "ran two bash_leave scripts in correct order"
 
 mkdir deleted_dir
-output=$(smartcd deleted_dir; rmdir ../deleted_dir; smartcd .. 2>&1)
+output=$(smartcd cd deleted_dir; rmdir ../deleted_dir; smartcd cd .. 2>&1)
 unlike "_$output" "No such file or directory" "smartcd doens't try to re-enter a deleted directory"
 
 # Clean up

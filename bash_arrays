@@ -209,7 +209,7 @@ function alen() {
 if [[ -n "$smartcd_initially_deferred" && -n "$(fn_exists autostash)" ]]; then
     smartcd_skip_action=1
     smartcd_run_mainline=1
-    smartcd
+    smartcd cd
     unset smartcd_skip_action
     unset smartcd_initially_deferred
 fi

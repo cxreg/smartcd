@@ -29,21 +29,25 @@
 #   ###############
 #
 #       # Install the library
-#       cp .bash_smartcd ~
+#       make install
+#       # or cp bash_smartcd ~/.bash_smartcd
 #
 #       # Add it to your bash init script
 #       . ~/.bash_smartcd
-#       alias cd=smartcd
+#       smartcd setup cd # replaces cd with cd()
 #
 #       # And it works with pushd/popd too
-#       alias pushd=smartpushd
-#       alias popd=smartpopd
+#       smartcd setup pushd
+#       smartcd setup popd
 #
-#       And if you are an "autocd" user, you may want
-#       setup_smartcd_prompt_hook
+#       If you are an "autocd" user, you may want
+#       smartcd setup prompt-hook
 #
 #       # Edit the file to create some commands to run when entering
-#       bash_enter -e
+#       smartcd edit enter
+#
+#       # Non-interactively
+#       echo 'echo "hi!"' | smartcd edit enter
 #
 #       # Or done manually
 #       echo 'echo "hi!"' > ~/.smartcd/somedir/bash_enter
@@ -52,9 +56,9 @@
 #       # current directory.  If you want the inverse to occur as well, having
 #       # leave scripts run on shell exit, you'll want to hook the shell's EXIT
 #       # trap like this:
-#       setup_smartcd_exit_hook
+#       smartcd setup exit-hook
 #
-#   This library combines very nicely with .bash_varstash to allow
+#   This library combines very nicely with bash_varstash to allow
 #   you to set per-directory environment variables:
 #
 #       # bash_enter
@@ -98,11 +102,11 @@
 #   One advanced feature of smartcd is the ability to configure and use
 #   templates for your enter and leave scripts.  If you often find yourself
 #   creating very similar scripts with only minor differences, templates can
-#   help.  This is primarily handled with a function named "smartcd_template".
+#   help.  This is handled with "smartcd template".
 #
 #   To create a template based on the current directory, run:
 #
-#       smartcd_template create template_name
+#       smartcd template create template_name
 #
 #   The name can be any arbitrary value, but should be meaningful to you and
 #   should not contain special characters.  This will create a new template
@@ -113,34 +117,76 @@
 #
 #   To install the template, cd to a destination and run:
 #
-#       smartcd_template install template_name
+#       smartcd template install template_name
 #
 #   The other available commands are:
 #
-#       smartcd_template list
-#       smartcd_template show <name>
-#       smartcd_template edit <name>
-#       smartcd_template delete <name>
+#       smartcd template list
+#       smartcd template show <name>
+#       smartcd template edit <name>
+#       smartcd template delete <name>
 #
 ################################################################################
 
+# Compatibility functions
+function smartpushd() { smartcd pushd "$@"; }
+function smartpopd()  { smartcd popd "$@";  }
+
 function smartcd() {
-    local action="builtin cd"
-    _smartcd "$@"
-}
+    local command="$1"
 
-function smartpushd() {
-    local action="builtin pushd"
-    _smartcd "$@"
+    local usage="Usage: smartcd ( cd | pushd | popd | edit | show | fiename | template | setup ) [args]"
+    case $command in
+        -h|help|'') echo $usage;;
+     cd|pushd|popd) shift; _smartcd $command "$@";;
+     edit|show|cat|\
+          filename) shift; local file=$1; shift
+                    case $file in
+                                   enter|leave) _smartcd_file_check bash_$file $command  "$@";;
+                         bash_enter|bash_leave) _smartcd_file_check $file $command  "$@";;
+                                             *) echo "Usage: smartcd $command ( enter | leave )";;
+                    esac
+                    ;;
+          template) shift; smartcd_template "$@";;
+             setup) shift; local setup=$1; shift;
+                    case $setup in
+                             cd|pushd|popd) setup_smartcd_function $setup;;
+                        prompt-hook|prompt) setup_smartcd_prompt_hook;;
+                          chpwd-hook|chpwd) setup_smartcd_chpwd_hook;;
+                            exit-hook|exit) setup_smartcd_exit_hook;;
+                    esac
+                    ;;
+                 *) if [[ -n $ZSH_VERSION ]]; then
+                        local dir=$argv[-1]
+                    else
+                        local dir=${!#}
+                    fi
+                    if [[ -d $dir ]]; then
+                        if [[ -z $smartcd_warned_alias ]]; then
+                            echo "You appear to have smartcd set up in a deprecated fashion.  Please update your"
+                            echo "configuration.  If it currently looks like this:"
+                            echo
+                            echo "   alias cd=smartcd"
+                            echo "   alias pushd=smartpushd"
+                            echo "   alias popd=smartpopd"
+                            echo
+                            echo "you should update it to instead say this:"
+                            echo
+                            echo "   smartcd setup cd"
+                            echo "   smartcd setup pushd"
+                            echo "   smartcd setup popd"
+                            echo
+                            echo "If you are getting this message incorrectly or don't know what it means, run"
+                            echo "\`make setup\`, or email cxreg@pobox.com for help."
+                            smartcd_warned_alias=1
+                        fi
+                        _smartcd cd "$@"
+                    else
+                        echo $usage
+                    fi
+                    ;;
+    esac
 }
-
-function smartpopd() {
-    local action="builtin popd"
-    _smartcd "$@"
-}
-
-# This variable should always have a leading "x" on it to prevent it from being
-# snarfed up by autonamedirs (zsh, you crazy)
 
 function _smartcd() {
     # Don't run this twice consecutively from being sourced.  If the user double-sources
@@ -157,6 +203,9 @@ function _smartcd() {
         unset smartcd_last_run_mainline
     fi
     unset smartcd_run_mainline
+
+    # What are we being invoked as?
+    local action="builtin $1"; shift
 
     # First, take note of where we're starting from
     local wherenow="${_smartcd_last_run_for#x}"
@@ -199,7 +248,7 @@ function _smartcd() {
         fi
     fi
 
-    if (( $? != 0 )); then return; fi;
+    if (( $? != 0 )); then return; fi
     local whereto="$(pwd)"
     _smartcd_last_run_for="x$whereto"
 
@@ -399,13 +448,13 @@ function _smartcd() {
 function smartcd_edit() {
     # Invoke the users editor (or vi) on the relevant file
     local file="$1"
-    if [[ $file = "enter" || $file = "leave" ]]; then
-        file="bash_$file"
-    fi
-    if [[ $file != "bash_enter" && $file != "bash_leave" ]]; then
-        echo "Usage: smartcd_edit ( bash_enter | bash_leave )"
-        return
-    fi
+    case $file in
+        bash_enter|bash_leave) ;;
+                  enter|leave) file="bash_$file";;
+                            *) echo "Usage: smartcd_edit ( bash_enter | bash_leave )"
+                               return
+                               ;;
+    esac
 
     local smartcd_dir="$HOME/.smartcd$(pwd)"
     if [[ ! -d $smartcd_dir ]]; then
@@ -431,10 +480,15 @@ function _smartcd_hook() {
     # Skip this if we already ran smartcd for this directory
     if [[ "x$cwd" != "$_smartcd_last_run_for" ]]; then
         local smartcd_skip_action=1
-        _smartcd "$cwd"
+        smartcd cd "$cwd"
     fi
 
     eval $_smartcd_original_command
+}
+
+function setup_smartcd_function() {
+    local cmd=$1;
+    eval "$cmd() { smartcd $cmd \"\$@\"; }"
 }
 
 function setup_smartcd_prompt_hook() {
@@ -503,7 +557,7 @@ function setup_smartcd_exit_hook() {
 
 function _smartcd_exit_trap() {
     local smartcd_exiting=1
-    smartcd /
+    smartcd cd /
     eval $_smartcd_original_exit_trap
 }
 
@@ -520,32 +574,29 @@ function bash_leave() {
 function _smartcd_file_check() {
     local confdir="$HOME/.smartcd$(pwd)"
 
-    local file=$1
-    shift
+    local file=$1; shift
 
-    if [[ $1 = '-h' || $1 = 'help' ]]; then
-        echo "Usage: $file [ edit | show | filename ]"
-    elif [[ $1 = '-f' || $1 = 'filename' ]]; then
-        echo "$confdir/$file"
-    elif [[ $1 = '-e' || $1 = 'edit' ]]; then
-        smartcd_edit $file
-    else
-        if [[ -f "$confdir/$file" ]]; then
-            echo "$confdir/$file exists"
-            if [[ $1 = '-l' || $1 = 'show' ]]; then
-                echo "-------------------------------------------------------------------------"
-                cat "$confdir/$file"
-                echo "-------------------------------------------------------------------------"
-            fi
-        else
-            echo "$confdir/$file does not exist"
-        fi
-    fi
+    case $1 in
+           -h|help) echo "Usage: $file [ edit | show | filename ]";;
+       -f|filename) echo "$confdir/$file";;
+           -e|edit) smartcd_edit $file;;
+    -l|show|cat|'') if [[ -f "$confdir/$file" ]]; then
+                        echo "$confdir/$file exists"
+                        case $1 in
+                           -l|show|cat) echo "-------------------------------------------------------------------------"
+                                        cat "$confdir/$file"
+                                        echo "-------------------------------------------------------------------------"
+                                        ;;
+                        esac
+                    else
+                        echo "$confdir/$file does not exist"
+                    fi
+                    ;;
+    esac
 }
 
 function smartcd_template() {
-    local action=$1
-    shift
+    local action=$1; shift
 
     local confdir="$HOME/.smartcd"
 
@@ -591,19 +642,19 @@ EOF
                         smartcd_template _init "$name"
                         ${EDITOR:-vi} "$confdir/template_$name"
                     else
-                        echo "Usage: smartcd_template edit <name>"
+                        echo "Usage: smartcd template edit <name>"
                     fi
                     ;;
       create|-c)    local name="$1"; shift
                     if [[ -n $name ]]; then
                         if [[ -f "$confdir/template_$name" ]]; then
-                            echo "Template $name already exists, run \"smartcd_template edit $name\" to modify it"
+                            echo "Template $name already exists, run \"smartcd template edit $name\" to modify it"
                         else
                             smartcd_template _init "$name" "$(pwd)"
                             smartcd_template edit "$name"
                         fi
                     else
-                        echo "Usage: smartcd_template create <name>"
+                        echo "Usage: smartcd template create <name>"
                     fi
                     ;;
         list|-l)    for file in $confdir/template_*; do
@@ -624,7 +675,7 @@ EOF
                             echo "Template $name not found"
                         fi
                     else
-                        echo "Usage: smartcd_template show <name>"
+                        echo "Usage: smartcd template show <name>"
                     fi
                     ;;
      install|-i)    local name="$1"; shift
@@ -661,7 +712,7 @@ EOF
                             echo "Template $name not found"
                         fi
                     else
-                        echo "Usage: smartcd_template install <name>"
+                        echo "Usage: smartcd template install <name>"
                     fi
                     ;;
       delete|rm|-d) local name="$1"; shift
@@ -672,11 +723,13 @@ EOF
                             echo "Template $name not found"
                         fi
                     else
-                        echo "Usage: smartcd_template delete <name>"
+                        echo "Usage: smartcd template delete <name>"
                     fi
                     ;;
+             '')    echo "Usage: smartcd template ( edit | create | list | show | install | delete ) [args]"
+                    ;;
               *)    echo "Unknown action $action."
-                    echo "Usage: smartcd_template ( edit | create | list | show | install | delete ) [args]"
+                    echo "Usage: smartcd template ( edit | create | list | show | install | delete ) [args]"
                     ;;
     esac
 }
@@ -691,7 +744,7 @@ function fn_exists() {
 if [[ -n "$(fn_exists apush)" && -n "$(fn_exists autostash)" && -z "$SMARTCD_NOINITIAL" ]]; then
     smartcd_skip_action=1
     smartcd_run_mainline=1
-    smartcd
+    smartcd cd
     unset smartcd_skip_action
 else
     smartcd_initially_deferred=1

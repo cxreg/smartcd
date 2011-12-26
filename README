@@ -19,14 +19,14 @@ echo >> ~/.bash_profile '
 source ~/.bash_arrays
 source ~/.bash_varstash
 source ~/.bash_smartcd
-alias cd=smartcd
-alias pushd=smartpushd
-alias popd=smartpopd
+smartcd setup cd
+smartcd setup pushd
+smartcd setup popd
 '
 
 # And if you are an "autocd" user, you may want
 echo >> ~/.bash_profile '
-setup_smartcd_prompt_hook
+smartcd setup prompt-hook
 '
 
 # Go to a directory with special needs
@@ -37,7 +37,10 @@ user@host:~$ cd project
 user@host:~/project$ autostash PATH=./bin:$PATH
 
 # Or edit the "enter" script
-user@host:~/project$ bash_enter -e
+user@host:~/project$ smartcd edit enter
+
+# Non-interactively
+user@host:~/project$ echo 'autostash PATH=./temporary/path:$PATH' | smartcd edit enter
 
 # If you like doing things by hand, you may prefer
 mkdir -p ~/.smartcd/some/directory
@@ -49,7 +52,7 @@ echo 'echo "bye!"' >> ~/.smartcd/some/directory/bash_leave
 # When a shell is started enter scripts will be run from / up to your current
 # directory.  If you want the inverse to occur as well, having leave scripts run
 # on shell exit, you'll want to hook the shell's EXIT trap like this:
-setup_smartcd_exit_hook
+smartcd setup exit-hook
 
 ####################
 # More information #
@@ -66,15 +69,16 @@ It works by running scripts which correspond to particular directories
 on your computer.  When you change between directories that have the
 relevant enter or leave scripts, they will be run as appropriate.
 
-The primary way of doing this is to alias the "cd" command to "smartcd"
-This also works with push and popd, which can be aliased to smartpushd
-and smartpopd repectively.
+The primary way of doing this is to create a "cd" function which calls
+"smartcd cd". This also works with push and popd.  The simplest way to
+create these wrappers is to call "smartcd setup cd", "smartcd setup pushd",
+and "smartcd setup pushd".
 
 If you prefer (or in addition), you can hook the prompt command
-This sets PROMPT_COMMAND in bash, or precmd in zsh.  After calling
-smartcd, it will call any preexisting command for those hooks.  This
-allows users with the "autocd" option set in their shell to also
-benefit from smartcd.
+This sets PROMPT_COMMAND in bash, or precmd in zsh.  This is done with
+"smartcd setup prompt-hook".  After calling smartcd, it will call any prior
+command for those hooks.  This allows users with the "autocd" option set
+in their shell to also benefit from smartcd.
 
 The commands that you want to run will live in a file under a directory
 structure in your home directory named .smartcd.  The structure under
@@ -86,27 +90,22 @@ example:
      /foo/bar       enter     ~/.smartcd/foo/bar/bash_enter
      /foo/bar/baz   leave     ~/.smartcd/foo/bar/baz/bash_leave
 
-Convenience functions, named bash_enter and bash_leave, are provided
-which inform you if the file exists.  If you call it with "-l", it will
-also display the file's contents.  Calling with -e will instead open it
-with your preferrred editor, creating the file if necessary.  And
-calling it with "-f" will simply list the filename, whether it exists or
-not.
+You can edit and read these files with the smartcd command using the
+"edit", "show", and "filename" actions.
 
-    user@host:/usr/local/bin$ bash_leave
+    user@host:/usr/local/bin$ smartcd show leave
     /home/user/.smartcd/usr/local/bin/bash_leave does not exist
 
-    user@host:/usr/local/bin$ bash_enter
-    /home/user/.smartcd/usr/local/bin/bash_enter exists
-
-    user@host:/usr/local/bin$ bash_enter -l
+    user@host:/usr/local/bin$ smartcd show enter
     /home/user/.smartcd/usr/local/bin/bash_enter exists
     -------------------------------------------------------------------------
     echo "testing"
     -------------------------------------------------------------------------
 
-    user@host:/usr/local/bin$ bash_enter -e
+    user@host:/usr/local/bin$ smartcd edit enter
     --> edits ~/.smartcd/usr/local/bin/bash_enter
+
+    user@host:/usr/local/bin$ echo "some-command" | smartcd edit enter
 
 One thing to note is that going from a directory to its child is not
 considered "leaving", so the bash_leave will not be run until you go to
@@ -127,20 +126,21 @@ in the user's shell directly.
 
 Any action you can take in the shell can be done in these scripts; you
 are certainly not limited to varstash.  Other examples might include a
-VCS update or even attaching to a particular screen session!
+VCS update, starting a daemon, or even attaching to a particular screen
+session!
 
 In addition to configuring these scripts individually, smartcd supports
 a template system, which can be set up to re-use common configuration
-among many directories.  This is controlled with the "smartcd_template"
-function.
+among many directories.  This is controlled with the "smartcd template"
+action.
 
 To create a new template based on the current directory, run:
 
-    smartcd_template create some_template_name
+    smartcd template create some_template_name
 
 Then to install it, from some other directory run:
 
-    smartcd_template install some_template_name
+    smartcd template install some_template_name
 
 This will prepopulate the template from the bash_enter and bash_leave
 files corresponding to the working directory.  You can then edit the
