@@ -157,9 +157,9 @@ function stash() {
             # Nothing in the variable we're stashing, but make a note that we stashed so we
             # do the right thing when unstashing.  Without this, we take no action on unstash
 
-            # This is crazy.  sometimes zsh errors with:
+            # Zsh bug sometimes caues
             # (eval):1: command not found: __varstash_nostash___tmp__home_dolszewski_src_smartcd_RANDOM_VARIABLE=1
-            # but sometimes it doesn't.  phase of the moon?  or what?
+            # fixed in zsh commit 724fd07a67f, version 4.3.14
             eval "__varstash_nostash__$stash_name=1"
 
             # In the case of a previously unset variable that we're assigning too, export it
