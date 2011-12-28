@@ -3,7 +3,7 @@
 # If you would like to install smartcd, run the following command and
 # it will download and install itself.
 #
-#   % curl -L http://cxreg.com/smartcd | bash
+#   % curl -L http://smartcd.org/install | bash
 #
 # If you don't have curl, but you do have wget, replace `curl -L` with `wget -O -`.
 #
