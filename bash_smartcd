@@ -135,7 +135,7 @@ function smartpopd()  { smartcd popd "$@";  }
 function smartcd() {
     local command="$1"
 
-    local usage="Usage: smartcd ( cd | pushd | popd | edit | show | filename | template | setup | config ) [args]"
+    local usage="Usage: smartcd ( edit | show | filename | template | setup | config ) [args]"
     case $command in
         -h|help|'') echo $usage;;
      cd|pushd|popd) shift; _smartcd $command "$@";;
