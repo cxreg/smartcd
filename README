@@ -212,7 +212,6 @@ differ from this library.
 
 ondir - http://swapoff.org/ondir.html
   * Written in C, and is executed by a "cd" function
-  * Does not walk directory hierarchy the way smartcd does
   * Requires manual and explicit variable setting and unsetting
 
 direnv - https://github.com/zimbatm/direnv/
