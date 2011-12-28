@@ -247,7 +247,7 @@ function unstash() {
             local unstashed_variable=1
         elif [[ -n "$(declare -p __varstash_variable__$unstash_name 2>/dev/null)" ]]; then
             # Unset variable first to reset export
-            unset $unstash_which
+            unset -v $unstash_which
             eval "$unstash_which=\"\$__varstash_variable__$unstash_name\""
             unset __varstash_variable__$unstash_name
             local unstashed=1
