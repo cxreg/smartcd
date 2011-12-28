@@ -111,6 +111,9 @@ function stash() {
             eval "__varstash_alias__$stash_name=\"$alias_def\""
             local stashed=1
         fi
+        if [[ $stash_which != $stash_expression && -n $_stashing_alias_assign ]]; then
+            eval "alias $stash_which=\"$stash_value\""
+        fi
 
         # Handle any function that may exist under this name
         local function_def="$(declare -f $stash_which)"
@@ -139,13 +142,13 @@ function stash() {
             elif [[ $vartype =~ $pattern" -x" ]]; then
                 # variable is exported
                 eval "__varstash_export__$stash_name=\"\$$stash_which\""
-                if [[ $stash_which != $stash_expression ]]; then
+                if [[ $stash_which != $stash_expression && -z $_stashing_alias_assign ]]; then
                     eval "export $stash_which=\"$stash_value\""
                 fi
             else
                 # regular variable
                 eval "__varstash_variable__$stash_name=\"\$$stash_which\""
-                if [[ $stash_which != $stash_expression ]]; then
+                if [[ $stash_which != $stash_expression && -z $_stashing_alias_assign ]]; then
                     eval "$stash_which=\"$stash_value\""
                 fi
 
@@ -163,7 +166,7 @@ function stash() {
             eval "__varstash_nostash__$stash_name=1"
 
             # In the case of a previously unset variable that we're assigning too, export it
-            if [[ $stash_which != $stash_expression ]]; then
+            if [[ $stash_which != $stash_expression && -z $_stashing_alias_assign ]]; then
                 eval "export $stash_which=\"$stash_value\""
             fi
         fi
@@ -185,6 +188,10 @@ function autostash() {
 
     local run_from_autostash=1
     while [[ -n $1 ]]; do
+        if [[ $1 = "alias" && $2 =~ "=" ]]; then
+            shift
+            local _stashing_alias_assign=1
+        fi
         stash "$1"
         local autostash_name=$(_mangle_var AUTOSTASH)
         local varname=${1%%'='*}
