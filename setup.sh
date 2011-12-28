@@ -5,8 +5,7 @@ function setup_file() {
     local file="$1"
 
     function _setup_conditionally() {
-        cond=$1
-        shift
+        cond=$1; shift
         if [[ ! $cond =~ $yes ]]; then
             local comment="# "
         fi
@@ -17,21 +16,21 @@ function setup_file() {
 
     config="\n# Load and configure smartcd\nsource ~/.bash_arrays\nsource ~/.bash_varstash\nsource ~/.bash_smartcd"
 
-    _setup_conditionally "$alias_cd"       "alias cd=smartcd"
-    _setup_conditionally "$alias_pushd"    "alias pushd=smartpushd"
-    _setup_conditionally "$alias_pushd"    "alias popd=smartpopd"
-    _setup_conditionally "$enable_hook"    "setup_smartcd_prompt_hook"
-    _setup_conditionally "$enable_exit"    "setup_smartcd_exit_hook"
-    _setup_conditionally "$autoconfigure"  "VARSTASH_AUTOCONFIGURE=1"
-    _setup_conditionally "$autoedit"       "VARSTASH_AUTOEDIT=1"
-    _setup_conditionally "$automigrate"    "SMARTCD_AUTOMIGRATE=1"
-    _setup_conditionally "$legacy"         "SMARTCD_LEGACY=1"
+    _setup_conditionally "$setup_cd"            "smartcd setup cd"
+    _setup_conditionally "$setup_pushd"         "smartcd setup pushd"
+    _setup_conditionally "$setup_pushd"         "smartcd setup popd"
+    _setup_conditionally "$enable_prompt_hook"  "smartcd setup prompt-hook"
+    _setup_conditionally "$enable_exit_hook"    "smartcd setup exit-hook"
+    _setup_conditionally "$autoconfigure"       "VARSTASH_AUTOCONFIGURE=1"
+    _setup_conditionally "$autoedit"            "VARSTASH_AUTOEDIT=1"
+    _setup_conditionally "$automigrate"         "SMARTCD_AUTOMIGRATE=1"
+    _setup_conditionally "$legacy"              "SMARTCD_LEGACY=1"
 
     # Add commented-out quiet settings so the user can enable them later
     _setup_conditionally ""                "SMARTCD_QUIET=1"
     _setup_conditionally ""                "VARSTASH_QUIET=1"
 
-    if ! grep "alias cd=smartcd" "$file" >/dev/null 2>&1; then
+    if ! grep "smartcd" "$file" >/dev/null 2>&1; then
         echo "Configuring $file"
         echo -e $config >> $file
     else
@@ -59,35 +58,35 @@ else
 fi
 
 echo
-echo "[ alias cd=smartcd ]"
-echo -n "Would you like to alias cd to smartcd?  This is the recommended way to run smartcd [Y/n] "
-read alias_cd < /dev/tty
-alias_cd=$(echo $alias_cd | tr 'A-Z' 'a-z')
-: ${alias_cd:=y}
+echo "[ smartcd setup cd ]"
+echo -n "Would you like to wrap cd with smartcd?  This is the recommended way to run smartcd [Y/n] "
+read setup_cd < /dev/tty
+setup_cd=$(echo $setup_cd | tr 'A-Z' 'a-z')
+: ${setup_cd:=y}
 
 echo
-echo "[ alias pushd=smartpushd ]"
-echo "[ alias popd=smartpopd   ]"
-echo -n "Would you like to alias pushd and popd? [Y/n] "
-read alias_pushd < /dev/tty
-alias_pushd=$(echo $alias_pushd | tr 'A-Z' 'a-z')
-: ${alias_pushd:=y}
+echo "[ smartcd setup pushd ]"
+echo "[ smartcd setup popd  ]"
+echo -n "Would you like to wrap pushd and popd? [Y/n] "
+read setup_pushd < /dev/tty
+setup_pushd=$(echo $setup_pushd | tr 'A-Z' 'a-z')
+: ${setup_pushd:=y}
 
 echo
 echo "[ setup_smartcd_prompt_hook ]"
 echo "Would you like to enable prompt-command hooks?  (This is only recommended if you are an"
 echo -n "\"autocd\" user, say no if you are unsure [y/N] "
-read enable_hook < /dev/tty
-enable_hook=$(echo $enable_hook | tr 'A-Z' 'a-z')
-: ${enable_hook:=n}
+read enable_prompt_hook < /dev/tty
+enable_prompt_hook=$(echo $enable_prompt_hook | tr 'A-Z' 'a-z')
+: ${enable_prompt_hook:=n}
 
 echo
 echo "[ setup_smartcd_exit_hook ]"
 echo "Would you like to enable the shell exit hook?  This will cause bash_leave scripts to run"
 echo -n "from your current directory down to / when exiting your shell [y/N] "
-read enable_exit < /dev/tty
-enable_exit=$(echo $enable_exit | tr 'A-Z' 'a-z')
-: ${enable_exit:=n}
+read enable_exit_hook < /dev/tty
+enable_exit_hook=$(echo $enable_exit_hook | tr 'A-Z' 'a-z')
+: ${enable_exit_hook:=n}
 
 echo
 echo "[ VARSTASH_AUTOCONFIGURE=1 ]"
