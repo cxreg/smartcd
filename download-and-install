@@ -27,6 +27,10 @@ else
     echo "instructions included."
 fi
 
+if [[ -f ~/.bash_smartcd ]]; then
+    smartcd_previously_installed=1
+fi
+
 working_dir=$(mktemp -d)
 cd $working_dir
 $download "$baseurl/bash_smartcd" > ~/.bash_smartcd
@@ -47,5 +51,30 @@ cd ~
 rm -rf $working_dir
 
 echo "Congratulations, you have installed smartcd!"
-echo
-echo "To get started, ..."
+
+if [[ -z $smartcd_previously_installed ]]; then
+    echo "*********************************************************************"
+    echo "IMPORTANT NOTE: If you just installed smartcd for the first time and"
+    echo "you haven't created a new shell, it may not be loaded yet.  Run"
+    echo
+    echo "    source ~/.smartcd_config"
+    echo "*********************************************************************"
+    echo
+    echo "To get started, create a few scripts.  Its easy!  Try this:"
+    echo
+    echo "    echo 'echo hello there from \$(pwd)' | smartcd edit enter"
+    echo "    echo 'echo goodbye from \$(pwd)' | smartcd edit leave"
+    echo
+    echo "Then simply leave the directory and come back.  For a more practical"
+    echo "example, how about tweaking your PATH?"
+    echo
+    echo "    echo \"autostash PATH=\$(pwd)/bin:\\\$PATH\" | smartcd edit enter"
+    echo
+    echo "(side note: the quoting rules when editing in this fashion can be a bit"
+    echo "awkward, so feel free to run \`smartcd edit\` interactively too!"
+    echo
+    echo "When you enter the directory, your \$PATH will be updated and when you"
+    echo "leave it is restored to its previous value automagically.  How cool is"
+    echo "that?  For more detail on what is possible, read the documentation in"
+    echo "~/.bash_smartcd or refer to the README at https://github.com/cxreg/smartcd"
+fi
