@@ -8,7 +8,8 @@
 
 # Install the files and configure your shell
 make install
-make setup
+source ~/.bash_smartcd
+smartcd config
 
 # Or, you can set it up manually
 cp bash_arrays ~/.bash_arrays

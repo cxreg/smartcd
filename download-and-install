@@ -36,15 +36,17 @@ cd $working_dir
 $download "$baseurl/bash_smartcd" > ~/.bash_smartcd
 $download "$baseurl/bash_varstash" > ~/.bash_varstash
 $download "$baseurl/bash_arrays" > ~/.bash_arrays
-$download "$baseurl/setup.sh" > setup.sh
 
 echo "Installation complete"
-echo -n "Run setup? [Y/n] "
+echo -n "Configure now? [Y/n] "
 read setup < /dev/tty
 setup=$(echo $setup | tr 'A-Z' 'a-z')
 : ${setup:=y}
 if [[ $setup =~ "y" ]]; then
-    bash ./setup.sh
+    source ~/.bash_smartcd
+    smartcd config
+else
+    echo "Run \"smartcd config\" to configure when you are ready."
 fi
 
 cd ~

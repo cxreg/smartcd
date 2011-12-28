@@ -135,7 +135,7 @@ function smartpopd()  { smartcd popd "$@";  }
 function smartcd() {
     local command="$1"
 
-    local usage="Usage: smartcd ( cd | pushd | popd | edit | show | fiename | template | setup ) [args]"
+    local usage="Usage: smartcd ( cd | pushd | popd | edit | show | filename | template | setup | config ) [args]"
     case $command in
         -h|help|'') echo $usage;;
      cd|pushd|popd) shift; _smartcd $command "$@";;
@@ -156,6 +156,7 @@ function smartcd() {
                             exit-hook|exit) setup_smartcd_exit_hook;;
                     esac
                     ;;
+            config) smartcd_config;;
                  *) if [[ -n $ZSH_VERSION ]]; then
                         local dir=$argv[-1]
                     else
@@ -177,7 +178,7 @@ function smartcd() {
                             echo "   smartcd setup popd"
                             echo
                             echo "If you are getting this message incorrectly or don't know what it means, run"
-                            echo "\`make setup\`, or email cxreg@pobox.com for help."
+                            echo "\`smartcd config\`, or email cxreg@pobox.com for help."
                             smartcd_warned_alias=1
                         fi
                         _smartcd cd "$@"
@@ -738,6 +739,215 @@ function fn_exists() {
     if [[ -n "$(declare -f $1)" ]]; then
         echo 1
     fi
+}
+
+function smartcd_config() {
+    function setup_file() {
+        local file="$1"; shift
+        local config="$1"; shift
+
+        if ! grep "smartcd" "$file" >/dev/null 2>&1; then
+            echo "Configuring $file"
+            echo -e "$config" >> $file
+        else
+            echo "$file already appears to be configured, please check it for correctness"
+            echo "This is what you configured:"
+            echo -e "$config"
+        fi
+    }
+
+    function generate_config() {
+        function _setup_conditionally() {
+            local cond=$1; shift
+            if [[ ! $cond =~ $yes ]]; then
+                local comment="# "
+            fi
+            config="$config\n${comment}$*"
+        }
+
+        local config="\n# Load and configure smartcd\nsource ~/.bash_arrays\nsource ~/.bash_varstash\nsource ~/.bash_smartcd"
+
+        _setup_conditionally "$setup_cd"            "smartcd setup cd"
+        _setup_conditionally "$setup_pushd"         "smartcd setup pushd"
+        _setup_conditionally "$setup_pushd"         "smartcd setup popd"
+        _setup_conditionally "$enable_prompt_hook"  "smartcd setup prompt-hook"
+        _setup_conditionally "$enable_exit_hook"    "smartcd setup exit-hook"
+        _setup_conditionally "$autoconfigure"       "VARSTASH_AUTOCONFIGURE=1"
+        _setup_conditionally "$autoedit"            "VARSTASH_AUTOEDIT=1"
+        _setup_conditionally "$automigrate"         "SMARTCD_AUTOMIGRATE=1"
+        _setup_conditionally "$legacy"              "SMARTCD_LEGACY=1"
+
+        # Add commented-out quiet settings so the user can enable them later
+        _setup_conditionally ""                "SMARTCD_QUIET=1"
+        _setup_conditionally ""                "VARSTASH_QUIET=1"
+
+        unset -f _setup_conditionally
+
+        echo -e "$config"
+    }
+
+    local yes="^y"
+    function read_yesno() {
+        local yesno
+        read yesno < /dev/tty
+        yesno=$(echo $yesno | tr 'A-Z' 'a-z')
+        : ${yesno:=$1}
+        echo $yesno
+    }
+
+    local which_shell=$SHELL
+    if [[ $which_shell =~ 'bash' ]]; then
+        local possible_files=".bashrc .bash_profile .profile"
+    elif [[ $which_shell =~ 'zsh' ]]; then
+        local possible_files=".zshrc"
+    else
+        echo "Unknown shell, sorry!  Only bash and zsh are supported at this time"
+        exit 1
+    fi
+
+    echo
+    echo "[ smartcd setup cd ]"
+    echo -n "Would you like to wrap cd with smartcd?  This is the recommended way to run smartcd [Y/n] "
+    local setup_cd=$(read_yesno y)
+
+    echo
+    echo "[ smartcd setup pushd ]"
+    echo "[ smartcd setup popd  ]"
+    echo -n "Would you like to wrap pushd and popd? [Y/n] "
+    local setup_pushd=$(read_yesno y)
+
+    echo
+    echo "[ setup_smartcd_prompt_hook ]"
+    echo "Would you like to enable prompt-command hooks?  (This is only recommended if you are an"
+    echo -n "\"autocd\" user, say no if you are unsure [y/N] "
+    local enable_prompt_hook=$(read_yesno n)
+
+    echo
+    echo "[ setup_smartcd_exit_hook ]"
+    echo "Would you like to enable the shell exit hook?  This will cause bash_leave scripts to run"
+    echo -n "from your current directory down to / when exiting your shell [y/N] "
+    local enable_exit_hook=$(read_yesno n)
+
+    echo
+    echo "[ VARSTASH_AUTOCONFIGURE=1 ]"
+    echo -n "Would you like to automatically configure smartcd when you run stash or autostash manually? [y/N] "
+    local autoconfigure=$(read_yesno n)
+
+    if [[ $autoconfigure =~ $yes ]]; then
+        echo
+        echo "[ VARSTASH_AUTOEDIT=1 ]"
+        echo -n "Would you also like to edit the smartcd config after it is automatically configured? [y/N] "
+        local autoedit=$(read_yesno n)
+    fi
+
+    echo
+    echo "[ADVANCED USAGE]"
+
+    echo
+    echo "[ SMARTCD_AUTOMIGRATE=1 ]"
+    echo -n "Would you like to automigrate legacy smartcd scripts? [y/N] "
+    local automigrate=$(read_yesno n)
+
+    echo
+    echo "[ SMARTCD_LEGACY=1 ]"
+    echo -n "Would you like to allow legacy scripts to run in-place? (DISCOURAGED) [y/N] "
+    local legacy=$(read_yesno n)
+
+    local config=$(generate_config)
+
+    echo
+
+    if [[ -f "$HOME/.smartcd_config" ]]; then
+        local config_file_exists=1
+        echo -n "$HOME/.smartcd_config already exists, do you want to overwrite it? [y/N] "
+        local overwrite_config_file=$(read_yesno n)
+        if [[ $overwrite_config_file =~ $yes ]]; then
+            echo -e "$config" > "$HOME/.smartcd_config"
+        else
+            echo "Ok, here is the configuration that you generated, please update as necessary:"
+            echo "$config"
+        fi
+    else
+        echo -n "Would you like to configure smartcd in $HOME/.smartcd_config? (recommended) [Y/n] "
+        local create_config_file=$(read_yesno y)
+        if [[ $create_config_file =~ $yes ]]; then
+            echo -e "$config" > "$HOME/.smartcd_config"
+            local config_file_exists=1
+        fi
+    fi
+
+    if [[ -n $config_file_exists ]]; then
+
+        echo -n "Would you like to load your config file now? [Y/n] "
+        local loadnow=$(read_yesno y)
+        if [[ $loadnow =~ $yes ]]; then
+            source $HOME/.smartcd_config
+        fi
+
+        for file in $possible_files; do
+            if [[ -f "$HOME/$file" ]]; then
+                if grep "\.smartcd_config" "$HOME/$file" >/dev/null 2>&1; then
+                    local setup=1
+                else
+                    echo -n "I see you have a $file, would you like to load your config file from there? [Y/n] "
+                    local answer=$(read_yesno y)
+                    if [[ $answer =~ $yes ]]; then
+                        echo -e "\nsource ~/.smartcd_config" >> "$HOME/$file"
+                        local setup=1
+                    fi
+                fi
+            fi
+        done
+
+        if [[ -z $setup ]]; then
+            echo -n "You did not load your config anywhere, which file would you like to load it from? "
+            read filename < /dev/tty
+            if [[ -n "$filename" ]]; then
+                # eval here to expand ~
+                local real_filename=$(readlink -f $(eval echo $filename))
+                if [[ -f "$real_filename" ]]; then
+                    echo -e "\nsource ~/.smartcd_config" >> "$real_filename"
+                else
+                    echo "Sorry, I can't find $filename"
+                fi
+            else
+                echo
+                echo "WARNING"
+                echo "You apparently did not configure your shell to load your smartcd configuration."
+                echo "Make sure you add \"source ~/.smartcd_config\" to the appropriate location."
+            fi
+        fi
+    else
+        for file in $possible_files; do
+            if [[ -f "$HOME/$file" ]]; then
+                echo -n "I see you have a $file, would you like to write your config to it? [Y/n] "
+                local answer=$(read_yesno y)
+                if [[ $answer =~ $yes ]]; then
+                    setup_file "$HOME/$file" "$config"
+                    local setup=1
+                fi
+            fi
+        done
+
+        if [[ -z $setup ]]; then
+            echo -n "You did not configure any files, which file would you like to set up? "
+            read filename < /dev/tty
+            if [[ -n "$filename" ]]; then
+                # eval here to expand ~
+                local real_filename=$(readlink -f $(eval echo $filename))
+                if [[ -f "$real_filename" ]]; then
+                    setup_file "$real_filename" "$config"
+                else
+                    echo "Sorry, I can't find $filename"
+                fi
+            else
+                echo "Ok, here is your configuration, please set it up in an appropriate location:"
+                echo "$config"
+            fi
+        fi
+    fi
+
+    unset -f setup_file generate_config read_yesno
 }
 
 # Run on load if all the necessary libraries are loaded, otherwise let them do it
