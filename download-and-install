@@ -22,7 +22,7 @@ if [[ -n $lwp ]] && perl -MCrypt::SSLeay -e '' >/dev/null 2>&1; then
 elif [[ -n $curl ]]; then
     download="curl -L"
 elif [[ -n $wget ]]; then
-    download="wget -O -"
+    download="wget --no-check-certificate -O -"
 else
     echo "I can't find either wget or curl on your system, sorry!  Please download"
     echo "smartcd from http://github.com/cxreg/smartcd and follow the install"
