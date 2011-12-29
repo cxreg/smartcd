@@ -5,7 +5,9 @@
 #
 #   % curl -L http://smartcd.org/install | bash
 #
-# If you don't have curl, but you do have wget, replace `curl -L` with `wget -O -`.
+# If you don't have curl, but you do have wget, try
+#
+#   % wget --no-check-certificate -O - http://smartcd.org/install | bash
 #
 # For more details about this program, visit http://github.com/cxreg/smartcd
 
