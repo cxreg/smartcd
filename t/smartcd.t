@@ -14,7 +14,7 @@ plan_tests 12
 # One tier
 dir=tmp_dir
 mkdir -p $dir
-smartcd_dir=$HOME/.smartcd$(pwd)/$dir
+smartcd_dir=$HOME/.smartcd/scripts$(pwd)/$dir
 mkdir -p $smartcd_dir
 
 echo -n >$smartcd_dir/bash_enter
@@ -54,7 +54,7 @@ smartcd cd ../..
 
 spacedir="dir with a space"
 mkdir -p "$spacedir"
-smartcd_spacedir="$HOME/.smartcd$(pwd)/$spacedir"
+smartcd_spacedir="$HOME/.smartcd/scripts$(pwd)/$spacedir"
 mkdir -p "$smartcd_spacedir"
 echo 'echo -n "1 "' > "$smartcd_spacedir/bash_enter"
 echo 'echo 2' > "$smartcd_spacedir/bash_leave"
@@ -64,7 +64,7 @@ is "${output-_}" "1 2" "could enter and leave a directory with a space"
 echo 'echo 4' > "$smartcd_spacedir/bash_leave"
 spacedir2="dir with a space/subdir"
 mkdir -p "$spacedir2"
-smartcd_spacedir2="$HOME/.smartcd$(pwd)/$spacedir2"
+smartcd_spacedir2="$HOME/.smartcd/scripts$(pwd)/$spacedir2"
 mkdir -p "$smartcd_spacedir2"
 echo 'echo -n "2 "' > "$smartcd_spacedir2/bash_enter"
 echo 'echo -n "3 "' > "$smartcd_spacedir2/bash_leave"

@@ -44,11 +44,11 @@ user@host:~/project$ smartcd edit enter
 user@host:~/project$ echo 'autostash PATH=./temporary/path:$PATH' | smartcd edit enter
 
 # If you like doing things by hand, you may prefer
-mkdir -p ~/.smartcd/some/directory
-echo 'autostash PATH=./temporary/path:$PATH' >> ~/.smartcd/some/directory/bash_enter
+mkdir -p ~/.smartcd/scripts/some/directory
+echo 'autostash PATH=./temporary/path:$PATH' >> ~/.smartcd/scripts/some/directory/bash_enter
 
 # And you can run things explicitly on leave, as well
-echo 'echo "bye!"' >> ~/.smartcd/some/directory/bash_leave
+echo 'echo "bye!"' >> ~/.smartcd/scripts/some/directory/bash_leave
 
 # When a shell is started enter scripts will be run from / up to your current
 # directory.  If you want the inverse to occur as well, having leave scripts run
@@ -88,23 +88,23 @@ example:
 
       Path         Action      Script
     ------------------------------------------------------------
-     /foo/bar       enter     ~/.smartcd/foo/bar/bash_enter
-     /foo/bar/baz   leave     ~/.smartcd/foo/bar/baz/bash_leave
+     /foo/bar       enter     ~/.smartcd/scripts/foo/bar/bash_enter
+     /foo/bar/baz   leave     ~/.smartcd/scripts/foo/bar/baz/bash_leave
 
 You can edit and read these files with the smartcd command using the
 "edit", "show", and "filename" actions.
 
     user@host:/usr/local/bin$ smartcd show leave
-    /home/user/.smartcd/usr/local/bin/bash_leave does not exist
+    /home/user/.smartcd/scripts/usr/local/bin/bash_leave does not exist
 
     user@host:/usr/local/bin$ smartcd show enter
-    /home/user/.smartcd/usr/local/bin/bash_enter exists
+    /home/user/.smartcd/scripts/usr/local/bin/bash_enter exists
     -------------------------------------------------------------------------
     echo "testing"
     -------------------------------------------------------------------------
 
     user@host:/usr/local/bin$ smartcd edit enter
-    --> edits ~/.smartcd/usr/local/bin/bash_enter
+    --> edits ~/.smartcd/scripts/usr/local/bin/bash_enter
 
     user@host:/usr/local/bin$ echo "some-command" | smartcd edit enter
 

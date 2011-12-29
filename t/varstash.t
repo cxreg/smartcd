@@ -110,7 +110,7 @@ export HOME=$(pwd)/tmphome
 VARSTASH_AUTOCONFIG=1
 oldshell=$SHELL
 autostash SHELL
-config_file="$HOME/.smartcd$(pwd)/bash_enter"
+config_file="$HOME/.smartcd/scripts$(pwd)/bash_enter"
 config_file_exists=$([[ -f $config_file ]] && echo "yes")
 
 like "${config_file_exists-_}" "yes" "created smartcd file"

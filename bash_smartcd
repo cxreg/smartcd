@@ -22,7 +22,7 @@
 #   under your home directory which mirrors the directories they
 #   represent, for example:
 #
-#       /foo/bar/baz  ->  ~/.smartcd/foo/bar/baz
+#       /foo/bar/baz  ->  ~/.smartcd/scripts/foo/bar/baz
 #
 #   ###############
 #   # Basic usage #
@@ -50,7 +50,7 @@
 #       echo 'echo "hi!"' | smartcd edit enter
 #
 #       # Or done manually
-#       echo 'echo "hi!"' > ~/.smartcd/somedir/bash_enter
+#       echo 'echo "hi!"' > ~/.smartcd/scripts/somedir/bash_enter
 #
 #       # When a shell is started enter scripts will be run from / up to your
 #       # current directory.  If you want the inverse to occur as well, having
@@ -266,14 +266,14 @@ function _smartcd() {
     local reset_pushdignoredups=:
     if [[ -n $ZSH_VERSION ]]; then
         for opt in $(setopt); do
-            if [[ $opt = "autopushd" ]]; then
-                reset_autopushd="setopt autopushd"
-                setopt noautopushd
-            fi
-            if [[ $opt = "pushdignoredups" ]]; then
-                reset_pushdignoredups="setopt pushdignoredups"
-                setopt nopushdignoredups
-            fi
+            case $opt in
+                     autopushd) reset_autopushd="setopt autopushd"
+                                setopt noautopushd
+                                ;;
+               pushdignoredups) reset_pushdignoredups="setopt pushdignoredups"
+                                setopt nopushdignoredups
+                                ;;
+            esac
         done
     fi
 
@@ -326,7 +326,8 @@ function _smartcd() {
         # Set this just in case we are not able to actualy chdir to $dir
         local varstash_dir="$dir"
 
-        local confdir="$HOME/.smartcd$dir"
+        local confdir="$HOME/.smartcd/scripts$dir"
+        local olddir="$HOME/.smartcd$dir"
         if [[ -d "$dir" ]]; then
             builtin cd "$dir"
             if [[ -f .bash_leave ]]; then
@@ -361,6 +362,11 @@ function _smartcd() {
         else
             echo "smartcd: leaving non-existent directory $dir"
         fi
+
+        if [[ -f "$olddir/bash_leave" ]]; then
+            smartcd_upgrade_database
+        fi
+
         # We will run this even if we were not able to chdir there, but
         # the user is notified that this occurred so they can check things out
         if [[ -f "$confdir/bash_leave" ]]; then
@@ -369,6 +375,7 @@ function _smartcd() {
             fi
             _smartcd_exec "$confdir/bash_leave" "$dir"
         fi
+
         if [[ -n "$(fn_exists autounstash)" ]]; then
             autounstash
         fi
@@ -385,7 +392,8 @@ function _smartcd() {
         local dir="$(alast enter_stack)"
         apop enter_stack >/dev/null
         builtin cd "$dir"
-        local confdir="$HOME/.smartcd$dir"
+        local confdir="$HOME/.smartcd/scripts$dir"
+        local olddir="$HOME/.smartcd$dir"
         if [[ -f .bash_enter ]]; then
             if [[ -n $SMARTCD_LEGACY ]]; then
                 if [[ -z $SMARTCD_QUIET ]]; then
@@ -415,6 +423,11 @@ function _smartcd() {
                 echo "############################################################################"
             fi
         fi
+
+        if [[ -f "$olddir/bash_enter" ]]; then
+            smartcd_upgrade_database
+        fi
+
         if [[ -f "$confdir/bash_enter" ]]; then
             if [[ -z $SMARTCD_QUIET ]]; then
                 echo "smartcd: running $confdir/bash_enter"
@@ -465,8 +478,12 @@ function smartcd_edit() {
                                ;;
     esac
 
-    local smartcd_dir="$HOME/.smartcd$(pwd)"
-    if [[ ! -d $smartcd_dir ]]; then
+    if [[ -f "$HOME/.smartcd$(pwd)/$file" ]]; then
+        smartcd_upgrade_database
+    fi
+
+    local smartcd_dir="$HOME/.smartcd/scripts$(pwd)"
+    if [[ ! -d "$smartcd_dir" ]]; then
         mkdir -p "$smartcd_dir"
     fi
 
@@ -581,9 +598,13 @@ function bash_leave() {
 # It's probably better to use getopts or something for this, but since only one
 # option at a time is valid right now, no need
 function _smartcd_file_check() {
-    local confdir="$HOME/.smartcd$(pwd)"
+    local confdir="$HOME/.smartcd/scripts$(pwd)"
 
     local file=$1; shift
+
+    if [[ -f "$HOME/.smartcd$(pwd)/$file" ]]; then
+        smartcd_upgrade_database
+    fi
 
     case $1 in
            -h|help) echo "Usage: $file [ edit | show | filename ]";;
@@ -607,7 +628,24 @@ function _smartcd_file_check() {
 function smartcd_template() {
     local action=$1; shift
 
-    local confdir="$HOME/.smartcd"
+    # Going to cheat here a bit because doing this right is _hard_
+    # Possibly temporarily set nonomatch in zsh who will barf on the following ls without it
+    local reset_nomatch=:
+    if [[ -n $ZSH_VERSION ]]; then
+        reset_nomatch="setopt nomatch"
+        if setopt | grep nonomatch >/dev/null; then
+            reset_nomatch=:
+        fi
+        setopt nonomatch
+    fi
+    # Force an empty argument to ls in order to gracefully handle nullglob
+    case $(ls '' $HOME/.smartcd/template_* 2>/dev/null) in
+        '') ;;
+         *) smartcd_upgrade_database;;
+    esac
+    eval $reset_nomatch
+
+    local confdir="$HOME/.smartcd/templates"
 
     case $action in
           _init)    local name="$1"; shift
@@ -956,6 +994,35 @@ function smartcd_config() {
     fi
 
     unset -f setup_file generate_config read_yesno
+}
+
+function smartcd_upgrade_database() {
+    if [[ -z $SMARTCD_QUIET ]]; then
+        case $_manual_upgrade in
+            1) echo "smartcd: upgrading";;
+            *) echo "smartcd: outdated script directory detected, upgrading";;
+        esac
+    fi
+    mkdir -p $HOME/.smartcd/scripts $HOME/.smartcd/templates $HOME/.smartcd/archive
+    for entry in $(ls $HOME/.smartcd); do
+        case $entry in
+             scripts|templates) ;;
+                    template_*) name=${entry#template_}
+                                cp "$HOME/.smartcd/$entry" "$HOME/.smartcd/templates/$name"
+                                mv "$HOME/.smartcd/$entry" "$HOME/.smartcd/archive"
+                                ;;
+                             *) # A little extra caution never hurt anybody, let's try to be future-proof
+                                if [[ -d "/$entry" ]]; then
+                                    cp -rpP "$HOME/.smartcd/$entry" "$HOME/.smartcd/scripts"
+                                    mv "$HOME/.smartcd/$entry" "$HOME/.smartcd/archive"
+                                fi
+                                ;;
+        esac
+
+    done
+
+    echo "smartcd: upgrade complete.  Your previous scripts can be found under"
+    echo "$HOME/.smartcd/archive in case anything went wrong."
 }
 
 # Run on load if all the necessary libraries are loaded, otherwise let them do it
