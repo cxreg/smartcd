@@ -28,7 +28,7 @@ cat >$smartcd_dir/bash_enter <<EOF
 echo this is a test
 EOF
 output=$(smartcd cd $dir)
-is "${output-_}" "this is a test" "bash_enter executed successfully using smartcd"
+is "_$output" "_this is a test" "bash_enter executed successfully using smartcd"
 
 output=$(smartcd pushd $dir)
 like "${output-_}" "this is a test" "bash_enter executed successfully using smartcd pushd"

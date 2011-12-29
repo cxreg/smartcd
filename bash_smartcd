@@ -189,6 +189,14 @@ function smartcd() {
     esac
 }
 
+function _smartcd_exec() {
+    local file=$1; shift
+    local dir=$1; shift
+    local contents="$(cat "$file")"
+    contents="${contents//__PATH__/$dir}"
+    eval "$contents"
+}
+
 function _smartcd() {
     # Don't run this twice consecutively from being sourced.  If the user double-sources
     # then it could result in scripts being run twice which may have undesirable or
@@ -326,7 +334,7 @@ function _smartcd() {
                     if [[ -z $SMARTCD_QUIET ]]; then
                         echo "smartcd: running $dir/.bash_leave"
                     fi
-                    . .bash_leave
+                    _smartcd_exec .bash_leave "$dir"
                 elif [[ -n $SMARTCD_AUTOMIGRATE ]]; then
                     echo "Automatically migrating \"$dir/.bash_leave\" to \"$confdir/bash_leave\""
                     mkdir -p "$confdir"
@@ -359,7 +367,7 @@ function _smartcd() {
             if [[ -z $SMARTCD_QUIET ]]; then
                 echo "smartcd: running $confdir/bash_leave"
             fi
-            . "$confdir/bash_leave"
+            _smartcd_exec "$confdir/bash_leave" "$dir"
         fi
         if [[ -n "$(fn_exists autounstash)" ]]; then
             autounstash
@@ -383,7 +391,7 @@ function _smartcd() {
                 if [[ -z $SMARTCD_QUIET ]]; then
                     echo "smartcd: running $dir/.bash_enter"
                 fi
-                . .bash_enter
+                _smartcd_exec .bash_enter "$dir"
             elif [[ -n $SMARTCD_AUTOMIGRATE ]]; then
                 echo "Automatically migrating \"$dir/.bash_enter\" to \"$confdir/bash_enter\""
                 mkdir -p "$confdir"
@@ -411,7 +419,7 @@ function _smartcd() {
             if [[ -z $SMARTCD_QUIET ]]; then
                 echo "smartcd: running $confdir/bash_enter"
             fi
-            . "$confdir/bash_enter"
+            _smartcd_exec "$confdir/bash_enter" "$dir"
         fi
 
         stack_size=$(alen enter_stack)
@@ -700,13 +708,13 @@ EOF
                                         echo "Configuring $smartcd_dir/bash_enter from template $name"
                                         local notified_enter=1
                                     fi
-                                    echo ${line//__PATH__/$current_dir} >> "$smartcd_dir/bash_enter"
+                                    echo "$line" >> "$smartcd_dir/bash_enter"
                                 elif [[ "$mode" = "leave" ]]; then
                                     if [[ -z "$notified_leave" ]]; then
                                         echo "Configuring $smartcd_dir/bash_leave from template $name"
                                         local notified_leave=1
                                     fi
-                                    echo ${line//__PATH__/$current_dir} >> "$smartcd_dir/bash_leave"
+                                    echo "$line" >> "$smartcd_dir/bash_leave"
                                 fi
                             done < "$confdir/template_$name"
                         else
