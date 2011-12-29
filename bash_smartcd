@@ -197,6 +197,39 @@ function _smartcd_exec() {
     eval "$contents"
 }
 
+function _smartcd_check_inode() {
+    if [[ -n $SMARTCD_NO_INODE ]]; then
+        return
+    fi
+    local dir=$1;
+    local inode=$(ls -di "$dir" | awk '{print $1}')
+    if [[ -f "$HOME/.smartcd/inodes$dir.inode" ]]; then
+        prev=$(cat "$HOME/.smartcd/inodes$dir.inode")
+        if [[ $inode != $prev ]]; then
+            echo "WARNING!  Possibly outdated scripts detected, not running them.  These"
+            echo "scripts were created for a directory which has been deleted or replaced,"
+            echo "but the scripts for them remained.  Please check the following files"
+            echo "for correctness:"
+            echo
+            for file in $(ls "$HOME/.smartcd/scripts$dir"); do
+                echo "    $HOME/.smartcd/scripts$dir/$file"
+            done
+            echo
+            echo "Once you have verified or corrected the situation, remove the following"
+            echo "file to make this warning go away"
+            echo
+            echo "    $HOME/.smartcd/inodes$dir.inode"
+            echo
+            echo "If you don't wish to keep this safety check in place, set SMARTCD_NO_INODE=1"
+            echo "or re-run \`smartcd config\`"
+            _inode_skip=1
+        fi
+    else
+        mkdir -p "$HOME/.smartcd/inodes$dir"
+        echo $inode > "$HOME/.smartcd/inodes$dir.inode"
+    fi
+}
+
 function _smartcd() {
     # Don't run this twice consecutively from being sourced.  If the user double-sources
     # then it could result in scripts being run twice which may have undesirable or
@@ -373,7 +406,11 @@ function _smartcd() {
             if [[ -z $SMARTCD_QUIET ]]; then
                 echo "smartcd: running $confdir/bash_leave"
             fi
-            _smartcd_exec "$confdir/bash_leave" "$dir"
+            _smartcd_check_inode "$dir"
+            if [[ -z $_inode_skip ]]; then
+                _smartcd_exec "$confdir/bash_leave" "$dir"
+            fi
+            unset -v _inode_skip
         fi
 
         if [[ -n "$(fn_exists autounstash)" ]]; then
@@ -432,7 +469,11 @@ function _smartcd() {
             if [[ -z $SMARTCD_QUIET ]]; then
                 echo "smartcd: running $confdir/bash_enter"
             fi
-            _smartcd_exec "$confdir/bash_enter" "$dir"
+            _smartcd_check_inode "$dir"
+            if [[ -z $_inode_skip ]]; then
+                _smartcd_exec "$confdir/bash_enter" "$dir"
+            fi
+            unset -v _inode_skip
         fi
 
         stack_size=$(alen enter_stack)
@@ -820,6 +861,7 @@ function smartcd_config() {
         _setup_conditionally "$enable_exit_hook"    "smartcd setup exit-hook"
         _setup_conditionally "$autoconfigure"       "VARSTASH_AUTOCONFIGURE=1"
         _setup_conditionally "$autoedit"            "VARSTASH_AUTOEDIT=1"
+        _setup_conditionally "$noinode"             "SMARTCD_NO_INODE=1"
         _setup_conditionally "$automigrate"         "SMARTCD_AUTOMIGRATE=1"
         _setup_conditionally "$legacy"              "SMARTCD_LEGACY=1"
 
@@ -888,6 +930,12 @@ function smartcd_config() {
 
     echo
     echo "[ADVANCED USAGE]"
+
+    echo
+    echo "[ SMARTCD_NO_INODE=1 ]"
+    echo "Would you like to skip validation that scripts are not stale from a previously deleted or renamed"
+    echo -n "directory? (DISCOURAGED) [y/N] "
+    local noinode=$(read_yesno n)
 
     echo
     echo "[ SMARTCD_AUTOMIGRATE=1 ]"
