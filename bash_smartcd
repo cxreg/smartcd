@@ -273,6 +273,7 @@ function _smartcd() {
         stash -f chpwd_functions
         unset -f chpwd 2>/dev/null
         unset chpwd_functions 2>/dev/null
+        unset -v varstash_dir
         local stashed_chpwd=1
     fi
 
@@ -420,6 +421,7 @@ function _smartcd() {
         stack_size=$(alen leave_stack)
         : ${stack_size:=0}
     done
+    unset -v varstash_dir
 
     # Run enter_stack in highest to lowest
     local stack_size=$(alen enter_stack)
