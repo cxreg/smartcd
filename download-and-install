@@ -33,7 +33,7 @@ if [[ -f ~/.bash_smartcd ]]; then
     smartcd_previously_installed=1
 fi
 
-working_dir=$(mktemp -d)
+working_dir=$(mktemp -d /tmp/smartcd-install.XXXXXX)
 cd $working_dir
 $download "$baseurl/bash_smartcd" > ~/.bash_smartcd
 $download "$baseurl/bash_varstash" > ~/.bash_varstash
