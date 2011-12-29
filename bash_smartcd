@@ -686,23 +686,24 @@ function smartcd_template() {
     esac
     eval $reset_nomatch
 
-    local confdir="$HOME/.smartcd/templates"
+    local confdir="$HOME/.smartcd"
 
     case $action in
           _init)    local name="$1"; shift
                     local from="$1"
                     if [[ -n "$from" ]]; then
-                        if [[ -f "$confdir/$from/bash_enter" ]]; then
-                            local enter_orig="$(eval cat \"$confdir/$from/bash_enter\")"
+                        if [[ -f "$confdir/scripts$from/bash_enter" ]]; then
+                            local enter_orig="$(eval cat \"$confdir/scripts$from/bash_enter\")"
+                            enter_orig="${enter_orig//$dir/__PATH__/}"
                         fi
                         if [[ -f "$confdir/$from/bash_leave" ]]; then
-                            local leave_orig="$(eval cat \"$confdir/$from/bash_leave\")"
+                            local leave_orig="$(eval cat \"$confdir/scripts$from/bash_leave\")"
                         fi
                     fi
 
-                    mkdir -p "$confdir"
-                    if [[ ! -f "$confdir/template_$name" ]]; then
-                        cat <<EOF >> "$confdir/template_$name"
+                    mkdir -p "$confdir/templates"
+                    if [[ ! -f "$confdir/templates/$name" ]]; then
+                        cat <<EOF >> "$confdir/templates/$name"
 ########################################################################
 # This is a smartcd template.  Edit this file to create a named
 # configuration you can copy to any number of directories.  This is
@@ -728,14 +729,14 @@ EOF
         edit|-e)    local name="$1"; shift
                     if [[ -n $name ]]; then
                         smartcd_template _init "$name"
-                        ${EDITOR:-vi} "$confdir/template_$name"
+                        ${EDITOR:-vi} "$confdir/templates/$name"
                     else
                         echo "Usage: smartcd template edit <name>"
                     fi
                     ;;
       create|-c)    local name="$1"; shift
                     if [[ -n $name ]]; then
-                        if [[ -f "$confdir/template_$name" ]]; then
+                        if [[ -f "$confdir/templates/$name" ]]; then
                             echo "Template $name already exists, run \"smartcd template edit $name\" to modify it"
                         else
                             smartcd_template _init "$name" "$(pwd)"
@@ -745,20 +746,20 @@ EOF
                         echo "Usage: smartcd template create <name>"
                     fi
                     ;;
-        list|-l)    for file in $confdir/template_*; do
+        list|-l)    for file in $confdir/templates/*; do
                         # if the user has shell options that leave us with a literal asterisk here
                         # in the event of no matches, we'll want to skip it.  rather than check and
                         # twiddle shell options, let's just see if that's what happened
-                        if [[ "$file" = "$confdir/template_*" ]]; then
+                        if [[ "$file" = "$confdir/templates/*" ]]; then
                             break
                         fi
-                        echo ${file#*template_}
+                        echo ${file#*templates/}
                     done
                     ;;
         show|-s)    local name="$1"; shift
                     if [[ -n $name ]]; then
-                        if [[ -f "$confdir/template_$name" ]]; then
-                            cat "$confdir/template_$name"
+                        if [[ -f "$confdir/templates/$name" ]]; then
+                            cat "$confdir/templates/$name"
                         else
                             echo "Template $name not found"
                         fi
@@ -768,9 +769,9 @@ EOF
                     ;;
      install|-i)    local name="$1"; shift
                     if [[ -n $name ]]; then
-                        if [[ -f "$confdir/template_$name" ]]; then
+                        if [[ -f "$confdir/templates/$name" ]]; then
                             local current_dir=$(pwd)
-                            local smartcd_dir="$confdir$current_dir"
+                            local smartcd_dir="$confdir/scripts$current_dir"
                             mkdir -p "$smartcd_dir"
                             local mode=
                             while read line; do
@@ -795,7 +796,7 @@ EOF
                                     fi
                                     echo "$line" >> "$smartcd_dir/bash_leave"
                                 fi
-                            done < "$confdir/template_$name"
+                            done < "$confdir/templates/$name"
                         else
                             echo "Template $name not found"
                         fi
@@ -805,8 +806,8 @@ EOF
                     ;;
       delete|rm|-d) local name="$1"; shift
                     if [[ -n $name ]]; then
-                        if [[ -f "$confdir/template_$name" ]]; then
-                            rm "$confdir/template_$name"
+                        if [[ -f "$confdir/templates/$name" ]]; then
+                            rm "$confdir/templates/$name"
                         else
                             echo "Template $name not found"
                         fi
