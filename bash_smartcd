@@ -694,10 +694,11 @@ function smartcd_template() {
                     if [[ -n "$from" ]]; then
                         if [[ -f "$confdir/scripts$from/bash_enter" ]]; then
                             local enter_orig="$(eval cat \"$confdir/scripts$from/bash_enter\")"
-                            enter_orig="${enter_orig//$dir/__PATH__/}"
+                            enter_orig="${enter_orig//$from/__PATH__}"
                         fi
-                        if [[ -f "$confdir/$from/bash_leave" ]]; then
+                        if [[ -f "$confdir/scripts$from/bash_leave" ]]; then
                             local leave_orig="$(eval cat \"$confdir/scripts$from/bash_leave\")"
+                            leave_orig="${leave_orig//$from/__PATH__}"
                         fi
                     fi
 
