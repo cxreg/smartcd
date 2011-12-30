@@ -202,16 +202,16 @@ function _smartcd_check_inode() {
         return
     fi
     local dir=$1;
-    local inode=$(ls -di "$dir" | awk '{print $1}')
+    local inode=$(command ls -di "$dir" | command awk '{print $1}')
     if [[ -f "$HOME/.smartcd/inodes$dir.inode" ]]; then
-        prev=$(cat "$HOME/.smartcd/inodes$dir.inode")
+        prev=$(command cat "$HOME/.smartcd/inodes$dir.inode")
         if [[ $inode != $prev ]]; then
             echo "WARNING!  Possibly outdated scripts detected, not running them.  These"
             echo "scripts were created for a directory which has been deleted or replaced,"
             echo "but the scripts for them remained.  Please check the following files"
             echo "for correctness:"
             echo
-            for file in $(ls "$HOME/.smartcd/scripts$dir"); do
+            for file in $(command ls "$HOME/.smartcd/scripts$dir"); do
                 echo "    $HOME/.smartcd/scripts$dir/$file"
             done
             echo
@@ -225,7 +225,7 @@ function _smartcd_check_inode() {
             _inode_skip=1
         fi
     else
-        mkdir -p "$HOME/.smartcd/inodes$dir"
+        command mkdir -p "$HOME/.smartcd/inodes$dir"
         echo $inode > "$HOME/.smartcd/inodes$dir.inode"
     fi
 }
@@ -372,9 +372,9 @@ function _smartcd() {
                     _smartcd_exec .bash_leave "$dir"
                 elif [[ -n $SMARTCD_AUTOMIGRATE ]]; then
                     echo "Automatically migrating \"$dir/.bash_leave\" to \"$confdir/bash_leave\""
-                    mkdir -p "$confdir"
-                    cat "$dir/.bash_leave" >> "$confdir/bash_leave"
-                    rm "$dir/.bash_leave"
+                    command mkdir -p "$confdir"
+                    command cat "$dir/.bash_leave" >> "$confdir/bash_leave"
+                    command rm "$dir/.bash_leave"
                 elif [[ -z $SMARTCD_QUIET ]]; then
                     echo "############################################################################"
                     echo "# NOTICE!  Deprecated .bash_leave found, please migrate this file to the new"
@@ -441,9 +441,9 @@ function _smartcd() {
                 _smartcd_exec .bash_enter "$dir"
             elif [[ -n $SMARTCD_AUTOMIGRATE ]]; then
                 echo "Automatically migrating \"$dir/.bash_enter\" to \"$confdir/bash_enter\""
-                mkdir -p "$confdir"
-                cat "$dir/.bash_enter" >> "$confdir/bash_enter"
-                rm "$dir/.bash_enter"
+                command mkdir -p "$confdir"
+                command cat "$dir/.bash_enter" >> "$confdir/bash_enter"
+                command rm "$dir/.bash_enter"
             elif [[ -z $SMARTCD_QUIET ]]; then
                 echo "############################################################################"
                 echo "# NOTICE!  Deprecated .bash_enter found, please migrate this file to the new"
@@ -527,19 +527,19 @@ function smartcd_edit() {
 
     local smartcd_dir="$HOME/.smartcd/scripts$(pwd)"
     if [[ ! -d "$smartcd_dir" ]]; then
-        mkdir -p "$smartcd_dir"
+        command mkdir -p "$smartcd_dir"
     fi
 
     # Edit the file if interactive, otherwise write standard input to it
     if [[ -t 0 ]]; then
         ${EDITOR:-vi} "$smartcd_dir/$file"
     else
-        cat > "$smartcd_dir/$file"
+        command cat > "$smartcd_dir/$file"
     fi
 
     if [[ -f "$smartcd_dir/$file" && ! -s "$smartcd_dir/$file" ]]; then
         # Delete any file that is left empty
-        rm "$smartcd_dir/$file"
+        command rm "$smartcd_dir/$file"
     fi
 }
 
@@ -607,7 +607,7 @@ function setup_smartcd_exit_hook() {
         else
             # This is not completely safe but it's the best I could do for zsh
             # which does not allow you to ask for a specific trap definition
-            _smartcd_original_exit_trap=$(trap | sed -e':a' -e 'N' -e'$!ba' -e 's/.*trap -- \(.*\) EXIT.*/\1/')
+            _smartcd_original_exit_trap=$(trap | command sed -e':a' -e 'N' -e'$!ba' -e 's/.*trap -- \(.*\) EXIT.*/\1/')
         fi
     else
         # Bash supports this, which is much cleaner
@@ -657,7 +657,7 @@ function _smartcd_file_check() {
                         echo "$confdir/$file exists"
                         case $1 in
                            -l|show|cat) echo "-------------------------------------------------------------------------"
-                                        cat "$confdir/$file"
+                                        command cat "$confdir/$file"
                                         echo "-------------------------------------------------------------------------"
                                         ;;
                         esac
@@ -676,13 +676,13 @@ function smartcd_template() {
     local reset_nomatch=:
     if [[ -n $ZSH_VERSION ]]; then
         reset_nomatch="setopt nomatch"
-        if setopt | grep nonomatch >/dev/null; then
+        if setopt | command grep nonomatch >/dev/null; then
             reset_nomatch=:
         fi
         setopt nonomatch
     fi
     # Force an empty argument to ls in order to gracefully handle nullglob
-    case $(ls '' $HOME/.smartcd/template_* 2>/dev/null) in
+    case $(command ls '' $HOME/.smartcd/template_* 2>/dev/null) in
         '') ;;
          *) smartcd_upgrade_database;;
     esac
@@ -695,18 +695,18 @@ function smartcd_template() {
                     local from="$1"
                     if [[ -n "$from" ]]; then
                         if [[ -f "$confdir/scripts$from/bash_enter" ]]; then
-                            local enter_orig="$(eval cat \"$confdir/scripts$from/bash_enter\")"
+                            local enter_orig="$(eval command cat \"$confdir/scripts$from/bash_enter\")"
                             enter_orig="${enter_orig//$from/__PATH__}"
                         fi
                         if [[ -f "$confdir/scripts$from/bash_leave" ]]; then
-                            local leave_orig="$(eval cat \"$confdir/scripts$from/bash_leave\")"
+                            local leave_orig="$(eval command cat \"$confdir/scripts$from/bash_leave\")"
                             leave_orig="${leave_orig//$from/__PATH__}"
                         fi
                     fi
 
-                    mkdir -p "$confdir/templates"
+                    command mkdir -p "$confdir/templates"
                     if [[ ! -f "$confdir/templates/$name" ]]; then
-                        cat <<EOF >> "$confdir/templates/$name"
+                        command cat <<EOF >> "$confdir/templates/$name"
 ########################################################################
 # This is a smartcd template.  Edit this file to create a named
 # configuration you can copy to any number of directories.  This is
@@ -762,7 +762,7 @@ EOF
         show|-s)    local name="$1"; shift
                     if [[ -n $name ]]; then
                         if [[ -f "$confdir/templates/$name" ]]; then
-                            cat "$confdir/templates/$name"
+                            command cat "$confdir/templates/$name"
                         else
                             echo "Template $name not found"
                         fi
@@ -775,7 +775,7 @@ EOF
                         if [[ -f "$confdir/templates/$name" ]]; then
                             local current_dir=$(pwd)
                             local smartcd_dir="$confdir/scripts$current_dir"
-                            mkdir -p "$smartcd_dir"
+                            command mkdir -p "$smartcd_dir"
                             local mode=
                             while read line; do
                                 if [[ $line =~ "Enter any bash_enter commands" ]]; then
@@ -810,7 +810,7 @@ EOF
       delete|rm|-d) local name="$1"; shift
                     if [[ -n $name ]]; then
                         if [[ -f "$confdir/templates/$name" ]]; then
-                            rm "$confdir/templates/$name"
+                            command rm "$confdir/templates/$name"
                         else
                             echo "Template $name not found"
                         fi
@@ -837,7 +837,7 @@ function smartcd_config() {
         local file="$1"; shift
         local config="$1"; shift
 
-        if ! grep "smartcd" "$file" >/dev/null 2>&1; then
+        if ! command grep "smartcd" "$file" >/dev/null 2>&1; then
             echo "Configuring $file"
             echo -e "$config" >> $file
         else
@@ -882,7 +882,7 @@ function smartcd_config() {
     function read_yesno() {
         local yesno
         read yesno < /dev/tty
-        yesno=$(echo $yesno | tr 'A-Z' 'a-z')
+        yesno=$(echo $yesno | command tr 'A-Z' 'a-z')
         : ${yesno:=$1}
         echo $yesno
     }
@@ -984,7 +984,7 @@ function smartcd_config() {
 
         for file in $possible_files; do
             if [[ -f "$HOME/$file" ]]; then
-                if grep "\.smartcd_config" "$HOME/$file" >/dev/null 2>&1; then
+                if command grep "\.smartcd_config" "$HOME/$file" >/dev/null 2>&1; then
                     local setup=1
                 else
                     echo -n "I see you have a $file, would you like to load your config file from there? [Y/n] "
@@ -1055,18 +1055,18 @@ function smartcd_upgrade_database() {
             *) echo "smartcd: outdated script directory detected, upgrading";;
         esac
     fi
-    mkdir -p $HOME/.smartcd/scripts $HOME/.smartcd/templates $HOME/.smartcd/archive
-    for entry in $(ls $HOME/.smartcd); do
+    command mkdir -p $HOME/.smartcd/scripts $HOME/.smartcd/templates $HOME/.smartcd/archive
+    for entry in $(command ls $HOME/.smartcd); do
         case $entry in
              scripts|templates) ;;
                     template_*) name=${entry#template_}
-                                cp "$HOME/.smartcd/$entry" "$HOME/.smartcd/templates/$name"
-                                mv "$HOME/.smartcd/$entry" "$HOME/.smartcd/archive"
+                                command cp "$HOME/.smartcd/$entry" "$HOME/.smartcd/templates/$name"
+                                command mv "$HOME/.smartcd/$entry" "$HOME/.smartcd/archive"
                                 ;;
                              *) # A little extra caution never hurt anybody, let's try to be future-proof
                                 if [[ -d "/$entry" ]]; then
-                                    cp -rpP "$HOME/.smartcd/$entry" "$HOME/.smartcd/scripts"
-                                    mv "$HOME/.smartcd/$entry" "$HOME/.smartcd/archive"
+                                    command cp -rpP "$HOME/.smartcd/$entry" "$HOME/.smartcd/scripts"
+                                    command mv "$HOME/.smartcd/$entry" "$HOME/.smartcd/archive"
                                 fi
                                 ;;
         esac
