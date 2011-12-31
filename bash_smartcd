@@ -557,7 +557,7 @@ function _smartcd_hook() {
 
 function setup_smartcd_function() {
     local cmd=$1;
-    eval "$cmd() { smartcd $cmd \"\$@\"; }"
+    eval "function $cmd() { smartcd $cmd \"\$@\"; }"
 }
 
 function setup_smartcd_prompt_hook() {
