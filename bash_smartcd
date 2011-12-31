@@ -126,6 +126,27 @@
 #       smartcd template edit <name>
 #       smartcd template delete <name>
 #
+#   ##############
+#   # Backing up #
+#   ##############
+#
+#   You may find it valuable to back up your scripts and templates, either
+#   for preventative measures, or to copy your scripts to another machine.
+#   In any case, a import and export feature is provided to allow you to
+#   archive these files and restore them to a ~/.smartcd folder.
+#
+#       # Export your scripts
+#       smartcd export > my_smartcd_backup
+#
+#       # Several methods to import them
+#       smartcd import my_smartcd_backup
+#       cat my_smartcd_backup | smartcd import
+#
+#   If it happens that the machine you are importing to already has a ~/.smartcd
+#   directory with any scripts or templates in it, these files will be moved
+#   to a temp folder to avoid any conflict.  You may want to inspect these files
+#   by hand if this occurs and put them back in place if necessary.
+#
 ################################################################################
 
 # Compatibility functions
@@ -135,7 +156,7 @@ function smartpopd()  { smartcd popd "$@";  }
 function smartcd() {
     local command="$1"
 
-    local usage="Usage: smartcd ( edit | show | filename | template | setup | config ) [args]"
+    local usage="Usage: smartcd ( edit | show | filename | template | setup | config | export | import ) [args]"
     case $command in
         -h|help|'') echo $usage;;
      cd|pushd|popd) shift; _smartcd $command "$@";;
@@ -157,6 +178,8 @@ function smartcd() {
                     esac
                     ;;
             config) smartcd_config;;
+            export) shift; smartcd_export "$@";;
+            import) shift; smartcd_import "$@";;
                  *) if [[ -n $ZSH_VERSION ]]; then
                         local dir=$argv[-1]
                     else
@@ -1075,6 +1098,91 @@ function smartcd_upgrade_database() {
 
     echo "smartcd: upgrade complete.  Your previous scripts can be found under"
     echo "$HOME/.smartcd/archive in case anything went wrong."
+}
+
+# Export file format: (leading space added before all file contents)
+# -------------------------
+# smartcd export 1.0
+# @ scripts/home/user/foo
+#  ...
+#  ...
+# @ templates/wtf
+#  ...
+# -------------------------
+function smartcd_export() {
+    # not using stash here to avoid interfering with the user, who might also have it stashed.
+    local _old_ifs="$IFS"
+    IFS="
+"
+    echo "smartcd export 1.0"
+    apush remaining_dirs "scripts" "templates"
+    while (( $(alen remaining_dirs) > 0 )); do
+        dir=$(afirst remaining_dirs)
+        ashift remaining_dirs >/dev/null
+        files="$(command ls $HOME/.smartcd/$dir)"
+        for entry in $files; do
+            if [[ -f "$HOME/.smartcd/$dir/$entry" ]]; then
+                echo "@ $dir/$entry"
+                local line=
+                while read -r line; do
+                    echo " $line"
+                done < "$HOME/.smartcd/$dir/$entry"
+            elif [[ -d "$HOME/.smartcd/$dir/$entry" ]]; then
+                apush remaining_dirs "$dir/$entry"
+            else
+                echo "Skipping unknown file $HOME/.smartcd/$dir/$entry" >&2
+            fi
+        done
+    done
+
+    IFS="$_old_ifs"
+}
+
+function smartcd_import() {
+    if [[ -n $1 ]]; then
+        cat "$1" | _smartcd_import
+    else
+        _smartcd_import
+    fi
+}
+
+function _smartcd_import() {
+    local _old_ifs="$IFS"
+    IFS="
+"
+
+    if [[ -d "$HOME/.smartcd" ]]; then
+        for file in $(ls "$HOME/.smartcd"); do
+            case $file in
+                scripts|templates) if [[ -z "$olddir" ]]; then
+                                       command mkdir -p "$HOME/.smartcd/archive"
+                                       local olddir=$(command mktemp -d "$HOME/.smartcd/archive/import-backup.XXXXXX")
+                                   fi
+                                   echo "Old $HOME/.smartcd/$file found, moving to $olddir"
+                                   command mv "$HOME/.smartcd/$file" "$olddir"
+                                   ;;
+            esac
+        done
+
+        # These will be all wrong, so remove them
+        command rm -rf "$HOME/.smartcd/inodes"
+    fi
+
+    while read -r line; do
+        case $line in
+            "smartcd export"*) ;;
+                        "@ "*) local file="${line#@ }"
+                               local dir="${file%'/'*}"
+                               command mkdir -p "$HOME/.smartcd/$dir"
+                               ;;
+                            *)
+                               line="${line# }"
+                               echo "$line" >> "$HOME/.smartcd/$file"
+                               ;;
+        esac
+    done
+
+    IFS="$_old_ifs"
 }
 
 # Run on load if all the necessary libraries are loaded, otherwise let them do it

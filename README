@@ -244,6 +244,19 @@ WHAT ELSE CAN IT DO?
         smartcd setup exit-hook
 
 
+  BACKUP
+
+    If you would like to back up your scripts and templates, or copy them to
+    another computer, you can use the provided export/import feature.
+
+        # Export your scripts
+        smartcd export > my_smartcd_backup
+
+        # Several methods to import them
+        smartcd import my_smartcd_backup
+        cat my_smartcd_backup | smartcd import
+
+
   For more complete documentation, see the documentation in bash_smartcd itself.
 
 
