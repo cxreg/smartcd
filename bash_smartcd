@@ -225,6 +225,10 @@ function _smartcd_check_inode() {
         return
     fi
     local dir=$1;
+    if [[ ! -d "$dir" ]]; then
+        # Don't barf when leaving deleted directory
+        return
+    fi
     local inode=$(command ls -di "$dir" | command awk '{print $1}')
     if [[ -f "$HOME/.smartcd/inodes$dir.inode" ]]; then
         prev=$(command cat "$HOME/.smartcd/inodes$dir.inode")
