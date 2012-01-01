@@ -205,7 +205,7 @@ WHAT ARE SOME COMMON RECIPES?
     a project folder
 
         autostash PATH PERLBREW_PERL PERLBREW_VERSION PERLBREW_PATH PERLBREW_ROOT PATH_WITHOUT_PERLBREW
-        . /path/to/perlbrew/install/etc/bashrc
+        source /path/to/perlbrew/install/etc/bashrc
 
     perlbrew is available at http://search.cpan.org/~gugod/App-perlbrew/
 

@@ -33,7 +33,7 @@
 #       # or cp bash_smartcd ~/.bash_smartcd
 #
 #       # Add it to your bash init script
-#       . ~/.bash_smartcd
+#       source ~/.bash_smartcd
 #       smartcd setup cd # replaces cd with cd()
 #
 #       # And it works with pushd/popd too
