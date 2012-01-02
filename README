@@ -321,6 +321,7 @@ OTHER LIBRARIES
         areverse - Reverse the order of elements in the array
         afirst   - Like ashift, but doesn't remove anything.
         alast    - Like apop, but doesn't remove anything.
+        anth     - Retreive the n-th element of an array.
         alen     - Print the current number of elements in the array
         acopy    - Copy an array into a new variable
 

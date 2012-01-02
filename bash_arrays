@@ -47,6 +47,10 @@
 #         Description: Like apop, but doesn't remove anything.
 #         Usage:       $ alast var_name
 #
+#       anth
+#         Description: Retreive the n-th element of an array.
+#         Usage:       $ anth var_name n
+#
 #       alen
 #         Description: Print the current number of elements in the array
 #         Usage:       $ alen var_name
@@ -209,6 +213,16 @@ function alast() {
 
     if [[ -n $var ]] && (( $(eval "echo \${#$var[@]}") >= 1 )); then
         eval "echo \"\${$var""[\${#$var[@]} - $array_len_to_last_elem]}\""
+    fi
+}
+
+function anth() {
+    local var=$1
+    local n=$2
+    determine_array_type
+
+    if [[ -n $var ]] && (( $(eval "echo \${#$var[@]}") >= 1 )); then
+        eval "echo \"\${$var""[$(($array_first_index + $n - 1))]}\""
     fi
 }
 
