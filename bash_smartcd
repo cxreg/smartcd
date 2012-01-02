@@ -238,8 +238,12 @@ function _smartcd_check_inode() {
             echo "but the scripts for them remained.  Please check the following files"
             echo "for correctness:"
             echo
+            local _old_ifs="$IFS"
+            IFS="
+"
             for file in $(command ls "$HOME/.smartcd/scripts$dir"); do
                 echo "    $HOME/.smartcd/scripts$dir/$file"
+            IFS="$_old_ifs"
             done
             echo
             echo "Once you have verified or corrected the situation, remove the following"
@@ -1097,6 +1101,9 @@ function smartcd_upgrade_database() {
         esac
     fi
     command mkdir -p $HOME/.smartcd/scripts $HOME/.smartcd/templates $HOME/.smartcd/archive
+    local _old_ifs="$IFS"
+    IFS="
+"
     for entry in $(command ls $HOME/.smartcd); do
         case $entry in
              scripts|templates) ;;
@@ -1113,6 +1120,7 @@ function smartcd_upgrade_database() {
         esac
 
     done
+    IFS="$_old_ifs"
 
     echo "smartcd: upgrade complete.  Your previous scripts can be found under"
     echo "$HOME/.smartcd/archive in case anything went wrong."
