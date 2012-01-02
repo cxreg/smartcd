@@ -860,6 +860,20 @@ function fn_exists() {
 }
 
 function smartcd_config() {
+    if [[ -n $ZSH_VERSION ]]; then
+        # We need the third element because within anth or afirst, bash_arrays is first
+        # two due to the function call and the eval
+        local smartcd_file="$(anth funcsourcetrace 3)"
+        smartcd_file="${smartcd_file%:*}"
+    else
+        local smartcd_file="$BASH_SOURCE"
+    fi
+    if [[ "${smartcd_file%/*}" = $HOME ]]; then
+        smartcd_file=${smartcd_file/#$HOME/\~}
+    fi
+    varstash_file=${smartcd_file/%smartcd/varstash}
+    arrays_file=${smartcd_file/%smartcd/arrays}
+
     function setup_file() {
         local file="$1"; shift
         local config="$1"; shift
@@ -883,7 +897,7 @@ function smartcd_config() {
             config="$config\n${comment}$*"
         }
 
-        local config="\n# Load and configure smartcd\nsource ~/.bash_arrays\nsource ~/.bash_varstash\nsource ~/.bash_smartcd"
+        local config="\n# Load and configure smartcd\nsource $arrays_file\nsource $varstash_file\nsource $smartcd_file"
 
         _setup_conditionally "$setup_cd"            "smartcd setup cd"
         _setup_conditionally "$setup_pushd"         "smartcd setup pushd"
