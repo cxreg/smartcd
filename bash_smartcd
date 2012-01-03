@@ -652,21 +652,12 @@ function setup_smartcd_chpwd_hook() {
 }
 
 function setup_smartcd_exit_hook() {
-    # Both bash and zsh support "trap command EXIT" syntax, however zsh
-    # also supports a "TRAPEXIT()" function, which is mutually exclusive
-    # with the trap string
     if [[ -n $_smartcd_exit_trap_setup ]]; then
         return
     fi
 
     if [[ -n $ZSH_VERSION ]]; then
-        local _smartcd_prior_zshexit_def=$(declare -f zshexit)
-        if [[ -n $_smartcd_prior_zshexit_def ]]; then
-            _smartcd_prior_zshexit_def=${_smartcd_prior_zshexit_def/#zshexit/_smartcd_prior_zshexit}
-            eval $_smartcd_prior_zshexit_def
-            _smartcd_original_exit_trap=_smartcd_prior_zshexit
-        fi
-        eval "function zshexit() { _smartcd_exit_trap; }"
+        apush zshexit_functions _smartcd_exit_trap
     else
         # Bash supports this, which is much cleaner
         _smartcd_original_exit_trap=$(trap -p EXIT)
