@@ -1008,6 +1008,17 @@ function smartcd_config() {
         echo $yesno
     }
 
+    function ask() {
+        echo >/dev/tty
+        echo "[ $1 ]" >/dev/tty
+        echo -ne "$2" >/dev/tty
+        case $3 in
+            y) echo -n " [Y/n] " >/dev/tty;;
+            n) echo -n " [y/N] " >/dev/tty;;
+        esac
+        read_yesno $3
+    }
+
     local which_shell=$SHELL
     if [[ $which_shell =~ 'bash' ]]; then
         local possible_files=".bashrc .bash_profile .profile"
@@ -1018,59 +1029,39 @@ function smartcd_config() {
         exit 1
     fi
 
-    echo
-    echo "[ smartcd setup cd ]"
-    echo -n "Would you like to wrap cd with smartcd?  This is the recommended way to run smartcd [Y/n] "
-    local setup_cd=$(read_yesno y)
+    if [[ -f "$HOME/.smartcd_config" ]]; then
+        local cd_def=n pushd_def=n prompt_def=n exit_def=n autocon_def=n autoed_def=n
+        local inodef_def=n automig_def=n legacy_def=n
+        while read -r line; do
+            case $line in
+                         "smartcd setup cd") cd_def=y;;
+                      "smartcd setup pushd") pushd_def=y;;
+                "smartcd setup prompt-hook") prompt_def=y;;
+                  "smartcd setup exit-hook") exit_def=y;;
+                 "VARSTASH_AUTOCONFIGURE=1") autocon_def=y;;
+                      "VARSTASH_AUTOEDIT=1") autoed_def=y;;
+                       "SMARTCD_NO_INODE=1") inode_def=y;;
+                    "SMARTCD_AUTOMIGRATE=1") automig_def=y;;
+                         "SMARTCD_LEGACY=1") legacy_def=y;;
+            esac
+        done < "$HOME/.smartcd_config"
+    fi
 
-    echo
-    echo "[ smartcd setup pushd ]"
-    echo "[ smartcd setup popd  ]"
-    echo -n "Would you like to wrap pushd and popd? [Y/n] "
-    local setup_pushd=$(read_yesno y)
-
-    echo
-    echo "[ setup_smartcd_prompt_hook ]"
-    echo "Would you like to enable prompt-command hooks?  (This is only recommended if you are an"
-    echo -n "\"autocd\" user, say no if you are unsure [y/N] "
-    local enable_prompt_hook=$(read_yesno n)
-
-    echo
-    echo "[ setup_smartcd_exit_hook ]"
-    echo "Would you like to enable the shell exit hook?  This will cause bash_leave scripts to run"
-    echo -n "from your current directory down to / when exiting your shell [y/N] "
-    local enable_exit_hook=$(read_yesno n)
-
-    echo
-    echo "[ VARSTASH_AUTOCONFIGURE=1 ]"
-    echo -n "Would you like to automatically configure smartcd when you run stash or autostash manually? [y/N] "
-    local autoconfigure=$(read_yesno n)
-
+    local setup_cd=$(ask "smartcd setup cd" "Would you like to wrap cd with smartcd?  This is the recommended way to run smartcd" ${cd_def:-y})
+    local setup_pushd=$(ask "smartcd setup pushd" "Would you like to wrap pushd and popd?" ${pushd_def:-y})
+    local enable_prompt_hook=$(ask "smartcd setup prompt-hook" "Would you like to enable prompt-command hooks?  (This is only recommended if you are an\n\"autocd\" user, say no if you are unsure)" ${prompt_def:-n})
+    local enable_exit_hook=$(ask "smartcd setup exit-hook" "Would you like to enable the shell exit hook?  This will cause bash_leave scripts to run\nfrom your current directory down to / when exiting your shell" ${exit_def:-n})
+    local autoconfigure=$(ask "VARSTASH_AUTOCONFIGURE=1" "Would you like to automatically configure smartcd when you run stash or autostash manually?" ${autocon_def:-n})
     if [[ $autoconfigure =~ $yes ]]; then
-        echo
-        echo "[ VARSTASH_AUTOEDIT=1 ]"
-        echo -n "Would you also like to edit the smartcd config after it is automatically configured? [y/N] "
-        local autoedit=$(read_yesno n)
+        local autoedit=$(ask "VARSTASH_AUTOEDIT=1" "Would you also like to edit the smartcd config after it is automatically configured?" ${autoed_def:-n})
     fi
 
     echo
     echo "[ADVANCED USAGE]"
 
-    echo
-    echo "[ SMARTCD_NO_INODE=1 ]"
-    echo "Would you like to skip validation that scripts are not stale from a previously deleted or renamed"
-    echo -n "directory? (DISCOURAGED) [y/N] "
-    local noinode=$(read_yesno n)
-
-    echo
-    echo "[ SMARTCD_AUTOMIGRATE=1 ]"
-    echo -n "Would you like to automigrate legacy smartcd scripts? [y/N] "
-    local automigrate=$(read_yesno n)
-
-    echo
-    echo "[ SMARTCD_LEGACY=1 ]"
-    echo -n "Would you like to allow legacy scripts to run in-place? (DISCOURAGED) [y/N] "
-    local legacy=$(read_yesno n)
+    local noinode=$(ask "SMARTCD_NO_INODE=1" "Would you like to skip validation that scripts are not stale from a previously deleted or renamed directory? (DISCOURAGED)" ${inode_def:-n})
+    local automigrate=$(ask "SMARTCD_AUTOMIGRATE=1" "Would you like to automigrate legacy smartcd scripts?" ${automig_def:-n})
+    local legacy=$(ask "SMARTCD_LEGACY=1" "Would you like to allow legacy scripts to run in-place? (DISCOURAGED)" ${legacy_def:-n})
 
     local config=$(generate_config)
 
@@ -1166,7 +1157,7 @@ function smartcd_config() {
         fi
     fi
 
-    unset -f setup_file generate_config read_yesno
+    unset -f setup_file generate_config read_yesno ask
 }
 
 function smartcd_upgrade_database() {
