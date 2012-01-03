@@ -567,7 +567,31 @@ function smartcd_edit() {
 
     # Edit the file if interactive, otherwise write standard input to it
     if [[ -t 0 ]]; then
-        ${EDITOR:-vi} "$smartcd_dir/$file"
+        local tmpfile=$(mktemp /tmp/smartcd-edit.XXXXXX)
+        while read -r line; do
+            case $line in
+                # extremely hinky replacement here, very whitespace sensitive
+                *"smartcd template run"*) local tmpl=${line##*template run }
+                                          tmpl=${tmpl%% *}
+                                          echo "$line" >> "$tmpfile"
+                                          echo "$(smartcd template show_part $tmpl ${file#bash_})" >> "$tmpfile"
+                                          ;;
+                                       *) echo "$line" >> "$tmpfile";;
+            esac
+        done < "$smartcd_dir/$file"
+        ${EDITOR:-vi} "$tmpfile"
+        if [[ $? = 0 ]]; then
+            echo -n > "$smartcd_dir/$file"
+            local writing=1
+            while read -r line; do
+                case $line in
+                    "# begin smartcd template"*) writing=;;
+                      "# end smartcd template"*) writing=1;;
+                                              *) if [[ -n $writing ]]; then echo "$line" >> "$smartcd_dir/$file"; fi;;
+                esac
+            done < "$tmpfile"
+        fi
+        rm "$tmpfile"
     else
         command cat > "$smartcd_dir/$file"
     fi
@@ -798,6 +822,26 @@ EOF
                     if [[ -n $name ]]; then
                         if [[ -f "$confdir/templates/$name" ]]; then
                             command cat "$confdir/templates/$name"
+                        else
+                            echo "Template $name not found"
+                        fi
+                    else
+                        echo "Usage: smartcd template show <name>"
+                    fi
+                    ;;
+      show_part)    local name="$1"; shift
+                    if [[ -n $name ]]; then
+                        if [[ -f "$confdir/templates/$name" ]]; then
+                            echo "# begin smartcd template $name $1"
+                            local saving
+                            while read -r line; do
+                                case $line in
+                                    "# Enter any bash_$1 commands"*) saving=1;;
+                                                "# Enter any bash"*) saving=;;
+                                                                  *) if [[ -n $saving ]]; then echo "# $line"; fi;;
+                                esac
+                            done < "$confdir/templates/$name"
+                            echo "# end smartcd template $name $1"
                         else
                             echo "Template $name not found"
                         fi
