@@ -212,11 +212,13 @@ function smartcd() {
     esac
 }
 
+function _smartcd_exec_file() {
+    local contents="$(cat "$1")"
+    _smartcd_exec "$contents" "$2"
+}
+
 function _smartcd_exec() {
-    local file=$1; shift
-    local dir=$1; shift
-    local contents="$(cat "$file")"
-    contents="${contents//__PATH__/$dir}"
+    local contents="${1//__PATH__/$2}"
     eval "$contents"
 }
 
@@ -383,6 +385,7 @@ function _smartcd() {
     # Run leave_stack in lowest to highest
     local stack_size=$(alen leave_stack)
     : ${stack_size:=0}
+    local smartcd_runmode=leave
     while (( $stack_size >= 1 )); do
         # ashift in a sub-shell doesn't work
         local dir="$(afirst leave_stack)"
@@ -400,7 +403,7 @@ function _smartcd() {
                     if [[ -z $SMARTCD_QUIET ]]; then
                         echo "smartcd: running $dir/.bash_leave"
                     fi
-                    _smartcd_exec .bash_leave "$dir"
+                    _smartcd_exec_file .bash_leave "$dir"
                 elif [[ -n $SMARTCD_AUTOMIGRATE ]]; then
                     echo "Automatically migrating \"$dir/.bash_leave\" to \"$confdir/bash_leave\""
                     command mkdir -p "$confdir"
@@ -440,7 +443,7 @@ function _smartcd() {
             fi
             _smartcd_check_inode "$dir"
             if [[ -z $_inode_skip ]]; then
-                _smartcd_exec "$confdir/bash_leave" "$dir"
+                _smartcd_exec_file "$confdir/bash_leave" "$dir"
             fi
             unset -v _inode_skip
         fi
@@ -457,6 +460,7 @@ function _smartcd() {
     # Run enter_stack in highest to lowest
     local stack_size=$(alen enter_stack)
     : ${stack_size:=0}
+    local smartcd_runmode=enter
     while (( $stack_size >= 1 )); do
         # apop in a sub-shell doesn't work
         local dir="$(alast enter_stack)"
@@ -469,7 +473,7 @@ function _smartcd() {
                 if [[ -z $SMARTCD_QUIET ]]; then
                     echo "smartcd: running $dir/.bash_enter"
                 fi
-                _smartcd_exec .bash_enter "$dir"
+                _smartcd_exec_file .bash_enter "$dir"
             elif [[ -n $SMARTCD_AUTOMIGRATE ]]; then
                 echo "Automatically migrating \"$dir/.bash_enter\" to \"$confdir/bash_enter\""
                 command mkdir -p "$confdir"
@@ -504,7 +508,7 @@ function _smartcd() {
             fi
             _smartcd_check_inode "$dir"
             if [[ -z $_inode_skip ]]; then
-                _smartcd_exec "$confdir/bash_enter" "$dir"
+                _smartcd_exec_file "$confdir/bash_enter" "$dir"
             fi
             unset -v _inode_skip
         fi
@@ -849,10 +853,38 @@ EOF
                         echo "Usage: smartcd template delete <name>"
                     fi
                     ;;
-             '')    echo "Usage: smartcd template ( edit | create | list | show | install | delete ) [args]"
+               run) local name="$1"; shift
+                    local mode="$1"; shift
+                    if [[ -z $mode ]]; then
+                        mode="$smartcd_runmode"
+                    fi
+                    if [[ -n $name ]]; then
+                        if [[ -f "$confdir/templates/$name" ]]; then
+                            local contents
+                            local saving
+                            while read line; do
+                                case $line in
+                                    "# Enter any bash_$mode commands"*) saving=1;;
+                                                   "# Enter any bash"*) saving=;;
+                                                                     *) if [[ -n $saving ]]; then
+                                                                            contents="$contents
+$line"
+                                                                        fi
+                                                                        ;;
+                                esac
+                            done < "$confdir/templates/$name"
+                            _smartcd_exec "$contents" "$(pwd)"
+                        else
+                            echo "Template $name not found"
+                        fi
+                    else
+                        echo "Usage: smartcd template run <name> ( enter | leave )"
+                    fi
+                    ;;
+             '')    echo "Usage: smartcd template ( edit | create | list | show | run | install | delete ) [args]"
                     ;;
               *)    echo "Unknown action $action."
-                    echo "Usage: smartcd template ( edit | create | list | show | install | delete ) [args]"
+                    echo "Usage: smartcd template ( edit | create | list | show | run | install | delete ) [args]"
                     ;;
     esac
 }

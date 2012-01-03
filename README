@@ -231,6 +231,16 @@ WHAT ELSE CAN IT DO?
 
         smartcd template install some_template_name
 
+    You can also run a template in-place without installing it.  This gives you
+    the ability to use the templates without having to update them in all the
+    places they were installed if the template later changes.
+
+        smartcd template run some_template_name enter
+        smartcd template run some_template_name leave
+
+    When run from an enter or leave script, you can omit the "enter" or "leave"
+    argument, which will be derived from the context of the script executing.
+
     The template editor has other commands, "show", "list", and "delete".
 
 
