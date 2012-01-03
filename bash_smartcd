@@ -856,7 +856,7 @@ EOF
                             local smartcd_dir="$confdir/scripts$current_dir"
                             command mkdir -p "$smartcd_dir"
                             local mode=
-                            while read line; do
+                            while read -r line; do
                                 if [[ $line =~ "Enter any bash_enter commands" ]]; then
                                     mode=enter
                                     continue
@@ -906,7 +906,7 @@ EOF
                         if [[ -f "$confdir/templates/$name" ]]; then
                             local contents
                             local saving
-                            while read line; do
+                            while read -r line; do
                                 case $line in
                                     "# Enter any bash_$mode commands"*) saving=1;;
                                                    "# Enter any bash"*) saving=;;
