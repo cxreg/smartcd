@@ -64,8 +64,7 @@
 
 function stash() {
     if [[ $1 = "-f" ]]; then
-        local force=1
-        shift
+        local force=1; shift
     fi
 
     if [[ -n $1 ]] && [[ -z $run_from_smartcd ]] && [[ -z $run_from_autostash ]]; then
@@ -80,6 +79,12 @@ function stash() {
 
 
     while [[ -n $1 ]]; do
+        if [[ $1 = "alias" && $2 =~ "=" ]]; then
+            shift
+            local _stashing_alias_assign=1
+            continue
+        fi
+
         local stash_expression=$1
         local stash_which=${stash_expression%%'='*}
 
@@ -172,6 +177,7 @@ function stash() {
         fi
 
         shift
+        unset -v _stashing_alias_assign
     done
 }
 
@@ -197,6 +203,7 @@ function autostash() {
         local varname=${1%%'='*}
         apush $autostash_name "$varname"
         shift
+        unset -v _stashing_alias_assign
     done
 }
 
