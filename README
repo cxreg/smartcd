@@ -249,7 +249,7 @@ WHAT ELSE CAN IT DO?
     By default, your enter scripts will be run when a shell is started.  However,
     the opposite is not the case.  If you'd like your leave scripts to run when
     the shell exits, smartcd is able to utilize the shell's EXIT trap hook to do
-    so.  This is enabled by running
+    so, or in zsh, the zshexit() function.  This is enabled by running
 
         smartcd setup exit-hook
 
