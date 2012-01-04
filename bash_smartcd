@@ -160,6 +160,10 @@ function smartcd() {
     case $command in
         -h|help|'') echo $usage;;
      cd|pushd|popd) shift; _smartcd $command "$@";;
+           reenter) local dir="$(pwd)"
+                    _smartcd cd ..
+                    _smartcd cd "$dir"
+                    ;;
      edit|show|cat|\
           filename) shift; local file=$1; shift
                     case $file in
@@ -326,6 +330,11 @@ function _smartcd() {
 
     if (( $? != 0 )); then return; fi
     local whereto="$(pwd)"
+    if [[ $wherestarted = $whereto && $whereto != '/' ]]; then
+        _smartcd cd ..
+        _smartcd cd "$whereto"
+        return
+    fi
     _smartcd_last_run_for="x$whereto"
 
     # If zsh and autopushd is set, turn it off temporarily to avoid extra pushes
