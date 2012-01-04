@@ -225,23 +225,33 @@ WHAT ELSE CAN IT DO?
     This will create a new template named "some_template_name", and prepopulate
     it from the bash_enter and bash_leave files corresponding to the working
     directory, replacing any instance of your working directory with __PATH__.
-    You can then edit the contents with `smartcd template edit some_template_name`.
 
-    Then to install it, from some other directory run:
+    You can then edit the contents with `smartcd template edit some_template_name`.
+    The `create` step is optional, and if you `edit` a template that is not yet
+    created you will start with an empty one.
+
+    Now that your template is ready, you'll want to use it somewhere.  For this,
+    there are two options:
+
+    1) Run it "in-place", and all changes to the template will be dynamically
+    picked up by the enter and exit scripts which execute it
+
+        echo 'smartcd template run some_template_name' | smartcd edit enter
+
+    The `run` action will determine if you are in an "enter" or "leave" script,
+    and execute the correct portion of the template.  This does not need to be
+    the only line in your script, and in fact you can even run more than one
+    template from the same script.
+
+    2) Copy the current contents of the template to the scripts for a directory,
+    as a one-time operation.  This will not automatically propagate changes to
+    the places it is in use, and can be used as a way to quickly bootstrap
+    scripts but allow them to exist independently.
 
         smartcd template install some_template_name
 
-    You can also run a template in-place without installing it.  This gives you
-    the ability to use the templates without having to update them in all the
-    places they were installed if the template later changes.
 
-        smartcd template run some_template_name enter
-        smartcd template run some_template_name leave
-
-    When run from an enter or leave script, you can omit the "enter" or "leave"
-    argument, which will be derived from the context of the script executing.
-
-    The template editor has other commands, "show", "list", and "delete".
+    The other template editor actions are "show", "list", and "delete".
 
 
   EXIT HOOK
