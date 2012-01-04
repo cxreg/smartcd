@@ -330,11 +330,6 @@ function _smartcd() {
 
     if (( $? != 0 )); then return; fi
     local whereto="$(pwd)"
-    if [[ $wherestarted = $whereto && $whereto != '/' ]]; then
-        _smartcd cd ..
-        _smartcd cd "$whereto"
-        return
-    fi
     _smartcd_last_run_for="x$whereto"
 
     # If zsh and autopushd is set, turn it off temporarily to avoid extra pushes
