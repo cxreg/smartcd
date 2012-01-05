@@ -159,7 +159,7 @@ function smartcd() {
     local usage="Usage: smartcd ( edit | show | filename | template | setup | config | export | import ) [args]"
     case $command in
         -h|help|'') echo $usage;;
-     cd|pushd|popd) shift; _smartcd $command "$@";;
+     cd|pushd|popd) shift; _smartcd $command "$@"; return $?;;
            reenter) local dir="$(pwd)"
                     _smartcd cd ..
                     _smartcd cd "$dir"
@@ -327,8 +327,9 @@ function _smartcd() {
             eval $action
         fi
     fi
+    local rv=$?
 
-    if (( $? != 0 )); then return; fi
+    if (( $rv != 0 )); then return $rv; fi
     local whereto="$(pwd)"
     _smartcd_last_run_for="x$whereto"
 
