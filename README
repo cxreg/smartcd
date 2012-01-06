@@ -210,6 +210,69 @@ WHAT ARE SOME COMMON RECIPES?
     perlbrew is available at http://search.cpan.org/~gugod/App-perlbrew/
 
 
+  STOP/START
+
+    If you want something to start running when you enter the directory, and
+    stop running when you leave, you can certainly use smartcd for this.  Here's
+    an example of how someone is using smartcd to start and stop a Plack service
+
+        ### enter script ###
+
+        # temporarily define the functions stop and start
+        autostash stop start pidfile="__PATH__/.pid"
+        start() {
+            if [[ ! -f "$pidfile" ]] || ! kill -0 $(cat "$pidfile") >/dev/null 2>&1; then
+                (
+                    builtin cd __PATH__/html
+                    plackup &> /dev/null &
+                    local pid=$!
+                    echo $pid > "$pidfile"
+                    echo "Started Plack with pid $pid"
+                )
+            fi
+        }
+        stop() {
+            if [[ -f "$pidfile" ]] && kill -0 $(cat "$pidfile") >/dev/null 2>&1; then
+                kill $(cat "$pidfile")
+                rm "$pidfile"
+            fi
+        }
+
+        # There are several things to make a note of here
+        #
+        #   1) The sub-shell created in the start() function is not actually necessary
+        #      if `start` is _only_ run from within smartcd, since the extra `cd` command
+        #      will not prevent you from ending up in the right directory.  However, since
+        #      this function can be called manually, it's safer to do this in a subshell.
+        #
+        #   2) I used `builtin cd` instead of just `cd` in start() to avoid smartcd being
+        #      called during another call, possibly causing surprising results.  However,
+        #      if you actually want smartcd to be run in that situation, it's ok to do so.
+        #
+        #   3) Use __PATH__ liberally to ensure that files and actions are taken in the
+        #      correct place, even after you've changed to a subdirectory of where the script
+        #      was defined.
+
+        # Create an alias that calls both functions
+        autostash alias restart="stop; sleep 2; start"
+
+        # And automatically start-up on enter
+        start
+
+
+        ### leave script ###
+
+        # Shut down when leaving.  Yes, this function is still available here, and
+        # it will be removed by autounstash after this leave is complete
+        stop
+
+    and of course, if you want to be sure that this daemon is shut down properly
+    if you simply log out or close your shell, you will want the exit hook as well
+
+        # in your .smartcd_config, see `smartcd config`
+        smartcd setup exit-hook
+
+
 WHAT ELSE CAN IT DO?
 
   TEMPLATES
