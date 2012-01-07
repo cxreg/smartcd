@@ -333,20 +333,11 @@ function _smartcd() {
     local whereto="$(pwd)"
     _smartcd_last_run_for="x$whereto"
 
-    # If zsh and autopushd is set, turn it off temporarily to avoid extra pushes
-    local reset_autopushd=:
-    local reset_pushdignoredups=:
+    # If zsh, turn autopushd off temporarily to avoid extra pushes
     if [[ -n $ZSH_VERSION ]]; then
-        for opt in $(setopt); do
-            case $opt in
-                     autopushd) reset_autopushd="setopt autopushd"
-                                setopt noautopushd
-                                ;;
-               pushdignoredups) reset_pushdignoredups="setopt pushdignoredups"
-                                setopt nopushdignoredups
-                                ;;
-            esac
-        done
+        setopt localoptions
+        setopt noautopushd
+        setopt nopushdignoredups
     fi
 
     # Collect the list of directories we're leaving
@@ -544,10 +535,6 @@ function _smartcd() {
     if [[ -z $arrived_at_destination ]]; then
         builtin cd "$whereto"
     fi
-
-    # Turn autopushd back on, if needed.  Again, eval needed due to zsh oddness
-    eval $reset_autopushd
-    eval $reset_pushdignoredups
 }
 
 function smartcd_edit() {
@@ -729,13 +716,9 @@ function smartcd_template() {
     local action=$1; shift
 
     # Going to cheat here a bit because doing this right is _hard_
-    # Possibly temporarily set nonomatch in zsh who will barf on the following ls without it
-    local reset_nomatch=:
+    # temporarily set nonomatch in zsh who will barf on the following ls without it
     if [[ -n $ZSH_VERSION ]]; then
-        reset_nomatch="setopt nomatch"
-        if setopt | command grep nonomatch >/dev/null; then
-            reset_nomatch=:
-        fi
+        setopt localoptions
         setopt nonomatch
     fi
     # Force an empty argument to ls in order to gracefully handle nullglob
@@ -743,7 +726,6 @@ function smartcd_template() {
         '') ;;
          *) smartcd_upgrade_database;;
     esac
-    eval $reset_nomatch
 
     local confdir="$HOME/.smartcd"
 

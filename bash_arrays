@@ -66,27 +66,6 @@
 #   in Perl, and then finding it severely lacking in bash.
 ################################################################################
 
-# Set some variables for zsh vs bash
-function determine_array_type() {
-    if [[ -n $ZSH_VERSION ]]; then
-        local zsharrays=1
-        for opt in $(setopt); do
-            case $opt in
-                ksharrays) zsharrays=;;
-            esac
-        done
-    fi
-    if [[ -n $zsharrays ]]; then
-        array_len_to_last_elem=0
-        array_first_index=1
-        array_offset="+1"
-    else
-        array_len_to_last_elem=1
-        array_first_index=0
-        array_offset="-1"
-    fi
-}
-
 function is_array() {
     local var=$1
 
@@ -126,18 +105,17 @@ function apush() {
 }
 
 function apop() {
+    [[ -n $ZSH_VERSION ]] && setopt localoptions && setopt ksharrays
     local var=$1
-    determine_array_type
 
     _apop_return=
 
     if [[ -n $var ]] && (( $(eval "echo \${#$var""[@]}") >= 1 )); then
+        eval "_apop_return=\"\$(echo \"\${$var[\${#$var""[@]} - 1]}\")\""
         if [[ -n $ZSH_VERSION ]]; then
-            eval "_apop_return=\"\$$var""[-1]\""
             eval "$var""[-1]=()"
         else
-            eval "_apop_return=\"\$(echo \"\${$var[\${#$var""[@]} - $array_len_to_last_elem]}\")\""
-            eval "unset $var""[\$(( \${#$var""[@]} - $array_len_to_last_elem))]"
+            eval "unset $var""[\$(( \${#$var""[@]} - 1))]"
         fi
 
         echo "$_apop_return"
@@ -145,15 +123,15 @@ function apop() {
 }
 
 function ashift() {
+    [[ -n $ZSH_VERSION ]] && setopt localoptions && setopt ksharrays
     local var=$1
-    determine_array_type
 
     _ashift_return=
 
     if [[ -n $var ]] && (( $(eval "echo \${#$var[@]}") >= 1 )); then
-        eval "_ashift_return=\"\${$var""[$array_first_index]}\""
+        eval "_ashift_return=\"\${$var""[0]}\""
         if [[ -n $ZSH_VERSION ]]; then
-            eval "$var""[$array_first_index]=()"
+            eval "$var""[0]=()"
         else
             eval "unset $var[0]"
             eval "$var=(\"\${$var[@]}\")"
@@ -177,12 +155,12 @@ function aunshift() {
 }
 
 function areverse() {
+    [[ -n $ZSH_VERSION ]] && setopt localoptions && setopt ksharrays
     local var=$1
-    determine_array_type
 
     if [[ -n $var ]] && (( $(eval "echo \${#$var""[@]}") >= 2 )); then
         len=$(eval "echo \${#$var""[@]}")
-        i=$array_first_index
+        i=0
         if [[ -n $ZSH_VERSION ]]; then
             local op='<='
         else
@@ -191,38 +169,38 @@ function areverse() {
         while (( $i $op $len/2 )); do
             tmp=$(eval echo "\${$var""[\$i]}")
 
-            eval "$var""[\$i]=\"\${$var""[\$len-\$i$array_offset]}\""
-            eval "$var""[\$len-\$i$array_offset]=\"\$tmp\""
+            eval "$var""[\$i]=\"\${$var""[\$len-\$i-1]}\""
+            eval "$var""[\$len-\$i-1]=\"\$tmp\""
             (( i++ ))
         done
     fi
 }
 
 function afirst() {
+    [[ -n $ZSH_VERSION ]] && setopt localoptions && setopt ksharrays
     local var=$1
-    determine_array_type
 
     if [[ -n $var ]] && (( $(eval "echo \${#$var[@]}") >= 1 )); then
-        eval "echo \"\${$var""[$array_first_index]}\""
+        eval "echo \"\${$var""[0]}\""
     fi
 }
 
 function alast() {
+    [[ -n $ZSH_VERSION ]] && setopt localoptions && setopt ksharrays
     local var=$1
-    determine_array_type
 
     if [[ -n $var ]] && (( $(eval "echo \${#$var[@]}") >= 1 )); then
-        eval "echo \"\${$var""[\${#$var[@]} - $array_len_to_last_elem]}\""
+        eval "echo \"\${$var""[\${#$var[@]} - 1]}\""
     fi
 }
 
 function anth() {
+    [[ -n $ZSH_VERSION ]] && setopt localoptions && setopt ksharrays
     local var=$1
     local n=$2
-    determine_array_type
 
     if [[ -n $var ]] && (( $(eval "echo \${#$var[@]}") >= 1 )); then
-        eval "echo \"\${$var""[$(($array_first_index + $n - 1))]}\""
+        eval "echo \"\${$var""[$(($n - 1))]}\""
     fi
 }
 
