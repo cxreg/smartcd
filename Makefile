@@ -16,15 +16,19 @@ test_all: test_bash test_zsh
 
 
 install:
-	cp bash_arrays $(HOME)/.bash_arrays
-	cp bash_varstash $(HOME)/.bash_varstash
+	rm -rf $(HOME)/.smartcd/lib/core
+	mkdir -p $(HOME)/.smartcd/lib/core
+	cp -r lib/core $(HOME)/.smartcd/lib
 	cp bash_smartcd $(HOME)/.bash_smartcd
-	@echo "smartcd installed"
-	@echo "If this is your first time installing smartcd, run this following command:"
 	@echo
-	@echo "    source ~/.bash_smartcd"
+	@echo "smartcd is now installed"
 	@echo
-	@echo "After you have done that, run \"smartcd config\" to configure your shell"
+	@echo "If this is your first time installing smartcd, run the following command:"
+	@echo
+	@echo "    source ~/.smartcd/lib/core/smartcd"
+	@echo
+	@echo "After you have done that, run \`smartcd config\` to configure your shell"
+
 
 setup:
 	@echo "\`make setup\` is deprecated, please run \`smartcd config\`"

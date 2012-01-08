@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ################################################################################
-# bash_arrays - Basic array functions
+# Basic array functions
 #
 #   Copyright (c) 2009,2012 Dave Olszewski <cxreg@pobox.com>
 #   http://github.com/cxreg/smartcd

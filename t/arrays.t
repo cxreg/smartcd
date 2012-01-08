@@ -1,6 +1,6 @@
 # Load testing library
 source t/tap-functions
-source bash_arrays
+source lib/core/arrays
 
 plan_tests 19
 

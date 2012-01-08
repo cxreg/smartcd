@@ -29,15 +29,16 @@ else
     echo "instructions included."
 fi
 
-if [[ -f ~/.bash_smartcd ]]; then
+if [[ -f ~/.smartcd/lib/core/smartcd ]]; then
     smartcd_previously_installed=1
 fi
 
 working_dir=$(mktemp -d /tmp/smartcd-install.XXXXXX)
 cd $working_dir
-$download "$baseurl/bash_smartcd" > ~/.bash_smartcd
-$download "$baseurl/bash_varstash" > ~/.bash_varstash
-$download "$baseurl/bash_arrays" > ~/.bash_arrays
+mkdir -p ~/.smartcd/lib/core
+$download "$baseurl/lib/core/smartcd" > ~/.smartcd/lib/core/smartcd
+$download "$baseurl/lib/core/varstash" > ~/.smartcd/lib/core/varstash
+$download "$baseurl/lib/core/arrays" > ~/.smartcd/lib/core/arrays
 
 echo "Installation complete"
 echo -n "Configure now? [Y/n] "
@@ -45,7 +46,7 @@ read setup < /dev/tty
 setup=$(echo $setup | tr 'A-Z' 'a-z')
 : ${setup:=y}
 if [[ $setup =~ "y" ]]; then
-    source ~/.bash_smartcd
+    source ~/.smartcd/lib/core/smartcd
     smartcd config
 else
     echo "Run \"smartcd config\" to configure when you are ready."
@@ -80,5 +81,6 @@ if [[ -z $smartcd_previously_installed ]]; then
     echo "When you enter the directory, your \$PATH will be updated and when you"
     echo "leave it is restored to its previous value automagically.  How cool is"
     echo "that?  For more detail on what is possible, read the documentation in"
-    echo "~/.bash_smartcd or refer to the README at https://github.com/cxreg/smartcd"
+    echo "~/.smartcd/lib/core/smartcd or refer to the README at"
+    echo "https://github.com/cxreg/smartcd"
 fi

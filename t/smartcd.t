@@ -5,9 +5,9 @@ export HOME=$(pwd)/tmphome
 
 # Load testing library
 source t/tap-functions
-source bash_arrays
-source bash_varstash
-source bash_smartcd
+source lib/core/arrays
+source lib/core/varstash
+source lib/core/smartcd
 
 plan_tests 12
 

@@ -1,7 +1,7 @@
 # Load testing library
 source t/tap-functions
-source bash_varstash
-source bash_arrays
+source lib/core/varstash
+source lib/core/arrays
 
 plan_tests 36
 
@@ -126,7 +126,7 @@ output=$(autostash RANDOM_VARIABLE)
 is "${output-_}" "smartcd not loaded, cannot run smartcd_edit" "warns user when smartcd not loaded"
 rm $config_file
 
-source bash_smartcd
+source lib/core/smartcd
 output=$(autostash RANDOM_VARIABLE)
 is "${output-_}" "autostash RANDOM_VARIABLE" "autoedit seems to work"
 

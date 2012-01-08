@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ################################################################################
-# bash_varstash - Stash/unstash support for per-directory variables
+# Stash/unstash support for per-directory variables
 #
 #   Copyright (c) 2009,2012 Dave Olszewski <cxreg@pobox.com>
 #   http://github.com/cxreg/smartcd
@@ -25,7 +25,7 @@
 #       unstash PATH
 #
 #   Note that this was written for use with, and works very well with,
-#   bash_smartcd.  See the documentation there for examples.
+#   smartcd.  See the documentation there for examples.
 #
 #   An alternate usage is `autostash' which will trigger autounstash when
 #   leaving the directory, if combined with smartcd.  This reduces the amount

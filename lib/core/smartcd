@@ -1,0 +1,1264 @@
+#!/bin/bash
+
+################################################################################
+# smartcd - cd with some oomph
+#
+#   Copyright (c) 2009,2012 Dave Olszewski <cxreg@pobox.com>
+#   http://github.com/cxreg/smartcd
+#
+#   This code is released under GPL v2 and the Artistic License, and
+#   may be redistributed under the terms of either.
+#
+#
+#   ###########
+#   # Summary #
+#   ###########
+#
+#   This replacement for bash's built-in cd function gives you the
+#   ability to run bash_enter and bash_leave scripts for each of
+#   the directories you are traveling between.  The scripts are run
+#   in the expected order to the most common root between where you
+#   are, and where you're going.  These files reside in a hierarchy
+#   under your home directory which mirrors the directories they
+#   represent, for example:
+#
+#       /foo/bar/baz  ->  ~/.smartcd/scripts/foo/bar/baz
+#
+#   ###############
+#   # Basic usage #
+#   ###############
+#
+#       # Install the library
+#       make install
+#
+#       # Add it to your bash init script
+#       smartcd setup cd # replaces cd with cd()
+#
+#       # And it works with pushd/popd too
+#       smartcd setup pushd
+#       smartcd setup popd
+#
+#       If you are an "autocd" user, you may want
+#       smartcd setup prompt-hook
+#
+#       # Edit the file to create some commands to run when entering
+#       smartcd edit enter
+#
+#       # Non-interactively
+#       echo 'echo "hi!"' | smartcd edit enter
+#
+#       # Or done manually
+#       echo 'echo "hi!"' > ~/.smartcd/scripts/somedir/bash_enter
+#
+#       # When a shell is started enter scripts will be run from / up to your
+#       # current directory.  If you want the inverse to occur as well, having
+#       # leave scripts run on shell exit, you'll want to hook the shell's EXIT
+#       # trap like this:
+#       smartcd setup exit-hook
+#
+#   This library combines very nicely with varstash to allow
+#   you to set per-directory environment variables:
+#
+#       # bash_enter
+#       stash PATH
+#       export PATH=/something/extra:$PATH
+#
+#       # bash_leave
+#       unstash PATH
+#
+#       # or the automagic version, which unstashes for you
+#       autostash PATH
+#       export PATH=/something/extra:$PATH
+#
+#   When a script is run by smartcd, it will announce that it has done
+#   so unless SMARTCD_QUIET is set.
+#
+#   ########################
+#   # Legacy mode (unsafe) #
+#   ########################
+#
+#   The original version of this library was such that the scripts
+#   containing the commands to run were themselves located in the
+#   directory which they correspond to, named .bash_enter and
+#   .bash_leave:
+#
+#       /foo/bar/baz  ->  /foo/bar/baz/.bash_enter
+#
+#   This was deemed unsafe, and the new scheme was adopted.  If you
+#   prefer the old system and wish to accept the risk in doing so, you
+#   can set SMARTCD_LEGACY=1 to allow the old behavior.  If you do not do
+#   so, and a legacy script is found, it will *NOT* be invoked, and
+#   instructions for migrating it to the new location will be displayed
+#   (unless SMARTCD_QUIET is set).  If you set SMARTCD_AUTOMIGRATE=1 then
+#   the migration steps will be executed for you whenever a legacy script
+#   is found.
+#
+#   #############
+#   # Templates #
+#   #############
+#
+#   One advanced feature of smartcd is the ability to configure and use
+#   templates for your enter and leave scripts.  If you often find yourself
+#   creating very similar scripts with only minor differences, templates can
+#   help.  This is handled with "smartcd template".
+#
+#   To create a template based on the current directory, run:
+#
+#       smartcd template create template_name
+#
+#   The name can be any arbitrary value, but should be meaningful to you and
+#   should not contain special characters.  This will create a new template
+#   named what you have chosen, and prepopulate it with the contents from
+#   your current bash_enter and bash_leave scripts.  You can then edit the
+#   file and save it.  When you install the template, anywhere you inserted
+#   the string "__PATH__" will be replaced with the directory being set up.
+#
+#   To install the template, cd to a destination and run:
+#
+#       smartcd template install template_name
+#
+#   The other available commands are:
+#
+#       smartcd template list
+#       smartcd template show <name>
+#       smartcd template edit <name>
+#       smartcd template delete <name>
+#
+#   ##############
+#   # Backing up #
+#   ##############
+#
+#   You may find it valuable to back up your scripts and templates, either
+#   for preventative measures, or to copy your scripts to another machine.
+#   In any case, a import and export feature is provided to allow you to
+#   archive these files and restore them to a ~/.smartcd folder.
+#
+#       # Export your scripts
+#       smartcd export > my_smartcd_backup
+#
+#       # Several methods to import them
+#       smartcd import my_smartcd_backup
+#       cat my_smartcd_backup | smartcd import
+#
+#   If it happens that the machine you are importing to already has a ~/.smartcd
+#   directory with any scripts or templates in it, these files will be moved
+#   to a temp folder to avoid any conflict.  You may want to inspect these files
+#   by hand if this occurs and put them back in place if necessary.
+#
+################################################################################
+
+# Compatibility functions
+function smartpushd() { smartcd pushd "$@"; }
+function smartpopd()  { smartcd popd "$@";  }
+
+function smartcd() {
+    local command="$1"
+
+    local usage="Usage: smartcd ( edit | show | filename | template | setup | config | export | import ) [args]"
+    case $command in
+        -h|help|'') echo $usage;;
+     cd|pushd|popd) shift; _smartcd $command "$@"; return $?;;
+           reenter) local dir="$(pwd)"
+                    _smartcd cd ..
+                    _smartcd cd "$dir"
+                    ;;
+     edit|show|cat|\
+          filename) shift; local file=$1; shift
+                    case $file in
+                                   enter|leave) _smartcd_file_check bash_$file $command  "$@";;
+                         bash_enter|bash_leave) _smartcd_file_check $file $command  "$@";;
+                                             *) echo "Usage: smartcd $command ( enter | leave )";;
+                    esac
+                    ;;
+          template) shift; smartcd_template "$@";;
+             setup) shift; local setup=$1; shift;
+                    case $setup in
+                             cd|pushd|popd) setup_smartcd_function $setup;;
+                        prompt-hook|prompt) setup_smartcd_prompt_hook;;
+                          chpwd-hook|chpwd) setup_smartcd_chpwd_hook;;
+                            exit-hook|exit) setup_smartcd_exit_hook;;
+                    esac
+                    ;;
+            config) smartcd_config;;
+            export) shift; smartcd_export "$@";;
+            import) shift; smartcd_import "$@";;
+                 *) if [[ -n $ZSH_VERSION ]]; then
+                        local dir=$argv[-1]
+                    else
+                        local dir=${!#}
+                    fi
+                    if [[ -d $dir ]]; then
+                        if [[ -z $smartcd_warned_alias ]]; then
+                            echo "You appear to have smartcd set up in a deprecated fashion.  Please update your"
+                            echo "configuration.  If it currently looks like this:"
+                            echo
+                            echo "   alias cd=smartcd"
+                            echo "   alias pushd=smartpushd"
+                            echo "   alias popd=smartpopd"
+                            echo
+                            echo "you should update it to instead say this:"
+                            echo
+                            echo "   smartcd setup cd"
+                            echo "   smartcd setup pushd"
+                            echo "   smartcd setup popd"
+                            echo
+                            echo "If you are getting this message incorrectly or don't know what it means, run"
+                            echo "\`smartcd config\`, or email cxreg@pobox.com for help."
+                            smartcd_warned_alias=1
+                        fi
+                        _smartcd cd "$@"
+                    else
+                        echo $usage
+                    fi
+                    ;;
+    esac
+}
+
+function _smartcd_exec_file() {
+    local contents="$(cat "$1")"
+    _smartcd_exec "$contents" "$2"
+}
+
+function _smartcd_exec() {
+    local contents="${1//__PATH__/$2}"
+    eval "$contents"
+}
+
+function _smartcd_check_inode() {
+    if [[ -n $SMARTCD_NO_INODE ]]; then
+        return
+    fi
+    local dir=$1;
+    if [[ ! -d "$dir" ]]; then
+        # Don't barf when leaving deleted directory
+        return
+    fi
+    local inode=$(command ls -di "$dir" | command awk '{print $1}')
+    if [[ -f "$HOME/.smartcd/inodes$dir.inode" ]]; then
+        prev=$(command cat "$HOME/.smartcd/inodes$dir.inode")
+        if [[ $inode != $prev ]]; then
+            echo "WARNING!  Possibly outdated scripts detected, not running them.  These"
+            echo "scripts were created for a directory which has been deleted or replaced,"
+            echo "but the scripts for them remained.  Please check the following files"
+            echo "for correctness:"
+            echo
+            local _old_ifs="$IFS"
+            IFS=$'\n'
+            for file in $(command ls "$HOME/.smartcd/scripts$dir"); do
+                echo "    $HOME/.smartcd/scripts$dir/$file"
+            IFS="$_old_ifs"
+            done
+            echo
+            echo "Once you have verified or corrected the situation, remove the following"
+            echo "file to make this warning go away"
+            echo
+            echo "    $HOME/.smartcd/inodes$dir.inode"
+            echo
+            echo "If you don't wish to keep this safety check in place, set SMARTCD_NO_INODE=1"
+            echo "or re-run \`smartcd config\`"
+            _inode_skip=1
+        fi
+    else
+        command mkdir -p "$HOME/.smartcd/inodes$dir"
+        echo $inode > "$HOME/.smartcd/inodes$dir.inode"
+    fi
+}
+
+function _smartcd() {
+    # Don't run this twice consecutively from being sourced.  If the user double-sources
+    # then it could result in scripts being run twice which may have undesirable or
+    # unpredictable effects, so don't do that
+    if [[ -n $smartcd_run_mainline ]]; then
+        if [[ -n $smartcd_last_run_mainline ]]; then
+            unset smartcd_run_mainline
+            return
+        else
+            smartcd_last_run_mainline=1
+        fi
+    else
+        unset smartcd_last_run_mainline
+    fi
+    unset smartcd_run_mainline
+
+    # What are we being invoked as?
+    local action="builtin $1"; shift
+
+    # First, take note of where we're starting from
+    local wherenow="${_smartcd_last_run_for#x}"
+    local wherestarted="$wherenow"
+    if [[ -z "$wherestarted" ]]; then
+        wherestarted=/
+        local initial_mode=1
+    fi
+    local run_from_smartcd=1
+    local _ashift_return
+    local _apop_return
+
+    if [[ -z "$(fn_exists apush)" ]]; then
+        echo "array library is not loaded, please ensure that it is installed before using smartcd"
+        return
+    fi
+
+    # If this is zsh and the user has chpwd enabled, it will fire a whole lot of times
+    # during this.  Stash it and disable it until we're done.
+    if [[ -n $ZSH_VERSION && -n "$(fn_exists stash)" ]]; then
+        local varstash_dir="$wherestarted"
+        stash -f chpwd
+        stash -f chpwd_functions
+        unset -f chpwd 2>/dev/null
+        unset chpwd_functions 2>/dev/null
+        unset -v varstash_dir
+        local stashed_chpwd=1
+    fi
+
+    # Go there and get the fully qualified path.  Also, fail first if it's an
+    # invalid destination, before we do any more work.
+    if [[ -z $smartcd_skip_action ]]; then
+        if [[ -n $1 ]] || [[ -z ${1-_} ]]; then
+            if [[ -n $ZSH_VERSION ]]; then
+                ${=action} "$@"
+            else
+                $action "$@"
+            fi
+        else
+            eval $action
+        fi
+    fi
+    local rv=$?
+
+    if (( $rv != 0 )); then return $rv; fi
+    local whereto="$(pwd)"
+    _smartcd_last_run_for="x$whereto"
+
+    # If zsh, turn autopushd off temporarily to avoid extra pushes
+    if [[ -n $ZSH_VERSION ]]; then
+        setopt localoptions
+        setopt noautopushd
+        setopt nopushdignoredups
+    fi
+
+    # Collect the list of directories we're leaving
+    unset leave_stack
+    while [[ -n $wherenow ]]; do
+        apush leave_stack "$wherenow"
+        wherenow="${wherenow%/*}"
+    done
+    if [[ -z $initial_mode ]]; then
+        apush leave_stack "/"
+    fi
+
+    # Collect the list of directories we're entering, but enter nothing if
+    # we're in "exit mode" which just runs all leave scripts
+    if [[ -z $smartcd_exiting ]]; then
+        wherenow="$whereto"
+        unset enter_stack
+        while [[ -n $wherenow ]]; do
+            apush enter_stack "$wherenow"
+            wherenow=${wherenow%/*}
+        done
+        apush enter_stack "/"
+    fi
+
+    # Pop off common elements
+    while [[ -n "$(alast enter_stack)" ]] && [[ "$(alast enter_stack)" = "$(alast leave_stack)" ]]; do
+
+        # Special cases for /, otherwise it would never be possible to run enter/leave for it
+        if [[ "$(alen enter_stack)" = "1" ]] && [[ "$(afirst enter_stack)" = "/" ]]; then
+            apop leave_stack >/dev/null
+            break
+        elif [[ "$(alen leave_stack)" = "1" ]] && [[ "$(afirst leave_stack)" = "/" ]]; then
+            apop enter_stack >/dev/null
+            break
+        fi
+
+        apop enter_stack >/dev/null
+        apop leave_stack >/dev/null
+    done
+
+    # Run leave_stack in lowest to highest
+    local stack_size=$(alen leave_stack)
+    : ${stack_size:=0}
+    local smartcd_runmode=leave
+    while (( $stack_size >= 1 )); do
+        # ashift in a sub-shell doesn't work
+        local dir="$(afirst leave_stack)"
+        ashift leave_stack >/dev/null
+
+        # Set this just in case we are not able to actualy chdir to $dir
+        local varstash_dir="$dir"
+
+        local confdir="$HOME/.smartcd/scripts$dir"
+        local olddir="$HOME/.smartcd$dir"
+        if [[ -d "$dir" ]]; then
+            builtin cd "$dir"
+            if [[ -f .bash_leave ]]; then
+                if [[ -n $SMARTCD_LEGACY ]]; then
+                    if [[ -z $SMARTCD_QUIET ]]; then
+                        echo "smartcd: running $dir/.bash_leave"
+                    fi
+                    _smartcd_exec_file .bash_leave "$dir"
+                elif [[ -n $SMARTCD_AUTOMIGRATE ]]; then
+                    echo "Automatically migrating \"$dir/.bash_leave\" to \"$confdir/bash_leave\""
+                    command mkdir -p "$confdir"
+                    command cat "$dir/.bash_leave" >> "$confdir/bash_leave"
+                    command rm "$dir/.bash_leave"
+                elif [[ -z $SMARTCD_QUIET ]]; then
+                    echo "############################################################################"
+                    echo "# NOTICE!  Deprecated .bash_leave found, please migrate this file to the new"
+                    echo "# format using the following (or similar) commands:"
+                    if [[ ! -d $confdir ]]; then
+                        echo "mkdir -p \"$confdir\""
+                    fi
+                    echo "cat \"$dir/.bash_leave\" >> \"$confdir/bash_leave\""
+                    echo "rm \"$dir/.bash_leave\""
+                    echo "#"
+                    echo "# If you would like smartcd to perform this migration for you whenever"
+                    echo "# possible, set SMARTCD_AUTOMIGRATE=1"
+                    echo "#"
+                    echo "# If you wish to accept the risks of the old style of operation and run"
+                    echo "# them as-is, you may set SMARTCD_LEGACY=1 instead."
+                    echo "############################################################################"
+                fi
+            fi
+        else
+            echo "smartcd: leaving non-existent directory $dir"
+        fi
+
+        if [[ -f "$olddir/bash_leave" ]]; then
+            smartcd_upgrade_database
+        fi
+
+        # We will run this even if we were not able to chdir there, but
+        # the user is notified that this occurred so they can check things out
+        if [[ -f "$confdir/bash_leave" ]]; then
+            if [[ -z $SMARTCD_QUIET ]]; then
+                echo "smartcd: running $confdir/bash_leave"
+            fi
+            _smartcd_check_inode "$dir"
+            if [[ -z $_inode_skip ]]; then
+                _smartcd_exec_file "$confdir/bash_leave" "$dir"
+            fi
+            unset -v _inode_skip
+        fi
+
+        if [[ -n "$(fn_exists autounstash)" ]]; then
+            autounstash
+        fi
+
+        stack_size=$(alen leave_stack)
+        : ${stack_size:=0}
+    done
+    unset -v varstash_dir
+
+    # Run enter_stack in highest to lowest
+    local stack_size=$(alen enter_stack)
+    : ${stack_size:=0}
+    local smartcd_runmode=enter
+    while (( $stack_size >= 1 )); do
+        # apop in a sub-shell doesn't work
+        local dir="$(alast enter_stack)"
+        apop enter_stack >/dev/null
+        builtin cd "$dir"
+        local confdir="$HOME/.smartcd/scripts$dir"
+        local olddir="$HOME/.smartcd$dir"
+        if [[ -f .bash_enter ]]; then
+            if [[ -n $SMARTCD_LEGACY ]]; then
+                if [[ -z $SMARTCD_QUIET ]]; then
+                    echo "smartcd: running $dir/.bash_enter"
+                fi
+                _smartcd_exec_file .bash_enter "$dir"
+            elif [[ -n $SMARTCD_AUTOMIGRATE ]]; then
+                echo "Automatically migrating \"$dir/.bash_enter\" to \"$confdir/bash_enter\""
+                command mkdir -p "$confdir"
+                command cat "$dir/.bash_enter" >> "$confdir/bash_enter"
+                command rm "$dir/.bash_enter"
+            elif [[ -z $SMARTCD_QUIET ]]; then
+                echo "############################################################################"
+                echo "# NOTICE!  Deprecated .bash_enter found, please migrate this file to the new"
+                echo "# format using the following (or similar) commands:"
+                if [[ ! -d $confdir ]]; then
+                    echo "mkdir -p \"$confdir\""
+                fi
+                echo "cat \"$dir/.bash_enter\" >> \"$confdir/bash_enter\""
+                echo "rm \"$dir/.bash_enter\""
+                echo "#"
+                echo "# If you would like smartcd to perform this migration for you whenever"
+                echo "# possible, set SMARTCD_AUTOMIGRATE=1"
+                echo "#"
+                echo "# If you wish to accept the risks of the old style of operation and run"
+                echo "# them as-is, you may set SMARTCD_LEGACY=1 instead."
+                echo "############################################################################"
+            fi
+        fi
+
+        if [[ -f "$olddir/bash_enter" ]]; then
+            smartcd_upgrade_database
+        fi
+
+        if [[ -f "$confdir/bash_enter" ]]; then
+            if [[ -z $SMARTCD_QUIET ]]; then
+                echo "smartcd: running $confdir/bash_enter"
+            fi
+            _smartcd_check_inode "$dir"
+            if [[ -z $_inode_skip ]]; then
+                _smartcd_exec_file "$confdir/bash_enter" "$dir"
+            fi
+            unset -v _inode_skip
+        fi
+
+        stack_size=$(alen enter_stack)
+        : ${stack_size:=0}
+    done
+
+    # First go to starting directory, as long as it still exists...
+    if [[ -d "$wherestarted" ]]; then
+        builtin cd "$wherestarted"
+    fi
+
+    # ...restoring any chpwd hooks in the process, and allow them to fire once (now)...
+    if [[ -n $stashed_chpwd ]]; then
+        # However, if smartcd was called from a hook and we're still here, then that
+        # means that the chdir happened _before_ we started and thus the hook already
+        # fired.  So go there before re-adding the hooks.
+        if [[ -n $smartcd_skip_action ]]; then
+            builtin cd "$whereto"
+            local arrived_at_destination=1
+        fi
+        unstash chpwd
+        unstash chpwd_functions
+    fi
+
+    # ... and then jump to final directory to stay
+    if [[ -z $arrived_at_destination ]]; then
+        builtin cd "$whereto"
+    fi
+}
+
+function smartcd_edit() {
+    # Invoke the users editor (or vi) on the relevant file
+    local file="$1"
+    case $file in
+        bash_enter|bash_leave) ;;
+                  enter|leave) file="bash_$file";;
+                            *) echo "Usage: smartcd_edit ( bash_enter | bash_leave )"
+                               return
+                               ;;
+    esac
+
+    if [[ -f "$HOME/.smartcd$(pwd)/$file" ]]; then
+        smartcd_upgrade_database
+    fi
+
+    local smartcd_dir="$HOME/.smartcd/scripts$(pwd)"
+    if [[ ! -d "$smartcd_dir" ]]; then
+        command mkdir -p "$smartcd_dir"
+    fi
+
+    # Edit the file if interactive, otherwise write standard input to it
+    if [[ -t 0 ]]; then
+        local tmpfile=$(mktemp /tmp/smartcd-edit.XXXXXX) line=
+        local _old_ifs="$IFS"
+        IFS=$'\n'
+        if [[ -f "$smartcd_dir/$file" ]]; then
+            while read -r line; do
+                case $line in
+                    # extremely hinky replacement here, very whitespace sensitive
+                    *"smartcd template run"*) local tmpl=${line##*template run }
+                                            tmpl=${tmpl%% *}
+                                            echo "$line" >> "$tmpfile"
+                                            echo "$(smartcd template show_part $tmpl ${file#bash_})" >> "$tmpfile"
+                                            ;;
+                                        *) echo "$line" >> "$tmpfile";;
+                esac
+            done < "$smartcd_dir/$file"
+        fi
+        ${EDITOR:-vi} "$tmpfile"
+        if [[ $? = 0 ]]; then
+            echo -n > "$smartcd_dir/$file"
+            local writing=1
+            while read -r line; do
+                case $line in
+                    "# begin smartcd template"*) writing=;;
+                      "# end smartcd template"*) writing=1;;
+                                              *) if [[ -n $writing ]]; then echo "$line" >> "$smartcd_dir/$file"; fi;;
+                esac
+            done < "$tmpfile"
+        fi
+        IFS="$_old_ifs"
+        rm "$tmpfile"
+    else
+        command cat > "$smartcd_dir/$file"
+    fi
+
+    if [[ -f "$smartcd_dir/$file" && ! -s "$smartcd_dir/$file" ]]; then
+        # Delete any file that is left empty
+        command rm "$smartcd_dir/$file"
+    fi
+}
+
+function _smartcd_hook() {
+    local cwd="$(pwd)"
+
+    # Skip this if we already ran smartcd for this directory
+    if [[ "x$cwd" != "$_smartcd_last_run_for" ]]; then
+        local smartcd_skip_action=1
+        smartcd cd "$cwd"
+    fi
+
+    eval $_smartcd_original_command
+}
+
+function setup_smartcd_function() {
+    local cmd=$1;
+    eval "function $cmd() { smartcd $cmd \"\$@\"; }"
+}
+
+function setup_smartcd_prompt_hook() {
+    if [[ -n $ZSH_VERSION ]]; then
+        if [[ -z "$(fn_exists apush)" ]]; then
+            echo "array library is not loaded, please ensure that it is installed before using smartcd"
+            return
+        fi
+        _smartcd_original_command=:
+        apush precmd_functions _smartcd_hook
+    else
+        if [[ -n $PROMPT_COMMAND && -z $_smartcd_original_command ]]; then
+            _smartcd_original_command=$PROMPT_COMMAND
+        else
+            _smartcd_original_command=:
+        fi
+
+        PROMPT_COMMAND=_smartcd_hook
+    fi
+}
+
+function setup_smartcd_chpwd_hook() {
+    if [[ -n $ZSH_VERSION ]]; then
+        if [[ -z "$(fn_exists apush)" ]]; then
+            echo "array library is not loaded, please ensure that it is installed before using smartcd"
+            return
+        fi
+        _smartcd_original_command=:
+        apush chpwd_functions _smartcd_hook
+    fi
+}
+
+function setup_smartcd_exit_hook() {
+    if [[ -n $_smartcd_exit_trap_setup ]]; then
+        return
+    fi
+
+    if [[ -n $ZSH_VERSION ]]; then
+        apush zshexit_functions _smartcd_exit_trap
+    else
+        # Bash supports this, which is much cleaner
+        _smartcd_original_exit_trap=$(trap -p EXIT)
+        _smartcd_original_exit_trap=${_smartcd_original_exit_trap#trap -- }
+        _smartcd_original_exit_trap=${_smartcd_original_exit_trap% EXIT}
+        trap _smartcd_exit_trap EXIT
+    fi
+
+    _smartcd_exit_trap_setup=1
+}
+
+function _smartcd_exit_trap() {
+    local smartcd_exiting=1
+    smartcd cd /
+
+    if [[ -n $_smartcd_original_exit_trap ]]; then
+        eval $_smartcd_original_exit_trap
+    fi
+}
+
+function bash_enter() {
+    _smartcd_file_check bash_enter "$@"
+}
+
+function bash_leave() {
+    _smartcd_file_check bash_leave "$@"
+}
+
+# It's probably better to use getopts or something for this, but since only one
+# option at a time is valid right now, no need
+function _smartcd_file_check() {
+    local confdir="$HOME/.smartcd/scripts$(pwd)"
+
+    local file=$1; shift
+
+    if [[ -f "$HOME/.smartcd$(pwd)/$file" ]]; then
+        smartcd_upgrade_database
+    fi
+
+    case $1 in
+           -h|help) echo "Usage: $file [ edit | show | filename ]";;
+       -f|filename) echo "$confdir/$file";;
+           -e|edit) smartcd_edit $file;;
+    -l|show|cat|'') if [[ -f "$confdir/$file" ]]; then
+                        echo "$confdir/$file exists"
+                        case $1 in
+                           -l|show|cat) echo "-------------------------------------------------------------------------"
+                                        command cat "$confdir/$file"
+                                        echo "-------------------------------------------------------------------------"
+                                        ;;
+                        esac
+                    else
+                        echo "$confdir/$file does not exist"
+                    fi
+                    ;;
+    esac
+}
+
+function smartcd_template() {
+    local action=$1; shift
+
+    # Going to cheat here a bit because doing this right is _hard_
+    # temporarily set nonomatch in zsh who will barf on the following ls without it
+    if [[ -n $ZSH_VERSION ]]; then
+        setopt localoptions
+        setopt nonomatch
+    fi
+    # Force an empty argument to ls in order to gracefully handle nullglob
+    case $(command ls '' $HOME/.smartcd/template_* 2>/dev/null) in
+        '') ;;
+         *) smartcd_upgrade_database;;
+    esac
+
+    local confdir="$HOME/.smartcd"
+
+    case $action in
+          _init)    local name="$1"; shift
+                    local from="$1"
+                    if [[ -n "$from" ]]; then
+                        if [[ -f "$confdir/scripts$from/bash_enter" ]]; then
+                            local enter_orig="$(eval command cat \"$confdir/scripts$from/bash_enter\")"
+                            enter_orig="${enter_orig//$from/__PATH__}"
+                        fi
+                        if [[ -f "$confdir/scripts$from/bash_leave" ]]; then
+                            local leave_orig="$(eval command cat \"$confdir/scripts$from/bash_leave\")"
+                            leave_orig="${leave_orig//$from/__PATH__}"
+                        fi
+                    fi
+
+                    command mkdir -p "$confdir/templates"
+                    if [[ ! -f "$confdir/templates/$name" ]]; then
+                        command cat <<EOF >> "$confdir/templates/$name"
+########################################################################
+# This is a smartcd template.  Edit this file to create a named
+# configuration you can copy to any number of directories.  This is
+# useful if you often use the same settings in different directories
+# but with minor differences.
+#
+# The string __PATH__ will be replaced with the directory being
+# configured when this template is installed, so you can set variables:
+#
+#    autostash PATH=__PATH__/bin:\$PATH
+#
+# This template is named '$name'
+########################################################################
+
+# Enter any bash_enter commands below here: (leave this line!)
+$enter_orig
+
+# Enter any bash_leave commands below here: (leave this line!)
+$leave_orig
+EOF
+                    fi
+                    ;;
+        edit|-e)    local name="$1"; shift
+                    if [[ -n $name ]]; then
+                        smartcd_template _init "$name"
+                        ${EDITOR:-vi} "$confdir/templates/$name"
+                    else
+                        echo "Usage: smartcd template edit <name>"
+                    fi
+                    ;;
+      create|-c)    local name="$1"; shift
+                    if [[ -n $name ]]; then
+                        if [[ -f "$confdir/templates/$name" ]]; then
+                            echo "Template $name already exists, run \"smartcd template edit $name\" to modify it"
+                        else
+                            smartcd_template _init "$name" "$(pwd)"
+                            smartcd_template edit "$name"
+                        fi
+                    else
+                        echo "Usage: smartcd template create <name>"
+                    fi
+                    ;;
+        list|-l)    for file in $confdir/templates/*; do
+                        # if the user has shell options that leave us with a literal asterisk here
+                        # in the event of no matches, we'll want to skip it.  rather than check and
+                        # twiddle shell options, let's just see if that's what happened
+                        if [[ "$file" = "$confdir/templates/*" ]]; then
+                            break
+                        fi
+                        echo ${file#*templates/}
+                    done
+                    ;;
+        show|-s)    local name="$1"; shift
+                    if [[ -n $name ]]; then
+                        if [[ -f "$confdir/templates/$name" ]]; then
+                            command cat "$confdir/templates/$name"
+                        else
+                            echo "Template $name not found"
+                        fi
+                    else
+                        echo "Usage: smartcd template show <name>"
+                    fi
+                    ;;
+      show_part)    local name="$1"; shift
+                    if [[ -n $name ]]; then
+                        if [[ -f "$confdir/templates/$name" ]]; then
+                            echo "# begin smartcd template $name $1"
+                            local saving line=
+                            while read -r line; do
+                                case $line in
+                                    "# Enter any bash_$1 commands"*) saving=1;;
+                                                "# Enter any bash"*) saving=;;
+                                                                  *) if [[ -n $saving ]]; then echo "# $line"; fi;;
+                                esac
+                            done < "$confdir/templates/$name"
+                            echo "# end smartcd template $name $1"
+                        else
+                            echo "Template $name not found"
+                        fi
+                    else
+                        echo "Usage: smartcd template show <name>"
+                    fi
+                    ;;
+     install|-i)    local name="$1"; shift
+                    if [[ -n $name ]]; then
+                        if [[ -f "$confdir/templates/$name" ]]; then
+                            local current_dir=$(pwd)
+                            local smartcd_dir="$confdir/scripts$current_dir"
+                            command mkdir -p "$smartcd_dir"
+                            local mode= line=
+                            while read -r line; do
+                                if [[ $line =~ "Enter any bash_enter commands" ]]; then
+                                    mode=enter
+                                    continue
+                                fi
+                                if [[ $line =~ "Enter any bash_leave commands" ]]; then
+                                    mode=leave
+                                    continue
+                                fi
+                                if [[ "$mode" = "enter" ]]; then
+                                    if [[ -z "$notified_enter" ]]; then
+                                        echo "Configuring $smartcd_dir/bash_enter from template $name"
+                                        local notified_enter=1
+                                    fi
+                                    echo "$line" >> "$smartcd_dir/bash_enter"
+                                elif [[ "$mode" = "leave" ]]; then
+                                    if [[ -z "$notified_leave" ]]; then
+                                        echo "Configuring $smartcd_dir/bash_leave from template $name"
+                                        local notified_leave=1
+                                    fi
+                                    echo "$line" >> "$smartcd_dir/bash_leave"
+                                fi
+                            done < "$confdir/templates/$name"
+                        else
+                            echo "Template $name not found"
+                        fi
+                    else
+                        echo "Usage: smartcd template install <name>"
+                    fi
+                    ;;
+      delete|rm|-d) local name="$1"; shift
+                    if [[ -n $name ]]; then
+                        if [[ -f "$confdir/templates/$name" ]]; then
+                            command rm "$confdir/templates/$name"
+                        else
+                            echo "Template $name not found"
+                        fi
+                    else
+                        echo "Usage: smartcd template delete <name>"
+                    fi
+                    ;;
+               run) local name="$1"; shift
+                    local mode="$1"; shift
+                    if [[ -z $mode ]]; then
+                        mode="$smartcd_runmode"
+                    fi
+                    if [[ -n $name ]]; then
+                        if [[ -f "$confdir/templates/$name" ]]; then
+                            local contents saving line= _old_ifs="$IFS"
+                            IFS=$'\n'
+                            while read -r line; do
+                                case $line in
+                                    "# Enter any bash_$mode commands"*) saving=1;;
+                                                   "# Enter any bash"*) saving=;;
+                                                                     *) if [[ -n $saving ]]; then
+                                                                            contents="$contents
+$line"
+                                                                        fi
+                                                                        ;;
+                                esac
+                            done < "$confdir/templates/$name"
+                            IFS="$_old_ifs"
+                            _smartcd_exec "$contents" "$(pwd)"
+                        else
+                            echo "Template $name not found"
+                        fi
+                    else
+                        echo "Usage: smartcd template run <name> ( enter | leave )"
+                    fi
+                    ;;
+             '')    echo "Usage: smartcd template ( edit | create | list | show | run | install | delete ) [args]"
+                    ;;
+              *)    echo "Unknown action $action."
+                    echo "Usage: smartcd template ( edit | create | list | show | run | install | delete ) [args]"
+                    ;;
+    esac
+}
+
+function fn_exists() {
+    if [[ -n "$(declare -f $1)" ]]; then
+        echo 1
+    fi
+}
+
+function smartcd_config() {
+    if [[ -n $ZSH_VERSION ]]; then
+        # We need the third element because within anth or afirst, arrays is first
+        # two due to the function call and the eval
+        local smartcd_file="$(anth funcsourcetrace 3)"
+        smartcd_file="${smartcd_file%:*}"
+    else
+        local smartcd_file="$BASH_SOURCE"
+    fi
+    if [[ "${smartcd_file%/*}" = $HOME ]]; then
+        smartcd_file=${smartcd_file/#$HOME/\~}
+    fi
+    varstash_file=${smartcd_file/%smartcd/varstash}
+    arrays_file=${smartcd_file/%smartcd/arrays}
+
+    function setup_file() {
+        local file="$1"; shift
+        local config="$1"; shift
+
+        if ! command grep "smartcd" "$file" >/dev/null 2>&1; then
+            echo "Configuring $file"
+            echo -e "$config" >> $file
+        else
+            echo "$file already appears to be configured, please check it for correctness"
+            echo "This is what you configured:"
+            echo -e "$config"
+        fi
+    }
+
+    function generate_config() {
+        function _setup_conditionally() {
+            local cond=$1; shift
+            if [[ ! $cond =~ $yes ]]; then
+                local comment="# "
+            fi
+            config="$config\n${comment}$*"
+        }
+
+        local config="\n# Load and configure smartcd\nsource $arrays_file\nsource $varstash_file\nsource $smartcd_file"
+
+        _setup_conditionally "$setup_cd"            "smartcd setup cd"
+        _setup_conditionally "$setup_pushd"         "smartcd setup pushd"
+        _setup_conditionally "$setup_pushd"         "smartcd setup popd"
+        _setup_conditionally "$enable_prompt_hook"  "smartcd setup prompt-hook"
+        _setup_conditionally "$enable_exit_hook"    "smartcd setup exit-hook"
+        _setup_conditionally "$autoconfigure"       "VARSTASH_AUTOCONFIGURE=1"
+        _setup_conditionally "$autoedit"            "VARSTASH_AUTOEDIT=1"
+        _setup_conditionally "$noinode"             "SMARTCD_NO_INODE=1"
+        _setup_conditionally "$automigrate"         "SMARTCD_AUTOMIGRATE=1"
+        _setup_conditionally "$legacy"              "SMARTCD_LEGACY=1"
+
+        # Add commented-out quiet settings so the user can enable them later
+        _setup_conditionally ""                "SMARTCD_QUIET=1"
+        _setup_conditionally ""                "VARSTASH_QUIET=1"
+
+        unset -f _setup_conditionally
+
+        echo -e "$config"
+    }
+
+    local yes="^y"
+    function read_yesno() {
+        local yesno
+        read yesno < /dev/tty
+        yesno=$(echo $yesno | command tr 'A-Z' 'a-z')
+        : ${yesno:=$1}
+        echo $yesno
+    }
+
+    function ask() {
+        echo >/dev/tty
+        echo "[ $1 ]" >/dev/tty
+        echo -ne "$2" >/dev/tty
+        case $3 in
+            y) echo -n " [Y/n] " >/dev/tty;;
+            n) echo -n " [y/N] " >/dev/tty;;
+        esac
+        read_yesno $3
+    }
+
+    local which_shell=$SHELL
+    if [[ $which_shell =~ 'bash' ]]; then
+        local possible_files=".bashrc .bash_profile .profile"
+    elif [[ $which_shell =~ 'zsh' ]]; then
+        local possible_files=".zshrc"
+    else
+        echo "Unknown shell, sorry!  Only bash and zsh are supported at this time"
+        exit 1
+    fi
+
+    if [[ -f "$HOME/.smartcd_config" ]]; then
+        local cd_def=n pushd_def=n prompt_def=n exit_def=n autocon_def=n autoed_def=n
+        local inodef_def=n automig_def=n legacy_def=n line=
+        while read -r line; do
+            case $line in
+                         "smartcd setup cd") cd_def=y;;
+                      "smartcd setup pushd") pushd_def=y;;
+                "smartcd setup prompt-hook") prompt_def=y;;
+                  "smartcd setup exit-hook") exit_def=y;;
+                 "VARSTASH_AUTOCONFIGURE=1") autocon_def=y;;
+                      "VARSTASH_AUTOEDIT=1") autoed_def=y;;
+                       "SMARTCD_NO_INODE=1") inode_def=y;;
+                    "SMARTCD_AUTOMIGRATE=1") automig_def=y;;
+                         "SMARTCD_LEGACY=1") legacy_def=y;;
+            esac
+        done < "$HOME/.smartcd_config"
+    fi
+
+    local setup_cd=$(ask "smartcd setup cd" "Would you like to wrap cd with smartcd?  This is the recommended way to run smartcd" ${cd_def:-y})
+    local setup_pushd=$(ask "smartcd setup pushd" "Would you like to wrap pushd and popd?" ${pushd_def:-y})
+    local enable_prompt_hook=$(ask "smartcd setup prompt-hook" "Would you like to enable prompt-command hooks?  (This is only recommended if you are an\n\"autocd\" user, say no if you are unsure)" ${prompt_def:-n})
+    local enable_exit_hook=$(ask "smartcd setup exit-hook" "Would you like to enable the shell exit hook?  This will cause bash_leave scripts to run\nfrom your current directory down to / when exiting your shell" ${exit_def:-n})
+    local autoconfigure=$(ask "VARSTASH_AUTOCONFIGURE=1" "Would you like to automatically configure smartcd when you run stash or autostash manually?" ${autocon_def:-n})
+    if [[ $autoconfigure =~ $yes ]]; then
+        local autoedit=$(ask "VARSTASH_AUTOEDIT=1" "Would you also like to edit the smartcd config after it is automatically configured?" ${autoed_def:-n})
+    fi
+
+    echo
+    echo "[ADVANCED USAGE]"
+
+    local noinode=$(ask "SMARTCD_NO_INODE=1" "Would you like to skip validation that scripts are not stale from a previously deleted or renamed directory? (DISCOURAGED)" ${inode_def:-n})
+    local automigrate=$(ask "SMARTCD_AUTOMIGRATE=1" "Would you like to automigrate legacy smartcd scripts?" ${automig_def:-n})
+    local legacy=$(ask "SMARTCD_LEGACY=1" "Would you like to allow legacy scripts to run in-place? (DISCOURAGED)" ${legacy_def:-n})
+
+    local config=$(generate_config)
+
+    echo
+
+    if [[ -f "$HOME/.smartcd_config" ]]; then
+        local config_file_exists=1
+        echo -n "$HOME/.smartcd_config already exists, do you want to overwrite it? [y/N] "
+        local overwrite_config_file=$(read_yesno n)
+        if [[ $overwrite_config_file =~ $yes ]]; then
+            echo -e "$config" > "$HOME/.smartcd_config"
+        else
+            echo "Ok, here is the configuration that you generated, please update as necessary:"
+            echo "$config"
+        fi
+    else
+        echo -n "Would you like to configure smartcd in $HOME/.smartcd_config? (recommended) [Y/n] "
+        local create_config_file=$(read_yesno y)
+        if [[ $create_config_file =~ $yes ]]; then
+            echo -e "$config" > "$HOME/.smartcd_config"
+            local config_file_exists=1
+        fi
+    fi
+
+    if [[ -n $config_file_exists ]]; then
+
+        echo -n "Would you like to load your config file now? [Y/n] "
+        local loadnow=$(read_yesno y)
+        if [[ $loadnow =~ $yes ]]; then
+            source $HOME/.smartcd_config
+        fi
+
+        for file in $possible_files; do
+            if [[ -f "$HOME/$file" ]]; then
+                if command grep "\.smartcd_config" "$HOME/$file" >/dev/null 2>&1; then
+                    local setup=1
+                else
+                    echo -n "I see you have a $file, would you like to load your config file from there? [Y/n] "
+                    local answer=$(read_yesno y)
+                    if [[ $answer =~ $yes ]]; then
+                        echo -e "\n[[ -r \"\$HOME/.smartcd_config\" ]] && source ~/.smartcd_config" >> "$HOME/$file"
+                        local setup=1
+                    fi
+                fi
+            fi
+        done
+
+        if [[ -z $setup ]]; then
+            echo -n "You did not load your config anywhere, which file would you like to load it from? "
+            read filename < /dev/tty
+            if [[ -n "$filename" ]]; then
+                # eval here to expand ~
+                local real_filename=$(readlink -f $(eval echo $filename))
+                if [[ -f "$real_filename" ]]; then
+                    echo -e "\nsource ~/.smartcd_config" >> "$real_filename"
+                else
+                    echo "Sorry, I can't find $filename"
+                fi
+            else
+                echo
+                echo "WARNING"
+                echo "You apparently did not configure your shell to load your smartcd configuration."
+                echo "Make sure you add \"source ~/.smartcd_config\" to the appropriate location."
+            fi
+        fi
+    else
+        for file in $possible_files; do
+            if [[ -f "$HOME/$file" ]]; then
+                echo -n "I see you have a $file, would you like to write your config to it? [Y/n] "
+                local answer=$(read_yesno y)
+                if [[ $answer =~ $yes ]]; then
+                    setup_file "$HOME/$file" "$config"
+                    local setup=1
+                fi
+            fi
+        done
+
+        if [[ -z $setup ]]; then
+            echo -n "You did not configure any files, which file would you like to set up? "
+            read filename < /dev/tty
+            if [[ -n "$filename" ]]; then
+                # eval here to expand ~
+                local real_filename=$(readlink -f $(eval echo $filename))
+                if [[ -f "$real_filename" ]]; then
+                    setup_file "$real_filename" "$config"
+                else
+                    echo "Sorry, I can't find $filename"
+                fi
+            else
+                echo "Ok, here is your configuration, please set it up in an appropriate location:"
+                echo "$config"
+            fi
+        fi
+    fi
+
+    unset -f setup_file generate_config read_yesno ask
+}
+
+function smartcd_upgrade_database() {
+    if [[ -z $SMARTCD_QUIET ]]; then
+        case $_manual_upgrade in
+            1) echo "smartcd: upgrading";;
+            *) echo "smartcd: outdated script directory detected, upgrading";;
+        esac
+    fi
+    command mkdir -p $HOME/.smartcd/scripts $HOME/.smartcd/templates $HOME/.smartcd/archive
+    local _old_ifs="$IFS"
+    IFS=$'\n'
+    for entry in $(command ls $HOME/.smartcd); do
+        case $entry in
+             scripts|templates) ;;
+                    template_*) name=${entry#template_}
+                                command cp "$HOME/.smartcd/$entry" "$HOME/.smartcd/templates/$name"
+                                command mv "$HOME/.smartcd/$entry" "$HOME/.smartcd/archive"
+                                ;;
+                             *) # A little extra caution never hurt anybody, let's try to be future-proof
+                                if [[ -d "/$entry" || $entry = "bash_enter" || $entry = "bash_leave" ]]; then
+                                    command cp -rpP "$HOME/.smartcd/$entry" "$HOME/.smartcd/scripts"
+                                    command mv "$HOME/.smartcd/$entry" "$HOME/.smartcd/archive"
+                                fi
+                                ;;
+        esac
+
+    done
+    IFS="$_old_ifs"
+
+    echo "smartcd: upgrade complete.  Your previous scripts can be found under"
+    echo "$HOME/.smartcd/archive in case anything went wrong."
+}
+
+# Export file format: (leading space added before all file contents)
+# -------------------------
+# smartcd export 1.0
+# @ scripts/home/user/foo
+#  ...
+#  ...
+# @ templates/wtf
+#  ...
+# -------------------------
+function smartcd_export() {
+    # not using stash here to avoid interfering with the user, who might also have it stashed.
+    local _old_ifs="$IFS"
+    IFS=$'\n'
+    echo "smartcd export 1.0"
+    apush remaining_dirs "scripts" "templates"
+    while (( $(alen remaining_dirs) > 0 )); do
+        dir=$(afirst remaining_dirs)
+        ashift remaining_dirs >/dev/null
+        files="$(command ls $HOME/.smartcd/$dir)"
+        for entry in $files; do
+            if [[ -f "$HOME/.smartcd/$dir/$entry" ]]; then
+                echo "@ $dir/$entry"
+                local line=
+                while read -r line; do
+                    echo " $line"
+                done < "$HOME/.smartcd/$dir/$entry"
+            elif [[ -d "$HOME/.smartcd/$dir/$entry" ]]; then
+                apush remaining_dirs "$dir/$entry"
+            else
+                echo "Skipping unknown file $HOME/.smartcd/$dir/$entry" >&2
+            fi
+        done
+    done
+
+    IFS="$_old_ifs"
+}
+
+function smartcd_import() {
+    if [[ -n $1 ]]; then
+        cat "$1" | _smartcd_import
+    else
+        _smartcd_import
+    fi
+}
+
+function _smartcd_import() {
+    local _old_ifs="$IFS"
+    IFS=$'\n'
+
+    if [[ -d "$HOME/.smartcd" ]]; then
+        for file in $(ls "$HOME/.smartcd"); do
+            case $file in
+                scripts|templates) if [[ -z "$olddir" ]]; then
+                                       command mkdir -p "$HOME/.smartcd/archive"
+                                       local olddir=$(command mktemp -d "$HOME/.smartcd/archive/import-backup.XXXXXX")
+                                   fi
+                                   echo "Old $HOME/.smartcd/$file found, moving to $olddir"
+                                   command mv "$HOME/.smartcd/$file" "$olddir"
+                                   ;;
+            esac
+        done
+
+        # These will be all wrong, so remove them
+        command rm -rf "$HOME/.smartcd/inodes"
+    fi
+
+    local line=
+    while read -r line; do
+        case $line in
+            "smartcd export"*) ;;
+                        "@ "*) local file="${line#@ }"
+                               local dir="${file%'/'*}"
+                               command mkdir -p "$HOME/.smartcd/$dir"
+                               ;;
+                            *)
+                               line="${line# }"
+                               echo "$line" >> "$HOME/.smartcd/$file"
+                               ;;
+        esac
+    done
+
+    IFS="$_old_ifs"
+}
+
+# Run on load if all the necessary libraries are loaded, otherwise let them do it
+if [[ -n "$(fn_exists apush)" && -n "$(fn_exists autostash)" && -z "$SMARTCD_NOINITIAL" ]]; then
+    smartcd_skip_action=1
+    smartcd_run_mainline=1
+    smartcd cd
+    unset smartcd_skip_action
+else
+    smartcd_initially_deferred=1
+fi

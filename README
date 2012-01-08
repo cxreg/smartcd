@@ -41,7 +41,7 @@ OK, HOW DO I USE IT?
   the source, you can:
 
     make install
-    source ~/.bash_smartcd
+    source ~/.smartcd/lib/core/smartcd
     smartcd config
 
   However, if you would rather skip all that and simply have it install iself,
@@ -340,14 +340,14 @@ WHAT ELSE CAN IT DO?
         cat my_smartcd_backup | smartcd import
 
 
-  For more complete documentation, see the documentation in bash_smartcd itself.
+  For more complete documentation, see the documentation in lib/core/smartcd.
 
 
 OTHER LIBRARIES
 
   VARSTASH
 
-    As already discussed, the included library bash_varstash provides several
+    As already discussed, the included library lib/core/varstash provides several
     functions for saving values to a temporary location so that you can edit
     them, and then later restore the original value.
 
@@ -394,7 +394,7 @@ OTHER LIBRARIES
     set of supporting built-ins.  In particular, I find myself missing the Perl
     functions push, pop, shift, unshift, reverse.
 
-    To provide these capabilities, another library called bash_arrays is
+    To provide these capabilities, another library, lib/core/arrays, is
     included.  The provided functions are:
 
         apush    - Add an element to the end of your array
@@ -408,7 +408,7 @@ OTHER LIBRARIES
         alen     - Print the current number of elements in the array
         acopy    - Copy an array into a new variable
 
-    See documentation included in bash_arrays for more detail.
+    See documentation included in lib/core/arrays for more detail.
 
 
 LICENSE
