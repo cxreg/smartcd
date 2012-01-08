@@ -17,9 +17,12 @@ test_all: test_bash test_zsh
 
 install:
 	@[ -d $(HOME)/.smartcd/lib/core ] && echo "* Removing old $(HOME)/.smartcd/lib/core" && rm -rf $(HOME)/.smartcd/lib/core || true
-	@mkdir -p $(HOME)/.smartcd/lib/core
 	@echo "* Installing libraries to $(HOME)/.smartcd/lib"
+	@mkdir -p $(HOME)/.smartcd/lib/core
 	@cp -r lib/core $(HOME)/.smartcd/lib
+	@echo "* Installing helpers to $(HOME)/.smartcd/helper"
+	@mkdir -p $(HOME)/.smartcd/helper
+	@cp -r helper $(HOME)/.smartcd
 	@[ -f $(HOME)/.bash_smartcd ] && echo "* Replacing legacy $(HOME)/.bash_smartcd" && cp bash_smartcd $(HOME)/.bash_smartcd || true
 	@echo
 	@echo "Congratulations, smartcd is now installed"

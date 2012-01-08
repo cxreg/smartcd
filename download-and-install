@@ -36,15 +36,18 @@ fi
 function download_file() {
     local file="$1"
 
+    local dir=${file%/*}
+    if [[ ! -d ~/.smartcd/"$dir" ]]; then
+        mkdir -p ~/.smartcd/"$dir"
+    fi
     dots=$(printf "%*s" $((40 - ${#file})))
     echo -n "Downloading $file${dots// /.}"
-    $download "$baseurl/$file" > ~/.smartcd/$file 2>/dev/null
+    $download "$baseurl/$file" > ~/.smartcd/"$file" 2>/dev/null
     echo "done"
 }
 
 working_dir=$(mktemp -d /tmp/smartcd-install.XXXXXX)
 cd $working_dir
-mkdir -p ~/.smartcd/lib/core
 for file in                            \
     lib/core/smartcd                   \
     lib/core/smartcd_edit              \

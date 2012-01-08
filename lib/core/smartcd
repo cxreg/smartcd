@@ -199,6 +199,7 @@ function smartcd() {
             export) shift; smartcd_export "$@";;
             import) shift; smartcd_import "$@";;
             inform) shift; if [[ -z $suppress_output ]]; then echo "$@"; fi;;
+            helper) shift; smartcd_helper "$@";;
                  *) if [[ -n $ZSH_VERSION ]]; then
                         local dir=$argv[-1]
                     else
@@ -248,13 +249,15 @@ function _smartcd_load() {
 }
 
 function _smartcd_exec_file() {
-    local contents="$(cat "$1")"
-    _smartcd_exec "$contents" "$2"
+    local file="$1"; shift
+    local contents="$(command cat "$file")"
+    _smartcd_exec "$contents" "$@"
 }
 
 function _smartcd_exec() {
     local contents="${1//__PATH__/$2}"
-    eval "$contents"
+    shift; shift
+    eval "set -- \"\$@\"; $contents"
 }
 
 function _smartcd_check_inode() {
@@ -721,6 +724,10 @@ function smartcd_import() {
 
 function smartcd_upgrade_database() {
     _smartcd_load "smartcd_upgrade_database" && smartcd_upgrade_database "$@"
+}
+
+function smartcd_helper() {
+    _smartcd_load "smartcd_helper" && smartcd_helper "$@"
 }
 
 # Run on load if all the necessary libraries are loaded, otherwise let them do it

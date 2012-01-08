@@ -20,16 +20,25 @@ function _smartcd_completion() {
 
     local words
     if [[ $COMP_CWORD == 1 ]]; then
-        words="cd pushd popd setup config template edit show filename export import reenter inform"
+        words="cd pushd popd setup config template edit show filename export import reenter inform helper"
     elif [[ $COMP_CWORD == 2 ]]; then
         case $prev in
                          setup) words="cd pushd popd prompt-hook chpwd-hook exit-hook completion";;
                       template) words="edit create list show run install delete";;
             edit|show|filename) words="enter leave";;
+                        helper) words="run";;
         esac
     elif [[ $COMP_CWORD == 3 && "${COMP_WORDS[COMP_CWORD-2]}" == "template" ]]; then
         case $prev in
             edit|show|run|install|delete) words="$(smartcd template list)";;
+        esac
+    elif [[ $COMP_CWORD == 3 && "${COMP_WORDS[COMP_CWORD-2]}" == "helper" ]]; then
+        case $prev in
+            run) local _old_ifs="$IFS"
+                 IFS=$'\n'
+                 words="$(command ls $(_smartcd_base)/helper)"
+                 IFS="$_old_ifs"
+                 ;;
         esac
     fi
 
