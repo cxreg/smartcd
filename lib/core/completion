@@ -1,0 +1,43 @@
+#
+# bash/zsh completion for smartcd
+#
+# Copyright (C) 2011 Dave Olszewski <cxreg@pobox.com>
+# Distributed under the GNU General Public License, version 2.0.
+#
+
+if [[ -n $ZSH_VERSION ]]; then
+    autoload -U +X bashcompinit && bashcompinit
+fi
+
+function _smartcd_completion() {
+    COMPREPLY=()
+
+    local cur="${COMP_WORDS[COMP_CWORD]}"
+    local prev="${COMP_WORDS[COMP_CWORD-1]}"
+    local prevprev="${COMP_WORDS[COMP_CWORD-2]}"
+
+    local prev_ifs="$IFS"
+    IFS=$' \t\n'
+
+    local words
+    if [[ $COMP_CWORD == 1 ]]; then
+        words="cd pushd popd setup config template edit show filename export import"
+    elif [[ $COMP_CWORD == 2 ]]; then
+        case $prev in
+                         setup) words="cd pushd popd prompt-hook chpwd-hook exit-hook completion";;
+                      template) words="edit create list show run install delete";;
+            edit|show|filename) words="enter leave";;
+        esac
+    elif [[ $COMP_CWORD == 3 && $prevprev = "template" ]]; then
+        case $prev in
+            edit|show|run|install|delete) words="$(smartcd template list)";;
+        esac
+    fi
+
+    COMPREPLY=( $(compgen -W "$words" -- "$cur") )
+
+    IFS="$prev_ifs"
+}
+
+complete -o bashdefault -o default -F _smartcd_completion smartcd 2>/dev/null \
+    || complete -o default -F _smartcd_completion smartcd

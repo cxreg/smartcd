@@ -177,6 +177,10 @@ function smartcd() {
                         prompt-hook|prompt) setup_smartcd_prompt_hook;;
                           chpwd-hook|chpwd) setup_smartcd_chpwd_hook;;
                             exit-hook|exit) setup_smartcd_exit_hook;;
+                                completion) local smartcd_file="$(_this_file)"
+                                            local completion_file=${smartcd_file/%smartcd/completion}
+                                            source "$completion_file"
+                                            ;;
                     esac
                     ;;
             config) smartcd_config;;
@@ -916,20 +920,25 @@ function fn_exists() {
     fi
 }
 
-function smartcd_config() {
+function _this_file() {
     if [[ -n $ZSH_VERSION ]]; then
         # We need the third element because within anth or afirst, arrays is first
         # two due to the function call and the eval
-        local smartcd_file="$(anth funcsourcetrace 3)"
-        smartcd_file="${smartcd_file%:*}"
+        local this_file="$(anth funcsourcetrace 3)"
+        this_file="${this_file%:*}"
     else
-        local smartcd_file="$BASH_SOURCE"
+        local this_file="$BASH_SOURCE"
     fi
-    if [[ "${smartcd_file%/*}" = $HOME ]]; then
-        smartcd_file=${smartcd_file/#$HOME/\~}
+    if [[ "${this_file%/*}" = $HOME ]]; then
+        this_file=${this_file/#$HOME/\~}
     fi
-    varstash_file=${smartcd_file/%smartcd/varstash}
-    arrays_file=${smartcd_file/%smartcd/arrays}
+    echo "$this_file"
+}
+
+function smartcd_config() {
+    local smartcd_file="$(_this_file)"
+    local varstash_file=${smartcd_file/%smartcd/varstash}
+    local arrays_file=${smartcd_file/%smartcd/arrays}
 
     function setup_file() {
         local file="$1"; shift
@@ -961,6 +970,7 @@ function smartcd_config() {
         _setup_conditionally "$setup_pushd"         "smartcd setup popd"
         _setup_conditionally "$enable_prompt_hook"  "smartcd setup prompt-hook"
         _setup_conditionally "$enable_exit_hook"    "smartcd setup exit-hook"
+        _setup_conditionally "$enable_completion"   "smartcd setup completion"
         _setup_conditionally "$autoconfigure"       "VARSTASH_AUTOCONFIGURE=1"
         _setup_conditionally "$autoedit"            "VARSTASH_AUTOEDIT=1"
         _setup_conditionally "$noinode"             "SMARTCD_NO_INODE=1"
@@ -1028,6 +1038,7 @@ function smartcd_config() {
     local setup_pushd=$(ask "smartcd setup pushd" "Would you like to wrap pushd and popd?" ${pushd_def:-y})
     local enable_prompt_hook=$(ask "smartcd setup prompt-hook" "Would you like to enable prompt-command hooks?  (This is only recommended if you are an\n\"autocd\" user, say no if you are unsure)" ${prompt_def:-n})
     local enable_exit_hook=$(ask "smartcd setup exit-hook" "Would you like to enable the shell exit hook?  This will cause bash_leave scripts to run\nfrom your current directory down to / when exiting your shell" ${exit_def:-n})
+    local enable_completion=$(ask "smartcd setup completion" "Would you like to enable smartcd tab completion?" ${exit_def:-y})
     local autoconfigure=$(ask "VARSTASH_AUTOCONFIGURE=1" "Would you like to automatically configure smartcd when you run stash or autostash manually?" ${autocon_def:-n})
     if [[ $autoconfigure =~ $yes ]]; then
         local autoedit=$(ask "VARSTASH_AUTOEDIT=1" "Would you also like to edit the smartcd config after it is automatically configured?" ${autoed_def:-n})

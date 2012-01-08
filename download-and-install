@@ -39,6 +39,7 @@ mkdir -p ~/.smartcd/lib/core
 $download "$baseurl/lib/core/smartcd" > ~/.smartcd/lib/core/smartcd
 $download "$baseurl/lib/core/varstash" > ~/.smartcd/lib/core/varstash
 $download "$baseurl/lib/core/arrays" > ~/.smartcd/lib/core/arrays
+$download "$baseurl/lib/core/completion" > ~/.smartcd/lib/core/completion
 
 echo "Installation complete"
 echo -n "Configure now? [Y/n] "
