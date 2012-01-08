@@ -317,6 +317,8 @@ function _smartcd() {
 
     # Go there and get the fully qualified path.  Also, fail first if it's an
     # invalid destination, before we do any more work.
+    local _old_ifs="$IFS"
+    IFS=$' \t\n'
     if [[ -z $smartcd_skip_action ]]; then
         if [[ -n $1 ]] || [[ -z ${1-_} ]]; then
             if [[ -n $ZSH_VERSION ]]; then
@@ -329,6 +331,7 @@ function _smartcd() {
         fi
     fi
     local rv=$?
+    IFS="$_old_ifs"
 
     if (( $rv != 0 )); then return $rv; fi
     local whereto="$(pwd)"
@@ -891,8 +894,7 @@ EOF
                                     "# Enter any bash_$mode commands"*) saving=1;;
                                                    "# Enter any bash"*) saving=;;
                                                                      *) if [[ -n $saving ]]; then
-                                                                            contents="$contents
-$line"
+                                                                            contents="$contents"$'\n'"$line"
                                                                         fi
                                                                         ;;
                                 esac
@@ -1230,7 +1232,7 @@ function _smartcd_import() {
     IFS=$'\n'
 
     if [[ -d "$HOME/.smartcd" ]]; then
-        for file in $(ls "$HOME/.smartcd"); do
+        for file in $(command ls "$HOME/.smartcd"); do
             case $file in
                 scripts|templates) if [[ -z "$olddir" ]]; then
                                        command mkdir -p "$HOME/.smartcd/archive"
