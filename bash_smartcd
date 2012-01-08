@@ -245,8 +245,7 @@ function _smartcd_check_inode() {
             echo "for correctness:"
             echo
             local _old_ifs="$IFS"
-            IFS="
-"
+            IFS=$'\n'
             for file in $(command ls "$HOME/.smartcd/scripts$dir"); do
                 echo "    $HOME/.smartcd/scripts$dir/$file"
             IFS="$_old_ifs"
@@ -561,8 +560,7 @@ function smartcd_edit() {
     if [[ -t 0 ]]; then
         local tmpfile=$(mktemp /tmp/smartcd-edit.XXXXXX) line=
         local _old_ifs="$IFS"
-        IFS="
-"
+        IFS=$'\n'
         if [[ -f "$smartcd_dir/$file" ]]; then
             while read -r line; do
                 case $line in
@@ -885,8 +883,7 @@ EOF
                     if [[ -n $name ]]; then
                         if [[ -f "$confdir/templates/$name" ]]; then
                             local contents saving line= _old_ifs="$IFS"
-                            IFS="
-"
+                            IFS=$'\n'
                             while read -r line; do
                                 case $line in
                                     "# Enter any bash_$mode commands"*) saving=1;;
@@ -1151,8 +1148,7 @@ function smartcd_upgrade_database() {
     fi
     command mkdir -p $HOME/.smartcd/scripts $HOME/.smartcd/templates $HOME/.smartcd/archive
     local _old_ifs="$IFS"
-    IFS="
-"
+    IFS=$'\n'
     for entry in $(command ls $HOME/.smartcd); do
         case $entry in
              scripts|templates) ;;
@@ -1187,8 +1183,7 @@ function smartcd_upgrade_database() {
 function smartcd_export() {
     # not using stash here to avoid interfering with the user, who might also have it stashed.
     local _old_ifs="$IFS"
-    IFS="
-"
+    IFS=$'\n'
     echo "smartcd export 1.0"
     apush remaining_dirs "scripts" "templates"
     while (( $(alen remaining_dirs) > 0 )); do
@@ -1223,8 +1218,7 @@ function smartcd_import() {
 
 function _smartcd_import() {
     local _old_ifs="$IFS"
-    IFS="
-"
+    IFS=$'\n'
 
     if [[ -d "$HOME/.smartcd" ]]; then
         for file in $(ls "$HOME/.smartcd"); do
