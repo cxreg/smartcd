@@ -177,9 +177,8 @@ function smartcd() {
                         prompt-hook|prompt) setup_smartcd_prompt_hook;;
                           chpwd-hook|chpwd) setup_smartcd_chpwd_hook;;
                             exit-hook|exit) setup_smartcd_exit_hook;;
-                                completion) local smartcd_file="$(_this_file)"
-                                            local completion_file=${smartcd_file/%smartcd/completion}
-                                            source "$completion_file"
+                                completion) local smartcd_file="$(_smartcd_file)"
+                                            eval "source ${smartcd_file/%smartcd/completion}"
                                             ;;
                     esac
                     ;;
@@ -922,23 +921,23 @@ function fn_exists() {
     fi
 }
 
-function _this_file() {
+function _smartcd_file() {
     if [[ -n $ZSH_VERSION ]]; then
-        # We need the third element because within anth or afirst, arrays is first
-        # two due to the function call and the eval
+        # We need the third element because within anth or afirst, arrays is the
+        # first two due to the function call and the eval
         local this_file="$(anth funcsourcetrace 3)"
         this_file="${this_file%:*}"
     else
         local this_file="$BASH_SOURCE"
     fi
-    if [[ "${this_file%/*}" = $HOME ]]; then
+    if [[ "${this_file%/.smartcd/lib/core/smartcd}" = $HOME ]]; then
         this_file=${this_file/#$HOME/\~}
     fi
     echo "$this_file"
 }
 
 function smartcd_config() {
-    local smartcd_file="$(_this_file)"
+    local smartcd_file="$(_smartcd_file)"
     local varstash_file=${smartcd_file/%smartcd/varstash}
     local arrays_file=${smartcd_file/%smartcd/arrays}
 
