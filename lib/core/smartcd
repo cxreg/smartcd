@@ -616,7 +616,13 @@ function _smartcd_hook() {
 
 function setup_smartcd_function() {
     local cmd=$1;
-    eval "function $cmd() { smartcd $cmd \"\$@\"; }"
+    if typeset -f rvm >/dev/null 2>/dev/null &&
+      typeset -f __rvm_setup_cd_function >/dev/null 2>/dev/null
+    then
+        __rvm_setup_cd_function smartcd $cmd
+    else
+        eval "function $cmd() { smartcd $cmd \"\$@\"; }"
+    fi
 }
 
 function setup_smartcd_prompt_hook() {
