@@ -17,10 +17,10 @@ curl=$(which curl)
 wget=$(which wget)
 
 # Hopefully this is the right perl, otherwise, I hope you have Crypt::SSLeay installed :)
-if [[ -n $lwp ]] && perl -MCrypt::SSLeay -MLWP::Protocol::https -e '' >/dev/null 2>&1; then
-    download="lwp-request"
-elif [[ -n $curl ]]; then
+if [[ -n $curl ]]; then
     download="curl -L"
+elif [[ -n $lwp ]] && perl -MCrypt::SSLeay -MLWP::Protocol::https -e '' >/dev/null 2>&1; then
+    download="lwp-request"
 elif [[ -n $wget ]]; then
     download="wget --no-check-certificate -O -"
 else
