@@ -14,7 +14,6 @@ function _smartcd_completion() {
 
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
-    local prevprev="${COMP_WORDS[COMP_CWORD-2]}"
 
     local prev_ifs="$IFS"
     IFS=$' \t\n'
@@ -28,7 +27,7 @@ function _smartcd_completion() {
                       template) words="edit create list show run install delete";;
             edit|show|filename) words="enter leave";;
         esac
-    elif [[ $COMP_CWORD == 3 && $prevprev = "template" ]]; then
+    elif [[ $COMP_CWORD == 3 && "${COMP_WORDS[COMP_CWORD-2]}" == "template" ]]; then
         case $prev in
             edit|show|run|install|delete) words="$(smartcd template list)";;
         esac
