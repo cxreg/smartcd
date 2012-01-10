@@ -210,6 +210,18 @@ WHAT ARE SOME COMMON RECIPES?
     perlbrew is available at http://search.cpan.org/~gugod/App-perlbrew/
 
 
+  RVM
+
+    RVM is the Ruby Version Manager, which like perlbrew, can manage multiple
+    versions of the language being installed at once.  Because it too wants to
+    wrap the `cd` command, things are a little tricker than with perlbrew.
+    Fortunately, the RVM project has added express support for smartcd as the
+    action taken during its own cd.  If both projects are installed, RVM's cd()
+    will call smartcd's, regardless of which order the two are set up.
+
+    RVM is available at http://beginrescueend.com/
+
+
   STOP/START
 
     If you want something to start running when you enter the directory, and
