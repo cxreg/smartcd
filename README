@@ -250,6 +250,19 @@ WHAT ARE SOME COMMON RECIPES?
             fi
         }
 
+        # Create an alias that calls both functions
+        autostash alias restart="stop; sleep 2; start"
+
+        # And automatically start-up on enter
+        start
+
+
+        ### leave script ###
+
+        # Shut down when leaving.  Yes, this function is still available here, and
+        # it will be removed by autounstash after this leave is complete
+        stop
+
         # There are several things to make a note of here
         #
         #   1) The sub-shell created in the start() function is not actually necessary
@@ -265,18 +278,6 @@ WHAT ARE SOME COMMON RECIPES?
         #      correct place, even after you've changed to a subdirectory of where the script
         #      was defined.
 
-        # Create an alias that calls both functions
-        autostash alias restart="stop; sleep 2; start"
-
-        # And automatically start-up on enter
-        start
-
-
-        ### leave script ###
-
-        # Shut down when leaving.  Yes, this function is still available here, and
-        # it will be removed by autounstash after this leave is complete
-        stop
 
     and of course, if you want to be sure that this daemon is shut down properly
     if you simply log out or close your shell, you will want the exit hook as well
