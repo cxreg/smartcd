@@ -20,7 +20,7 @@ function _smartcd_completion() {
 
     local words
     if [[ $COMP_CWORD == 1 ]]; then
-        words="cd pushd popd setup config template edit show filename export import"
+        words="cd pushd popd setup config template edit show filename export import reenter"
     elif [[ $COMP_CWORD == 2 ]]; then
         case $prev in
                          setup) words="cd pushd popd prompt-hook chpwd-hook exit-hook completion";;
