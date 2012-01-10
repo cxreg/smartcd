@@ -366,13 +366,13 @@ function _smartcd() {
     fi
 
     # Pop off common elements
-    while [[ -n "$(alast enter_stack)" ]] && [[ "$(alast enter_stack)" = "$(alast leave_stack)" ]]; do
+    while [[ -n "$(alast enter_stack)" ]] && [[ "$(alast enter_stack)" == "$(alast leave_stack)" ]]; do
 
         # Special cases for /, otherwise it would never be possible to run enter/leave for it
-        if [[ "$(alen enter_stack)" = "1" ]] && [[ "$(afirst enter_stack)" = "/" ]]; then
+        if [[ "$(alen enter_stack)" == "1" ]] && [[ "$(afirst enter_stack)" == "/" ]]; then
             apop leave_stack >/dev/null
             break
-        elif [[ "$(alen leave_stack)" = "1" ]] && [[ "$(afirst leave_stack)" = "/" ]]; then
+        elif [[ "$(alen leave_stack)" == "1" ]] && [[ "$(afirst leave_stack)" == "/" ]]; then
             apop enter_stack >/dev/null
             break
         fi
@@ -579,7 +579,7 @@ function smartcd_edit() {
             done < "$smartcd_dir/$file"
         fi
         ${EDITOR:-vi} "$tmpfile"
-        if [[ $? = 0 ]]; then
+        if [[ $? == 0 ]]; then
             echo -n > "$smartcd_dir/$file"
             local writing=1
             while read -r line; do
@@ -794,7 +794,7 @@ EOF
                         # if the user has shell options that leave us with a literal asterisk here
                         # in the event of no matches, we'll want to skip it.  rather than check and
                         # twiddle shell options, let's just see if that's what happened
-                        if [[ "$file" = "$confdir/templates/*" ]]; then
+                        if [[ "$file" == "$confdir/templates/*" ]]; then
                             break
                         fi
                         echo ${file#*templates/}
@@ -847,13 +847,13 @@ EOF
                                     mode=leave
                                     continue
                                 fi
-                                if [[ "$mode" = "enter" ]]; then
+                                if [[ "$mode" == "enter" ]]; then
                                     if [[ -z "$notified_enter" ]]; then
                                         echo "Configuring $smartcd_dir/bash_enter from template $name"
                                         local notified_enter=1
                                     fi
                                     echo "$line" >> "$smartcd_dir/bash_enter"
-                                elif [[ "$mode" = "leave" ]]; then
+                                elif [[ "$mode" == "leave" ]]; then
                                     if [[ -z "$notified_leave" ]]; then
                                         echo "Configuring $smartcd_dir/bash_leave from template $name"
                                         local notified_leave=1
@@ -930,7 +930,7 @@ function _smartcd_file() {
     else
         local this_file="$BASH_SOURCE"
     fi
-    if [[ "${this_file%/.smartcd/lib/core/smartcd}" = $HOME ]]; then
+    if [[ "${this_file%/.smartcd/lib/core/smartcd}" == $HOME ]]; then
         this_file=${this_file/#$HOME/\~}
     fi
     echo "$this_file"
@@ -1167,7 +1167,7 @@ function smartcd_upgrade_database() {
                                 command mv "$HOME/.smartcd/$entry" "$HOME/.smartcd/archive"
                                 ;;
                              *) # A little extra caution never hurt anybody, let's try to be future-proof
-                                if [[ -d "/$entry" || $entry = "bash_enter" || $entry = "bash_leave" ]]; then
+                                if [[ -d "/$entry" || $entry == "bash_enter" || $entry == "bash_leave" ]]; then
                                     command cp -rpP "$HOME/.smartcd/$entry" "$HOME/.smartcd/scripts"
                                     command mv "$HOME/.smartcd/$entry" "$HOME/.smartcd/archive"
                                 fi

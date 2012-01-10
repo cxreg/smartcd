@@ -63,7 +63,7 @@
 ################################################################################
 
 function stash() {
-    if [[ $1 = "-f" ]]; then
+    if [[ $1 == "-f" ]]; then
         local force=1; shift
     fi
 
@@ -79,7 +79,7 @@ function stash() {
 
 
     while [[ -n $1 ]]; do
-        if [[ $1 = "alias" && $2 =~ "=" ]]; then
+        if [[ $1 == "alias" && $2 =~ "=" ]]; then
             shift
             local _stashing_alias_assign=1
             continue
@@ -194,7 +194,7 @@ function autostash() {
 
     local run_from_autostash=1
     while [[ -n $1 ]]; do
-        if [[ $1 = "alias" && $2 =~ "=" ]]; then
+        if [[ $1 == "alias" && $2 =~ "=" ]]; then
             shift
             local _stashing_alias_assign=1
         fi
@@ -340,11 +340,11 @@ function autostash_edit() {
 
 function varstash_edit() {
     if [[ -n $ZSH_VERSION ]]; then
-        if [[ $(type smartcd_edit) = "smartcd_edit is a shell function" ]]; then
+        if [[ $(type smartcd_edit) == "smartcd_edit is a shell function" ]]; then
             local can_run=1
         fi
     else
-        if [[ $(type -t smartcd_edit) = "function" ]]; then
+        if [[ $(type -t smartcd_edit) == "function" ]]; then
             local can_run=1
         fi
     fi
