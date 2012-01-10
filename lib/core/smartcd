@@ -544,8 +544,8 @@ function smartcd_edit() {
     # Invoke the users editor (or vi) on the relevant file
     local file="$1"
     case $file in
-        bash_enter|bash_leave) ;;
-                  enter|leave) file="bash_$file";;
+        bash_enter|bash_leave) local type=${file#bash_};;
+                  enter|leave) local type=$file; file="bash_$file";;
                             *) echo "Usage: smartcd_edit ( bash_enter | bash_leave )"
                                return
                                ;;
@@ -577,18 +577,42 @@ function smartcd_edit() {
                                         *) echo "$line" >> "$tmpfile";;
                 esac
             done < "$smartcd_dir/$file"
+        else
+            if [[ $type == "enter" ]]; then
+                local enter_usage=$(cat <<EOF
+  Some examples are editing your \$PATH or creating
+# a temporary alias:
+#
+#     autostash PATH=__PATH__/bin:\$PATH
+#     autostash alias restart="service stop; sleep 1; service start"
+EOF
+)
+            fi
+            command cat > "$tmpfile" << EOF
+########################################################################
+# smartcd $type - $(pwd)
+#
+# This is a smartcd script.  Commands you type will be run when you
+# $type this directory.  The string __PATH__ will be replaced with
+# the current path.$enter_usage
+#
+# See http://smartcd.org for more ideas about what can be put here
+########################################################################
+EOF
         fi
         ${EDITOR:-vi} "$tmpfile"
         if [[ $? == 0 ]]; then
             echo -n > "$smartcd_dir/$file"
-            local writing=1
-            while read -r line; do
-                case $line in
-                    "# begin smartcd template"*) writing=;;
-                      "# end smartcd template"*) writing=1;;
-                                              *) if [[ -n $writing ]]; then echo "$line" >> "$smartcd_dir/$file"; fi;;
-                esac
-            done < "$tmpfile"
+            if [[ -s "$tmpfile" ]]; then
+                local writing=1
+                while read -r line; do
+                    case $line in
+                        "# begin smartcd template"*) writing=;;
+                        "# end smartcd template"*) writing=1;;
+                                                *) if [[ -n $writing ]]; then echo "$line" >> "$smartcd_dir/$file"; fi;;
+                    esac
+                done < "$tmpfile"
+            fi
         fi
         IFS="$_old_ifs"
         rm "$tmpfile"
