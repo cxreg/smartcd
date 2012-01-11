@@ -154,6 +154,10 @@ function smartpopd()  { smartcd popd "$@";  }
 function smartcd() {
     local command="$1"
 
+    if [[ $# == "2" && $* == "cd ." ]]; then
+        command="reenter"
+    fi
+
     local usage="Usage: smartcd ( edit | show | filename | template | setup | config | export | import ) [args]"
     case $command in
         -h|help|'') echo $usage;;
