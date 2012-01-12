@@ -44,7 +44,7 @@ OK, HOW DO I USE IT?
     source ~/.smartcd/lib/core/smartcd
     smartcd config
 
-  However, if you would rather skip all that and simply have it install iself,
+  However, if you would rather skip all that and simply have it install itself,
   try this:
 
     curl -L http://smartcd.org/install | bash
