@@ -1052,14 +1052,15 @@ function smartcd_config() {
     fi
 
     if [[ -f "$HOME/.smartcd_config" ]]; then
-        local cd_def=n pushd_def=n prompt_def=n exit_def=n autocon_def=n autoed_def=n
-        local inodef_def=n automig_def=n legacy_def=n line=
+        local cd_def=n pushd_def=n prompt_def=n exit_def=n comp_def=n autocon_def=n autoed_def=n
+        local inode_def=n automig_def=n legacy_def=n line=
         while read -r line; do
             case $line in
                          "smartcd setup cd") cd_def=y;;
                       "smartcd setup pushd") pushd_def=y;;
                 "smartcd setup prompt-hook") prompt_def=y;;
                   "smartcd setup exit-hook") exit_def=y;;
+                 "smartcd setup completion") comp_def=y;;
                  "VARSTASH_AUTOCONFIGURE=1") autocon_def=y;;
                       "VARSTASH_AUTOEDIT=1") autoed_def=y;;
                        "SMARTCD_NO_INODE=1") inode_def=y;;
@@ -1067,24 +1068,31 @@ function smartcd_config() {
                          "SMARTCD_LEGACY=1") legacy_def=y;;
             esac
         done < "$HOME/.smartcd_config"
+    else
+        local use_defs=$(ask "use defaults" "Use all default settings?" y)
     fi
 
-    local setup_cd=$(ask "smartcd setup cd" "Would you like to wrap cd with smartcd?  This is the recommended way to run smartcd" ${cd_def:-y})
-    local setup_pushd=$(ask "smartcd setup pushd" "Would you like to wrap pushd and popd?" ${pushd_def:-y})
-    local enable_prompt_hook=$(ask "smartcd setup prompt-hook" "Would you like to enable prompt-command hooks?  (This is only recommended if you are an\n\"autocd\" user, say no if you are unsure)" ${prompt_def:-n})
-    local enable_exit_hook=$(ask "smartcd setup exit-hook" "Would you like to enable the shell exit hook?  This will cause bash_leave scripts to run\nfrom your current directory down to / when exiting your shell" ${exit_def:-n})
-    local enable_completion=$(ask "smartcd setup completion" "Would you like to enable smartcd tab completion?" ${exit_def:-y})
-    local autoconfigure=$(ask "VARSTASH_AUTOCONFIGURE=1" "Would you like to automatically configure smartcd when you run stash or autostash manually?" ${autocon_def:-n})
-    if [[ $autoconfigure =~ $yes ]]; then
-        local autoedit=$(ask "VARSTASH_AUTOEDIT=1" "Would you also like to edit the smartcd config after it is automatically configured?" ${autoed_def:-n})
+    if [[ ! $use_defs =~ $yes ]]; then
+        local setup_cd=$(ask "smartcd setup cd" "Would you like to wrap cd with smartcd?  This is the recommended way to run smartcd" $cd_def)
+        local setup_pushd=$(ask "smartcd setup pushd" "Would you like to wrap pushd and popd?" $pushd_def)
+        local enable_prompt_hook=$(ask "smartcd setup prompt-hook" "Would you like to enable prompt-command hooks?  (This is only recommended if you are an\n\"autocd\" user, say no if you are unsure)" $prompt_def)
+        local enable_exit_hook=$(ask "smartcd setup exit-hook" "Would you like to enable the shell exit hook?  This will cause bash_leave scripts to run\nfrom your current directory down to / when exiting your shell" $exit_def)
+        local enable_completion=$(ask "smartcd setup completion" "Would you like to enable smartcd tab completion?" $comp_def)
+        local autoconfigure=$(ask "VARSTASH_AUTOCONFIGURE=1" "Would you like to automatically configure smartcd when you run stash or autostash manually?" $autocon_def)
+        if [[ $autoconfigure =~ $yes ]]; then
+            local autoedit=$(ask "VARSTASH_AUTOEDIT=1" "Would you also like to edit the smartcd config after it is automatically configured?" $autoed_def)
+        fi
+
+        echo
+        echo "[ADVANCED USAGE]"
+
+        local noinode=$(ask "SMARTCD_NO_INODE=1" "Would you like to skip validation that scripts are not stale from a previously deleted or renamed directory? (DISCOURAGED)" $inode_def)
+        local automigrate=$(ask "SMARTCD_AUTOMIGRATE=1" "Would you like to automigrate legacy smartcd scripts?" $automig_def)
+        local legacy=$(ask "SMARTCD_LEGACY=1" "Would you like to allow legacy scripts to run in-place? (DISCOURAGED)" $legacy_def)
+    else
+        local setup_cd=y setup_pushd=y enable_prompt_hook=n enable_exit_hook=n enable_completion=yu
+        local autoconfigure=n autoedit=n noinode=n automigrate=n legacy=n
     fi
-
-    echo
-    echo "[ADVANCED USAGE]"
-
-    local noinode=$(ask "SMARTCD_NO_INODE=1" "Would you like to skip validation that scripts are not stale from a previously deleted or renamed directory? (DISCOURAGED)" ${inode_def:-n})
-    local automigrate=$(ask "SMARTCD_AUTOMIGRATE=1" "Would you like to automigrate legacy smartcd scripts?" ${automig_def:-n})
-    local legacy=$(ask "SMARTCD_LEGACY=1" "Would you like to allow legacy scripts to run in-place? (DISCOURAGED)" ${legacy_def:-n})
 
     local config=$(generate_config)
 
