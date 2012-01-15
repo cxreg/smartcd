@@ -137,7 +137,7 @@ HOW DOES IT WORK?
     user@host:/usr/local/bin$ smartcd show enter
     /home/user/.smartcd/scripts/usr/local/bin/bash_enter exists
     -------------------------------------------------------------------------
-    echo "testing"
+    smartcd inform "testing"
     -------------------------------------------------------------------------
 
     user@host:/usr/local/bin$ smartcd edit enter
@@ -166,6 +166,27 @@ HOW DOES IT WORK?
 WHAT ARE SOME COMMON RECIPES?
 
   Here are some examples of useful setups that have been created so far
+
+
+  DISPLAY A MESSAGE
+
+    Sometimes you may want a message to be shown when you enter or leave the
+    directory, either to remind to you do something, or simply to let you know
+    what the script has done.
+
+    You could use `echo` for this, but the issue with that is if you are doing
+    something sophisticated with pipes, you may not want this message to
+    interfere with the command being piped.  For example, you might use the
+    following command to copy some files
+
+        ( cd foo; tar -cf - sub-dir ) | ( cd bar; tar -xf - )
+
+    but if "foo" has an enter script which echos something, this will corrupt
+    the tar file.  By using `smartcd inform`, this will suppress the output when
+    it is detected that the output is not a terminal
+
+        smartcd inform "Reminder, don't forget to commit your code!"
+
 
   PROMPT
 
@@ -239,7 +260,7 @@ WHAT ARE SOME COMMON RECIPES?
                     plackup &> /dev/null &
                     local pid=$!
                     echo $pid > "$pidfile"
-                    echo "Started Plack with pid $pid"
+                    smartcd inform "Started Plack with pid $pid"
                 )
             fi
         }

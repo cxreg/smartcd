@@ -152,6 +152,11 @@ function smartpushd() { smartcd pushd "$@"; }
 function smartpopd()  { smartcd popd "$@";  }
 
 function smartcd() {
+    if [[ ! -t 1 ]]; then
+        SMARTCD_QUIET=1
+        local suppress_output=1
+    fi
+
     local command="$1"
 
     if [[ $# == "2" && $* == "cd ." ]]; then
@@ -189,6 +194,7 @@ function smartcd() {
             config) smartcd_config;;
             export) shift; smartcd_export "$@";;
             import) shift; smartcd_import "$@";;
+            inform) shift; if [[ -z $suppress_output ]]; then echo "$@"; fi;;
                  *) if [[ -n $ZSH_VERSION ]]; then
                         local dir=$argv[-1]
                     else
