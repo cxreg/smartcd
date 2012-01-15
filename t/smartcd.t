@@ -18,8 +18,9 @@ smartcd_dir=$HOME/.smartcd/scripts$(pwd)/$dir
 mkdir -p $smartcd_dir
 
 echo -n >$smartcd_dir/bash_enter
+SMARTCD_QUIET=0
 output=$(smartcd cd $dir)
-like "${output-_}" "smartcd: running" "smartcd informed user of script execution"
+like "_${output-_}" "_smartcd: running" "smartcd informed user of script execution"
 SMARTCD_QUIET=1
 output=$(smartcd cd $dir)
 is "_${output-_}_" "__" "quieted output"

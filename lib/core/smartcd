@@ -152,7 +152,7 @@ function smartpushd() { smartcd pushd "$@"; }
 function smartpopd()  { smartcd popd "$@";  }
 
 function smartcd() {
-    if [[ ! -t 1 ]]; then
+    if [[ ! -t 1 ]] && (( ${SMARTCD_QUIET:-1} > 0 )); then
         SMARTCD_QUIET=1
         local suppress_output=1
     fi
@@ -409,7 +409,7 @@ function _smartcd() {
             builtin cd "$dir"
             if [[ -f .bash_leave ]]; then
                 if [[ -n $SMARTCD_LEGACY ]]; then
-                    if [[ -z $SMARTCD_QUIET ]]; then
+                    if (( ${SMARTCD_QUIET:-0} == 0 )); then
                         echo "smartcd: running $dir/.bash_leave"
                     fi
                     _smartcd_exec_file .bash_leave "$dir"
@@ -418,7 +418,7 @@ function _smartcd() {
                     command mkdir -p "$confdir"
                     command cat "$dir/.bash_leave" >> "$confdir/bash_leave"
                     command rm "$dir/.bash_leave"
-                elif [[ -z $SMARTCD_QUIET ]]; then
+                elif (( ${SMARTCD_QUIET:-0} == 0 )); then
                     echo "############################################################################"
                     echo "# NOTICE!  Deprecated .bash_leave found, please migrate this file to the new"
                     echo "# format using the following (or similar) commands:"
@@ -447,7 +447,7 @@ function _smartcd() {
         # We will run this even if we were not able to chdir there, but
         # the user is notified that this occurred so they can check things out
         if [[ -f "$confdir/bash_leave" ]]; then
-            if [[ -z $SMARTCD_QUIET ]]; then
+            if (( ${SMARTCD_QUIET:-0} == 0 )); then
                 echo "smartcd: running $confdir/bash_leave"
             fi
             _smartcd_check_inode "$dir"
@@ -479,7 +479,7 @@ function _smartcd() {
         local olddir="$HOME/.smartcd$dir"
         if [[ -f .bash_enter ]]; then
             if [[ -n $SMARTCD_LEGACY ]]; then
-                if [[ -z $SMARTCD_QUIET ]]; then
+                if (( ${SMARTCD_QUIET:-0} == 0 )); then
                     echo "smartcd: running $dir/.bash_enter"
                 fi
                 _smartcd_exec_file .bash_enter "$dir"
@@ -488,7 +488,7 @@ function _smartcd() {
                 command mkdir -p "$confdir"
                 command cat "$dir/.bash_enter" >> "$confdir/bash_enter"
                 command rm "$dir/.bash_enter"
-            elif [[ -z $SMARTCD_QUIET ]]; then
+            elif (( ${SMARTCD_QUIET:-0} == 0 )); then
                 echo "############################################################################"
                 echo "# NOTICE!  Deprecated .bash_enter found, please migrate this file to the new"
                 echo "# format using the following (or similar) commands:"
@@ -512,7 +512,7 @@ function _smartcd() {
         fi
 
         if [[ -f "$confdir/bash_enter" ]]; then
-            if [[ -z $SMARTCD_QUIET ]]; then
+            if (( ${SMARTCD_QUIET:-0} == 0 )); then
                 echo "smartcd: running $confdir/bash_enter"
             fi
             _smartcd_check_inode "$dir"
@@ -1198,7 +1198,7 @@ function smartcd_config() {
 }
 
 function smartcd_upgrade_database() {
-    if [[ -z $SMARTCD_QUIET ]]; then
+    if (( ${SMARTCD_QUIET:-0} == 0 )); then
         case $_manual_upgrade in
             1) echo "smartcd: upgrading";;
             *) echo "smartcd: outdated script directory detected, upgrading";;
