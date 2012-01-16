@@ -346,6 +346,20 @@ function _smartcd_check_inode() {
     fi
 }
 
+function _smartcd_sysdir() {
+    if [[ -n $SMARTCD_SYSTEM_SCRIPTS ]]; then
+        local sysdir=$SMARTCD_SYSTEM_SCRIPTS
+    else
+        local sysdir=$(_smartcd_file)
+        case $sysdir in
+            ~*|$HOME/*) sysdir="/etc/smartcd/scripts";;
+                     *) sysdir=${sysdir/%lib\/core\/smartcd/etc\/scripts};;
+        esac
+    fi
+
+    echo "$sysdir"
+}
+
 function _smartcd() {
     # Don't run this twice consecutively from being sourced.  If the user double-sources
     # then it could result in scripts being run twice which may have undesirable or
@@ -474,54 +488,36 @@ function _smartcd() {
         # Set this just in case we are not able to actualy chdir to $smartcd_current_dir
         local varstash_dir="$smartcd_current_dir"
 
+        if [[ -d "$smartcd_current_dir" ]]; then
+            builtin cd "$smartcd_current_dir"
+        else
+            echo "smartcd: leaving non-existent directory $smartcd_current_dir"
+            local nodir=1
+        fi
+
         # Empty descend callbacks before unstashing, because if nothing was stashed,
         # it will not empty
         smartcd_ondescend_callbacks=()
         unstash smartcd_ondescend_callbacks
 
-        local confdir="$base/scripts$smartcd_current_dir"
-        local olddir="$base$smartcd_current_dir"
-        if [[ -d "$smartcd_current_dir" ]]; then
-            builtin cd "$smartcd_current_dir"
-            if [[ -f .bash_leave ]]; then
-                if [[ -n $SMARTCD_LEGACY ]]; then
-                    if (( ${SMARTCD_QUIET:-0} == 0 )); then
-                        echo "smartcd: running $smartcd_current_dir/.bash_leave"
-                    fi
-                    _smartcd_exec_file .bash_leave "$smartcd_current_dir"
-                elif [[ -n $SMARTCD_AUTOMIGRATE ]]; then
-                    echo "Automatically migrating \"$smartcd_current_dir/.bash_leave\" to \"$confdir/bash_leave\""
-                    command mkdir -p "$confdir"
-                    command cat "$smartcd_current_dir/.bash_leave" >> "$confdir/bash_leave"
-                    command rm "$smartcd_current_dir/.bash_leave"
-                elif (( ${SMARTCD_QUIET:-0} == 0 )); then
-                    echo "############################################################################"
-                    echo "# NOTICE!  Deprecated .bash_leave found, please migrate this file to the new"
-                    echo "# format using the following (or similar) commands:"
-                    if [[ ! -d $confdir ]]; then
-                        echo "mkdir -p \"$confdir\""
-                    fi
-                    echo "cat \"$smartcd_current_dir/.bash_leave\" >> \"$confdir/bash_leave\""
-                    echo "rm \"$smartcd_current_dir/.bash_leave\""
-                    echo "#"
-                    echo "# If you would like smartcd to perform this migration for you whenever"
-                    echo "# possible, set SMARTCD_AUTOMIGRATE=1"
-                    echo "#"
-                    echo "# If you wish to accept the risks of the old style of operation and run"
-                    echo "# them as-is, you may set SMARTCD_LEGACY=1 instead."
-                    echo "############################################################################"
-                fi
+        # We will run system scripts and ~/.smartcd scripts even if we were not
+        # able to chdir there, but the user is notified that this occurred so they
+        # can check things out
+
+        # 1) Run any system-wide scripts
+        local sysdir=$(_smartcd_sysdir)
+        if [[ -f "$sysdir$smartcd_current_dir/bash_leave" ]]; then
+            if (( ${SMARTCD_QUIET:-0} == 0 )); then
+                echo "smartcd: running $sysdir$smartcd_current_dir/bash_leave"
             fi
-        else
-            echo "smartcd: leaving non-existent directory $smartcd_current_dir"
+            _smartcd_exec_file "$sysdir$smartcd_current_dir/bash_leave" "$smartcd_current_dir"
         fi
 
-        if [[ -f "$olddir/bash_leave" ]]; then
+        # 2) Run ~/.smartcd scripts
+        if [[ -f "$base$smartcd_current_dir/bash_leave" ]]; then
             smartcd_upgrade_database
         fi
-
-        # We will run this even if we were not able to chdir there, but
-        # the user is notified that this occurred so they can check things out
+        local confdir="$base/scripts$smartcd_current_dir"
         if [[ -f "$confdir/bash_leave" ]]; then
             if (( ${SMARTCD_QUIET:-0} == 0 )); then
                 echo "smartcd: running $confdir/bash_leave"
@@ -533,14 +529,45 @@ function _smartcd() {
             unset -v _inode_skip
         fi
 
-        # Leave hook(s)
+        # 3) Detect .bash_leave and either notify or run
+        if [[ -z "$nodir" && -f .bash_leave ]]; then
+            if [[ -n $SMARTCD_LEGACY ]]; then
+                if (( ${SMARTCD_QUIET:-0} == 0 )); then
+                    echo "smartcd: running $smartcd_current_dir/.bash_leave"
+                fi
+                _smartcd_exec_file .bash_leave "$smartcd_current_dir"
+            elif [[ -n $SMARTCD_AUTOMIGRATE ]]; then
+                echo "Automatically migrating \"$smartcd_current_dir/.bash_leave\" to \"$confdir/bash_leave\""
+                command mkdir -p "$confdir"
+                command cat "$smartcd_current_dir/.bash_leave" >> "$confdir/bash_leave"
+                command rm "$smartcd_current_dir/.bash_leave"
+            elif (( ${SMARTCD_QUIET:-0} == 0 )); then
+                echo "############################################################################"
+                echo "# NOTICE!  Deprecated .bash_leave found, please migrate this file to the new"
+                echo "# format using the following (or similar) commands:"
+                if [[ ! -d $confdir ]]; then
+                    echo "mkdir -p \"$confdir\""
+                fi
+                echo "cat \"$smartcd_current_dir/.bash_leave\" >> \"$confdir/bash_leave\""
+                echo "rm \"$smartcd_current_dir/.bash_leave\""
+                echo "#"
+                echo "# If you would like smartcd to perform this migration for you whenever"
+                echo "# possible, set SMARTCD_AUTOMIGRATE=1"
+                echo "#"
+                echo "# If you wish to accept the risks of the old style of operation and run"
+                echo "# them as-is, you may set SMARTCD_LEGACY=1 instead."
+                echo "############################################################################"
+            fi
+        fi
+
+        # 4) Leave hook(s)
         local hook_array=$(_mangle_var smartcd_onleave_callbacks)
         while (( $(alen $hook_array) >= 1 )); do
             ashift $hook_array >/dev/null
             eval "$_ashift_return"
         done
 
-        # Autounstash
+        # 5) Autounstash
         if [[ -n "$(fn_exists autounstash)" ]]; then
             autounstash
         fi
@@ -589,8 +616,32 @@ function _smartcd() {
             eval "$cmd"
         done
 
+        # 1) Run any system-wide scripts
+        local sysdir=$(_smartcd_sysdir)
+        if [[ -f "$sysdir$smartcd_current_dir/bash_enter" ]]; then
+            if (( ${SMARTCD_QUIET:-0} == 0 )); then
+                echo "smartcd: running $sysdir$smartcd_current_dir/bash_enter"
+            fi
+            _smartcd_exec_file "$sysdir$smartcd_current_dir/bash_enter" "$smartcd_current_dir"
+        fi
+
+        # 2) Run ~/.smartcd scripts
+        if [[ -f "$base$smartcd_current_dir/bash_leave" ]]; then
+            smartcd_upgrade_database
+        fi
         local confdir="$base/scripts$smartcd_current_dir"
-        local olddir="$base$smartcd_current_dir"
+        if [[ -f "$confdir/bash_enter" ]]; then
+            if (( ${SMARTCD_QUIET:-0} == 0 )); then
+                echo "smartcd: running $confdir/bash_enter"
+            fi
+            _smartcd_check_inode "$smartcd_current_dir"
+            if [[ -z $_inode_skip ]]; then
+                _smartcd_exec_file "$confdir/bash_enter" "$smartcd_current_dir"
+            fi
+            unset -v _inode_skip
+        fi
+
+        # 3) Detect .bash_enter and either notify or run
         if [[ -f .bash_enter ]]; then
             if [[ -n $SMARTCD_LEGACY ]]; then
                 if (( ${SMARTCD_QUIET:-0} == 0 )); then
@@ -619,21 +670,6 @@ function _smartcd() {
                 echo "# them as-is, you may set SMARTCD_LEGACY=1 instead."
                 echo "############################################################################"
             fi
-        fi
-
-        if [[ -f "$olddir/bash_enter" ]]; then
-            smartcd_upgrade_database
-        fi
-
-        if [[ -f "$confdir/bash_enter" ]]; then
-            if (( ${SMARTCD_QUIET:-0} == 0 )); then
-                echo "smartcd: running $confdir/bash_enter"
-            fi
-            _smartcd_check_inode "$smartcd_current_dir"
-            if [[ -z $_inode_skip ]]; then
-                _smartcd_exec_file "$confdir/bash_enter" "$smartcd_current_dir"
-            fi
-            unset -v _inode_skip
         fi
 
         stack_size=$(alen enter_stack)
