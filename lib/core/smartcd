@@ -1285,12 +1285,12 @@ function _smartcd_import() {
     if [[ -d "$HOME/.smartcd" ]]; then
         for file in $(command ls "$HOME/.smartcd"); do
             case $file in
-                scripts|templates) if [[ -z "$olddir" ]]; then
-                                       command mkdir -p "$HOME/.smartcd/archive"
-                                       local olddir=$(command mktemp -d "$HOME/.smartcd/archive/import-backup.XXXXXX")
+                scripts|templates) command mkdir -p "$HOME/.smartcd/archive"
+                                   local backup=$(command mktemp -d "$HOME/.smartcd/archive/import-backup.XXXXXX")
+                                   if (( ${SMARTCD_QUIET:-0} == 0 )); then
+                                       echo "Old $HOME/.smartcd/$file found, moving to $backup"
                                    fi
-                                   echo "Old $HOME/.smartcd/$file found, moving to $olddir"
-                                   command mv "$HOME/.smartcd/$file" "$olddir"
+                                   command mv "$HOME/.smartcd/$file" "$backup"
                                    ;;
             esac
         done
