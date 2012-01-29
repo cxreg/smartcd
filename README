@@ -28,9 +28,11 @@ WHAT IS SMARTCD?
     * Wanted a daemon process to run automatically when you go to work on a
       project, and shut down when you finish
 
-    * Update your project from source control when you enter
+    * Wanted to automatically update your project from source control when you
+      enter
 
-    * Attach to a particular screen(1) session when working on something
+    * Needed to attach to a particular screen(1) session when working in
+      a particular directory
 
   These are just a few examples of problems people are solving with smartcd.
 
