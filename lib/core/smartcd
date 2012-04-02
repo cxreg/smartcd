@@ -1238,88 +1238,13 @@ function smartcd_upgrade_database() {
     echo "$HOME/.smartcd/archive in case anything went wrong."
 }
 
-# Export file format: (leading space added before all file contents)
-# -------------------------
-# smartcd export 1.0
-# @ scripts/home/user/foo
-#  ...
-#  ...
-# @ templates/wtf
-#  ...
-# -------------------------
+# Autoload stubs
 function smartcd_export() {
-    # not using stash here to avoid interfering with the user, who might also have it stashed.
-    local _old_ifs="$IFS"
-    IFS=$'\n'
-    echo "smartcd export 1.0"
-    apush remaining_dirs "scripts" "templates"
-    while (( $(alen remaining_dirs) > 0 )); do
-        dir=$(afirst remaining_dirs)
-        ashift remaining_dirs >/dev/null
-        files="$(command ls $HOME/.smartcd/$dir)"
-        for entry in $files; do
-            if [[ -f "$HOME/.smartcd/$dir/$entry" ]]; then
-                echo "@ $dir/$entry"
-                local line=
-                while builtin read -r line; do
-                    echo " $line"
-                done < "$HOME/.smartcd/$dir/$entry"
-            elif [[ -d "$HOME/.smartcd/$dir/$entry" ]]; then
-                apush remaining_dirs "$dir/$entry"
-            else
-                echo "Skipping unknown file $HOME/.smartcd/$dir/$entry" >&2
-            fi
-        done
-    done
-
-    IFS="$_old_ifs"
+    _smartcd_load "smartcd_export" && smartcd_export "$@"
 }
 
 function smartcd_import() {
-    if [[ -n $1 ]]; then
-        cat "$1" | _smartcd_import
-    else
-        _smartcd_import
-    fi
-}
-
-function _smartcd_import() {
-    local _old_ifs="$IFS"
-    IFS=$'\n'
-
-    if [[ -d "$HOME/.smartcd" ]]; then
-        for file in $(command ls "$HOME/.smartcd"); do
-            case $file in
-                scripts|templates) command mkdir -p "$HOME/.smartcd/archive"
-                                   local backup=$(command mktemp -d "$HOME/.smartcd/archive/import-backup.XXXXXX")
-                                   if (( ${SMARTCD_QUIET:-0} == 0 )); then
-                                       echo "Old $HOME/.smartcd/$file found, moving to $backup"
-                                   fi
-                                   command mv "$HOME/.smartcd/$file" "$backup"
-                                   ;;
-            esac
-        done
-
-        # These will be all wrong, so remove them
-        command rm -rf "$HOME/.smartcd/inodes"
-    fi
-
-    local line=
-    while builtin read -r line; do
-        case $line in
-            "smartcd export"*) ;;
-                        "@ "*) local file="${line#@ }"
-                               local dir="${file%'/'*}"
-                               command mkdir -p "$HOME/.smartcd/$dir"
-                               ;;
-                            *)
-                               line="${line# }"
-                               echo "$line" >> "$HOME/.smartcd/$file"
-                               ;;
-        esac
-    done
-
-    IFS="$_old_ifs"
+    _smartcd_load "smartcd_export" && smartcd_import "$@"
 }
 
 # Run on load if all the necessary libraries are loaded, otherwise let them do it
