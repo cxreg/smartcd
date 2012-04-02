@@ -48,6 +48,7 @@ mkdir -p ~/.smartcd/lib/core
 for file in                            \
     lib/core/smartcd                   \
     lib/core/smartcd_edit              \
+    lib/core/smartcd_config            \
     lib/core/smartcd_export            \
     lib/core/smartcd_template          \
     lib/core/smartcd_upgrade_database  \
