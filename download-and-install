@@ -33,13 +33,26 @@ if [[ -f ~/.smartcd/lib/core/smartcd ]]; then
     smartcd_previously_installed=1
 fi
 
+function download_file() {
+    local file="$1"
+
+    dots=$(printf "%*s" $((40 - ${#file})))
+    echo -n "Downloading $file${dots// /.}"
+    $download "$baseurl/$file" > ~/.smartcd/$file 2>/dev/null
+    echo "done"
+}
+
 working_dir=$(mktemp -d /tmp/smartcd-install.XXXXXX)
 cd $working_dir
 mkdir -p ~/.smartcd/lib/core
-$download "$baseurl/lib/core/smartcd" > ~/.smartcd/lib/core/smartcd
-$download "$baseurl/lib/core/varstash" > ~/.smartcd/lib/core/varstash
-$download "$baseurl/lib/core/arrays" > ~/.smartcd/lib/core/arrays
-$download "$baseurl/lib/core/completion" > ~/.smartcd/lib/core/completion
+for file in             \
+    lib/core/smartcd    \
+    lib/core/varstash   \
+    lib/core/arrays     \
+    lib/core/completion
+do
+    download_file "$file"
+done
 
 echo "Installation complete"
 echo -n "Configure now? [Y/n] "
