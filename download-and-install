@@ -47,6 +47,7 @@ cd $working_dir
 mkdir -p ~/.smartcd/lib/core
 for file in                  \
     lib/core/smartcd         \
+    lib/core/smartcd_edit    \
     lib/core/smartcd_export  \
     lib/core/varstash        \
     lib/core/arrays          \

@@ -733,36 +733,6 @@ function bash_leave() {
     _smartcd_file_check bash_leave "$@"
 }
 
-# It's probably better to use getopts or something for this, but since only one
-# option at a time is valid right now, no need
-function _smartcd_file_check() {
-    local confdir="$HOME/.smartcd/scripts$(pwd)"
-
-    local file=$1; shift
-
-    if [[ -f "$HOME/.smartcd$(pwd)/$file" ]]; then
-        smartcd_upgrade_database
-    fi
-
-    case $1 in
-           -h|help) echo "Usage: $file [ edit | show | filename ]";;
-       -f|filename) echo "$confdir/$file";;
-           -e|edit) smartcd_edit $file;;
-    -l|show|cat|'') if [[ -f "$confdir/$file" ]]; then
-                        echo "$confdir/$file exists"
-                        case $1 in
-                           -l|show|cat) echo "-------------------------------------------------------------------------"
-                                        command cat "$confdir/$file"
-                                        echo "-------------------------------------------------------------------------"
-                                        ;;
-                        esac
-                    else
-                        echo "$confdir/$file does not exist"
-                    fi
-                    ;;
-    esac
-}
-
 function smartcd_template() {
     local action=$1; shift
 
@@ -1239,6 +1209,14 @@ function smartcd_upgrade_database() {
 }
 
 # Autoload stubs
+function _smartcd_file_check() {
+    _smartcd_load "smartcd_edit" && _smartcd_file_check "$@"
+}
+
+function smartcd_edit() {
+    _smartcd_load "smartcd_edit" && smartcd_edit "$@"
+}
+
 function smartcd_export() {
     _smartcd_load "smartcd_export" && smartcd_export "$@"
 }
