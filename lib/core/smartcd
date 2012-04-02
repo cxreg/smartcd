@@ -186,9 +186,7 @@ function smartcd() {
                         prompt-hook|prompt) setup_smartcd_prompt_hook;;
                           chpwd-hook|chpwd) setup_smartcd_chpwd_hook;;
                             exit-hook|exit) setup_smartcd_exit_hook;;
-                                completion) local smartcd_file="$(_smartcd_file)"
-                                            eval "source ${smartcd_file/%smartcd/completion}"
-                                            ;;
+                                completion) _smartcd_load "completion";;
                     esac
                     ;;
             config) smartcd_config;;
@@ -225,6 +223,13 @@ function smartcd() {
                     fi
                     ;;
     esac
+}
+
+# Load bits of functionality from files
+function _smartcd_load() {
+    local file="$1"
+    local smartcd_file="$(_smartcd_file)"
+    eval "source ${smartcd_file/%smartcd/$file}"
 }
 
 function _smartcd_exec_file() {
