@@ -45,13 +45,14 @@ function download_file() {
 working_dir=$(mktemp -d /tmp/smartcd-install.XXXXXX)
 cd $working_dir
 mkdir -p ~/.smartcd/lib/core
-for file in                    \
-    lib/core/smartcd           \
-    lib/core/smartcd_edit      \
-    lib/core/smartcd_export    \
-    lib/core/smartcd_template  \
-    lib/core/varstash          \
-    lib/core/arrays            \
+for file in                            \
+    lib/core/smartcd                   \
+    lib/core/smartcd_edit              \
+    lib/core/smartcd_export            \
+    lib/core/smartcd_template          \
+    lib/core/smartcd_upgrade_database  \
+    lib/core/varstash                  \
+    lib/core/arrays                    \
     lib/core/completion
 do
     download_file "$file"

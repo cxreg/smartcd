@@ -1,0 +1,33 @@
+#!/bin/bash
+
+function smartcd_upgrade_database() {
+    if (( ${SMARTCD_QUIET:-0} == 0 )); then
+        case $_manual_upgrade in
+            1) echo "smartcd: upgrading";;
+            *) echo "smartcd: outdated script directory detected, upgrading";;
+        esac
+    fi
+    command mkdir -p $HOME/.smartcd/scripts $HOME/.smartcd/templates $HOME/.smartcd/archive
+    local _old_ifs="$IFS"
+    IFS=$'\n'
+    for entry in $(command ls $HOME/.smartcd); do
+        case $entry in
+             scripts|templates) ;;
+                    template_*) name=${entry#template_}
+                                command cp "$HOME/.smartcd/$entry" "$HOME/.smartcd/templates/$name"
+                                command mv "$HOME/.smartcd/$entry" "$HOME/.smartcd/archive"
+                                ;;
+                             *) # A little extra caution never hurt anybody, let's try to be future-proof
+                                if [[ -d "/$entry" || $entry == "bash_enter" || $entry == "bash_leave" ]]; then
+                                    command cp -rpP "$HOME/.smartcd/$entry" "$HOME/.smartcd/scripts"
+                                    command mv "$HOME/.smartcd/$entry" "$HOME/.smartcd/archive"
+                                fi
+                                ;;
+        esac
+
+    done
+    IFS="$_old_ifs"
+
+    echo "smartcd: upgrade complete.  Your previous scripts can be found under"
+    echo "$HOME/.smartcd/archive in case anything went wrong."
+}
