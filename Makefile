@@ -16,18 +16,20 @@ test_all: test_bash test_zsh
 
 
 install:
-	rm -rf $(HOME)/.smartcd/lib/core
-	mkdir -p $(HOME)/.smartcd/lib/core
-	cp -r lib/core $(HOME)/.smartcd/lib
-	cp bash_smartcd $(HOME)/.bash_smartcd
+	@[ -d $(HOME)/.smartcd/lib/core ] && echo "* Removing old $(HOME)/.smartcd/lib/core" && rm -rf $(HOME)/.smartcd/lib/core || true
+	@mkdir -p $(HOME)/.smartcd/lib/core
+	@echo "* Installing libraries to $(HOME)/.smartcd/lib"
+	@cp -r lib/core $(HOME)/.smartcd/lib
+	@[ -f $(HOME)/.bash_smartcd ] && echo "* Replacing legacy $(HOME)/.bash_smartcd" && cp bash_smartcd $(HOME)/.bash_smartcd || true
 	@echo
-	@echo "smartcd is now installed"
+	@echo "Congratulations, smartcd is now installed"
 	@echo
-	@echo "If this is your first time installing smartcd, run the following command:"
+	@echo "If this is your first time installing smartcd, run the following commands:"
 	@echo
 	@echo "    source ~/.smartcd/lib/core/smartcd"
+	@echo "    smartcd config"
 	@echo
-	@echo "After you have done that, run \`smartcd config\` to configure your shell"
+	@echo "See the README file for ideas about what you can do with it"
 
 
 setup:
