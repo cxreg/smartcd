@@ -3,7 +3,7 @@ source t/tap-functions
 source lib/core/varstash
 source lib/core/arrays
 
-plan_tests 36
+plan_tests 37
 
 thing=value
 
@@ -48,6 +48,9 @@ output=$(stash -f thing)
 unlike "_${output-_}" "_You have already stashed" "force double stash does not warn"
 stash -f thing >/dev/null
 is "_$(eval echo \$$varname)" _newvalue "double stashed with force"
+thing=anothervalue
+stash thing=yetanothervalue >/dev/null
+is "_$(eval echo \$$varname)" _newvalue "double stash assign without force worked"
 unstash thing
 thing=value
 
