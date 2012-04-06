@@ -189,6 +189,14 @@ function smartcd() {
                                 completion) _smartcd_load "completion";;
                     esac
                     ;;
+        leave-hook) local code=${2//\\/\\\\};
+                    code=${code//\"/\\\"};
+                    __smartcd_func_ctr=$(( $__smartcd_func_ctr + 1 ))
+                    local fn="__generated_smartcd_function_$__smartcd_func_ctr"
+                    eval "function $fn() { eval \"$code\"; unset -f $fn; }"
+                    local hook_array=$(_mangle_var smartcd_leave_hook)
+                    apush $hook_array $fn
+                    ;;
             config) smartcd_config;;
             export) shift; smartcd_export "$@";;
             import) shift; smartcd_import "$@";;
@@ -466,6 +474,14 @@ function _smartcd() {
             unset -v _inode_skip
         fi
 
+        # Leave hook(s)
+        local hook_array=$(_mangle_var smartcd_leave_hook)
+        while (( $(alen $hook_array) >= 1 )); do
+            ashift $hook_array >/dev/null
+            eval "$_ashift_return"
+        done
+
+        # Autounstash
         if [[ -n "$(fn_exists autounstash)" ]]; then
             autounstash
         fi
