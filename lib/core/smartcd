@@ -71,25 +71,19 @@
 #   When a script is run by smartcd, it will announce that it has done
 #   so unless SMARTCD_QUIET is set.
 #
-#   ########################
-#   # Legacy mode (unsafe) #
-#   ########################
+#   ###########
+#   # Helpers #
+#   ###########
 #
-#   The original version of this library was such that the scripts
-#   containing the commands to run were themselves located in the
-#   directory which they correspond to, named .bash_enter and
-#   .bash_leave:
+#   Some pre-written scripts are provided which implement things that
+#   you may find useful.  This system also allows people to distribute
+#   and share these independently of the core smartcd distribution.
 #
-#       /foo/bar/baz  ->  /foo/bar/baz/.bash_enter
+#   Currently the included helpers are 'path' and 'history'
 #
-#   This was deemed unsafe, and the new scheme was adopted.  If you
-#   prefer the old system and wish to accept the risk in doing so, you
-#   can set SMARTCD_LEGACY=1 to allow the old behavior.  If you do not do
-#   so, and a legacy script is found, it will *NOT* be invoked, and
-#   instructions for migrating it to the new location will be displayed
-#   (unless SMARTCD_QUIET is set).  If you set SMARTCD_AUTOMIGRATE=1 then
-#   the migration steps will be executed for you whenever a legacy script
-#   is found.
+#       smartcd helper run history localize __PATH__/.history
+#
+#       smartcd helper run path append __PATH__/bin
 #
 #   #############
 #   # Templates #
@@ -143,6 +137,26 @@
 #   to a temp folder to avoid any conflict.  You may want to inspect these files
 #   by hand if this occurs and put them back in place if necessary.
 #
+#   ########################
+#   # Legacy mode (unsafe) #
+#   ########################
+#
+#   The original version of this library was such that the scripts
+#   containing the commands to run were themselves located in the
+#   directory which they correspond to, named .bash_enter and
+#   .bash_leave:
+#
+#       /foo/bar/baz  ->  /foo/bar/baz/.bash_enter
+#
+#   This was deemed unsafe, and the new scheme was adopted.  If you
+#   prefer the old system and wish to accept the risk in doing so, you
+#   can set SMARTCD_LEGACY=1 to allow the old behavior.  If you do not do
+#   so, and a legacy script is found, it will *NOT* be invoked, and
+#   instructions for migrating it to the new location will be displayed
+#   (unless SMARTCD_QUIET is set).  If you set SMARTCD_AUTOMIGRATE=1 then
+#   the migration steps will be executed for you whenever a legacy script
+#   is found.
+#
 ################################################################################
 
 # Compatibility functions
@@ -161,7 +175,7 @@ function smartcd() {
         command="reenter"
     fi
 
-    local usage="Usage: smartcd ( edit | show | filename | template | setup | config | export | import ) [args]"
+    local usage="Usage: smartcd ( edit | show | filename | helper | template | setup | config | export | import ) [args]"
     case $command in
         -h|help|'') echo $usage;;
      cd|pushd|popd) shift; _smartcd $command "$@"; return $?;;

@@ -57,7 +57,7 @@ OK, HOW DO I USE IT?
   Once it is installed, you're ready to go.  All actions are available through
   the `smartcd` command.
 
-    Usage: smartcd ( edit | show | filename | template | setup | config ) [args]
+    Usage: smartcd ( edit | show | filename | helper | template | setup | config ) [args]
 
   If you run `smartcd edit enter`, it will launch your editor to allow you to
   begin creating a script for the current directory which will run when you
@@ -310,6 +310,32 @@ WHAT ARE SOME COMMON RECIPES?
 
 
 WHAT ELSE CAN IT DO?
+
+  HELPERS
+
+    A system for pre-written scripts is provided which implement things that you
+    may find useful.  This system allows people to distribute and share these
+    independently of the core smartcd distribution.
+
+    Some helpers are provided with smartcd, including:
+
+        path:
+
+            smartcd helper run path append __PATH__/bin
+            smartcd helper run path prepend __PATH__/bin
+
+            Simple ways to temporarily add elements to your PATH
+
+        history:
+
+            smartcd helper run history also-read ~/.bash_history
+            smartcd helper run history localize __PATH__/.history
+
+            This keeps commands run in the current and any subdirectories
+            in a separate history file specified as an argument.  The also-read
+            command will prepend another history file into the shell's buffer
+            when setting up, so that other history can be availble "further
+            back" in your history.
 
   TEMPLATES
 
