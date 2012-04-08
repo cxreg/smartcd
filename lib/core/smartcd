@@ -298,7 +298,9 @@ function _smartcd_check_inode() {
             local _old_ifs="$IFS"
             IFS=$'\n'
             for file in $(command ls "$base/scripts$dir"); do
-                echo "    $base/scripts$dir/$file"
+                if [[ -f "$base/scripts$dir/$file" ]]; then
+                    echo "    $base/scripts$dir/$file"
+                fi
             IFS="$_old_ifs"
             done
             echo
