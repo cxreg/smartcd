@@ -9,11 +9,12 @@ function smartcd_edit() {
                                ;;
     esac
 
-    if [[ -f "$HOME/.smartcd$(pwd)/$file" ]]; then
+    local base=$(_smartcd_base)
+    if [[ -f "$base$(pwd)/$file" ]]; then
         smartcd_upgrade_database
     fi
 
-    local smartcd_dir="$HOME/.smartcd/scripts$(pwd)"
+    local smartcd_dir="$base/scripts$(pwd)"
     if [[ ! -d "$smartcd_dir" ]]; then
         command mkdir -p "$smartcd_dir"
     fi
@@ -88,9 +89,10 @@ EOF
 # option at a time is valid right now, no need
 function _smartcd_file_check() {
     local file=$1; shift
-    local confdir="$HOME/.smartcd/scripts$(pwd)"
+    local base=$(_smartcd_base)
+    local confdir="$base/scripts$(pwd)"
 
-    if [[ -f "$HOME/.smartcd$(pwd)/$file" ]]; then
+    if [[ -f "$base$(pwd)/$file" ]]; then
         smartcd_upgrade_database
     fi
 

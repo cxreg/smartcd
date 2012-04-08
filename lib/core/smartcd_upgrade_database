@@ -5,20 +5,21 @@ function smartcd_upgrade_database() {
             *) echo "smartcd: outdated script directory detected, upgrading";;
         esac
     fi
-    command mkdir -p $HOME/.smartcd/scripts $HOME/.smartcd/templates $HOME/.smartcd/archive
+    local base=$(_smartcd_base)
+    command mkdir -p $base/scripts $base/templates $base/archive
     local _old_ifs="$IFS"
     IFS=$'\n'
-    for entry in $(command ls $HOME/.smartcd); do
+    for entry in $(command ls $base); do
         case $entry in
              scripts|templates) ;;
                     template_*) name=${entry#template_}
-                                command cp "$HOME/.smartcd/$entry" "$HOME/.smartcd/templates/$name"
-                                command mv "$HOME/.smartcd/$entry" "$HOME/.smartcd/archive"
+                                command cp "$base/$entry" "$base/templates/$name"
+                                command mv "$base/$entry" "$base/archive"
                                 ;;
                              *) # A little extra caution never hurt anybody, let's try to be future-proof
                                 if [[ -d "/$entry" || $entry == "bash_enter" || $entry == "bash_leave" ]]; then
-                                    command cp -rpP "$HOME/.smartcd/$entry" "$HOME/.smartcd/scripts"
-                                    command mv "$HOME/.smartcd/$entry" "$HOME/.smartcd/archive"
+                                    command cp -rpP "$base/$entry" "$base/scripts"
+                                    command mv "$base/$entry" "$base/archive"
                                 fi
                                 ;;
         esac
@@ -27,5 +28,5 @@ function smartcd_upgrade_database() {
     IFS="$_old_ifs"
 
     echo "smartcd: upgrade complete.  Your previous scripts can be found under"
-    echo "$HOME/.smartcd/archive in case anything went wrong."
+    echo "$base/archive in case anything went wrong."
 }

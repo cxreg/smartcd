@@ -231,6 +231,15 @@ function smartcd() {
     esac
 }
 
+function _smartcd_base() {
+    if [[ -n $SMARTCD_BASE ]]; then
+        echo "$SMARTCD_BASE"
+    else
+        echo "$HOME/.smartcd"
+    fi
+
+}
+
 # Load bits of functionality from files
 function _smartcd_load() {
     local file="$1"
@@ -257,9 +266,10 @@ function _smartcd_check_inode() {
         # Don't barf when leaving deleted directory
         return
     fi
+    local base=$(_smartcd_base)
     local inode=$(command ls -di "$dir" | command awk '{print $1}')
-    if [[ -f "$HOME/.smartcd/inodes$dir.inode" ]]; then
-        prev=$(command cat "$HOME/.smartcd/inodes$dir.inode")
+    if [[ -f "$base/inodes$dir.inode" ]]; then
+        prev=$(command cat "$base/inodes$dir.inode")
         if [[ $prev != "*" && $inode != $prev ]]; then
             echo "WARNING!  Possibly outdated scripts detected, not running them.  These"
             echo "scripts were created for a directory which has been deleted or replaced,"
@@ -268,27 +278,27 @@ function _smartcd_check_inode() {
             echo
             local _old_ifs="$IFS"
             IFS=$'\n'
-            for file in $(command ls "$HOME/.smartcd/scripts$dir"); do
-                echo "    $HOME/.smartcd/scripts$dir/$file"
+            for file in $(command ls "$base/scripts$dir"); do
+                echo "    $base/scripts$dir/$file"
             IFS="$_old_ifs"
             done
             echo
             echo "Once you have verified or corrected the situation, remove the following"
             echo "file to make this warning go away"
             echo
-            echo "    $HOME/.smartcd/inodes$dir.inode"
+            echo "    $base/inodes$dir.inode"
             echo
             echo "If you don't wish to keep this safety check in place, set SMARTCD_NO_INODE=1"
             echo "or re-run \`smartcd config\`"
             echo
             echo "To permanently ignore this check only for $dir, run the following command"
             echo
-            echo "    echo '*' > \"$HOME/.smartcd/inodes$dir.inode\""
+            echo "    echo '*' > \"$base/inodes$dir.inode\""
             _inode_skip=1
         fi
     else
-        command mkdir -p "$HOME/.smartcd/inodes$dir"
-        echo $inode > "$HOME/.smartcd/inodes$dir.inode"
+        command mkdir -p "$base/inodes$dir"
+        echo $inode > "$base/inodes$dir.inode"
     fi
 }
 
@@ -307,6 +317,8 @@ function _smartcd() {
         unset smartcd_last_run_mainline
     fi
     unset smartcd_run_mainline
+
+    local base=$(_smartcd_base)
 
     # What are we being invoked as?
     local action="builtin $1"; shift
@@ -418,8 +430,8 @@ function _smartcd() {
         # Set this just in case we are not able to actualy chdir to $dir
         local varstash_dir="$dir"
 
-        local confdir="$HOME/.smartcd/scripts$dir"
-        local olddir="$HOME/.smartcd$dir"
+        local confdir="$base/scripts$dir"
+        local olddir="$base$dir"
         if [[ -d "$dir" ]]; then
             builtin cd "$dir"
             if [[ -f .bash_leave ]]; then
@@ -498,8 +510,8 @@ function _smartcd() {
         local dir="$(alast enter_stack)"
         apop enter_stack >/dev/null
         builtin cd "$dir"
-        local confdir="$HOME/.smartcd/scripts$dir"
-        local olddir="$HOME/.smartcd$dir"
+        local confdir="$base/scripts$dir"
+        local olddir="$base$dir"
         if [[ -f .bash_enter ]]; then
             if [[ -n $SMARTCD_LEGACY ]]; then
                 if (( ${SMARTCD_QUIET:-0} == 0 )); then
