@@ -2,8 +2,9 @@
 source t/tap-functions
 source lib/core/varstash
 source lib/core/arrays
+source lib/core/smartcd
 
-plan_tests 37
+plan_tests 36
 
 thing=value
 
@@ -125,11 +126,6 @@ rm $config_file
 
 VARSTASH_AUTOEDIT=1
 EDITOR=cat
-output=$(autostash RANDOM_VARIABLE)
-is "${output-_}" "smartcd not loaded, cannot run smartcd_edit" "warns user when smartcd not loaded"
-rm $config_file
-
-source lib/core/smartcd
 output=$(autostash RANDOM_VARIABLE)
 is "${output-_}" "autostash RANDOM_VARIABLE" "autoedit seems to work"
 
