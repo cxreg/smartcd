@@ -14,6 +14,7 @@ function _smartcd_completion() {
 
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
+    local base=$(_smartcd_base)
 
     local prev_ifs="$IFS"
     IFS=$' \t\n'
@@ -28,18 +29,28 @@ function _smartcd_completion() {
             edit|show|filename) words="enter leave";;
                         helper) words="run";;
         esac
-    elif [[ $COMP_CWORD == 3 && "${COMP_WORDS[COMP_CWORD-2]}" == "template" ]]; then
-        case $prev in
-            edit|show|run|install|delete) words="$(smartcd template list)";;
+    elif [[ $COMP_CWORD == 3 ]]; then
+        case "${COMP_WORDS[COMP_CWORD-2]}" in
+            template) case $prev in
+                            edit|show|run|install|delete) words="$(smartcd template list)";;
+                      esac
+                      ;;
+              helper) case $prev in
+                            run) local _old_ifs="$IFS"
+                                 IFS=$'\n'
+                                 words="$(command ls $base/helper)"
+                                 IFS="$_old_ifs"
+                                 ;;
+                      esac
+                      ;;
         esac
-    elif [[ $COMP_CWORD == 3 && "${COMP_WORDS[COMP_CWORD-2]}" == "helper" ]]; then
-        case $prev in
-            run) local _old_ifs="$IFS"
-                 IFS=$'\n'
-                 words="$(command ls $(_smartcd_base)/helper)"
-                 IFS="$_old_ifs"
-                 ;;
-        esac
+    elif (( $COMP_CWORD >= 4 )) && [[ ${COMP_WORDS[1]} == "helper" && ${COMP_WORDS[2]} == "run" ]]; then
+        local helper="${COMP_WORDS[3]}"
+        if [[ -f "$base/helper/$helper/completion" ]]; then
+            # Pass unparsed tokens as arguments
+            local SMARTCD_COMP_CWORD=$(( $COMP_CWORD - 3))
+            source "$base/helper/$helper/completion" "${COMP_WORDS[@]:4}"
+        fi
     fi
 
     COMPREPLY=( $(compgen -W "$words" -- "$cur") )

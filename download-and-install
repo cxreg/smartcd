@@ -60,8 +60,13 @@ for file in                            \
     lib/core/completion                \
     helper/path/script                 \
     helper/path/meta                   \
+    helper/path/completion             \
     helper/history/script              \
-    helper/history/meta
+    helper/history/meta                \
+    helper/history/completion          \
+    helper/perlbrew/script             \
+    helper/perlbrew/meta               \
+    helper/perlbrew/completion
 do
     download_file "$file"
 done
