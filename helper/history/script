@@ -1,0 +1,57 @@
+###############################################################################
+# Modify your shell history
+#
+# Thanks to https://github.com/aaronharnly/dotfiles-public for the idea
+#
+# Example usage:
+#     smartcd helper run history also-read ~/.bash_history
+#     smartcd helper run history localize __PATH__/.history
+#
+# This example will read in your "main" history file first, then use
+# a local .history file to read and write to while you are in the current
+# and any subdirectories.  You can pass as many filenames to also-read
+# as you like.
+#
+# TODO:
+#   - provide a prompt hook function to flush and re-read regularly, to
+#     allow sharing of history between terminals to be more predictable
+#      - cache mtimes to optimize this
+#
+###############################################################################
+
+# FIXME: this currently only works in bash, not zsh
+if [[ -n $ZSH_VERSION ]]; then
+    echo "Sorry, this helper does not with Zsh at this time :("
+    return
+fi
+
+case $1 in
+     localize) # First we will set up a hook to revert these changes when we leave
+               smartcd leave-hook 'history -a; unstash SMARTCD_HISTORY_ALSOREAD; unstash HISTFILE; history -c; history -r'
+
+               # Flush current history
+               history -a
+               history -c
+
+               # Read also-read files in first
+               local alsoread_copy
+               acopy SMARTCD_HISTORY_ALSOREAD alsoread_copy
+               while (( $(alen alsoread_copy) > 0 )); do
+                   ashift alsoread_copy >/dev/null
+                   HISTFILE="$_ashift_return"
+                   history -r
+               done
+
+               # Now set the actual file we're working with and read it in
+               stash HISTFILE=$2
+               history -r
+               ;;
+    also-read) shift
+               stash SMARTCD_HISTORY_ALSOREAD=
+               unset -v SMARTCD_HISTORY_ALSOREAD
+               for file in "$@"; do
+                   apush SMARTCD_HISTORY_ALSOREAD "$file"
+               done
+               ;;
+            *) echo "Usage: smartcd helper run history localize <file>"
+esac

@@ -59,7 +59,9 @@ for file in                            \
     lib/core/arrays                    \
     lib/core/completion                \
     helper/path/script                 \
-    helper/path/meta
+    helper/path/meta                   \
+    helper/history/script              \
+    helper/history/meta
 do
     download_file "$file"
 done
