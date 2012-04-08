@@ -1,0 +1,32 @@
+###############################################################################
+# Modify your PATH
+#
+# Example usage:
+#
+#     # Find these after the main PATH locations
+#     smartcd helper run path append __PATH__/bin /bar
+#
+#     # Find these first
+#     smartcd helper run path prepend __PATH__/foo
+#
+###############################################################################
+
+local i
+local action="$1"; shift
+case $action in
+    prepend) local new
+             for i in "$@"; do
+                if [[ -n $new ]]; then
+                    new="$new:$i"
+                else
+                    new="$i"
+                fi
+             done
+             autostash PATH="$new:$PATH"
+             ;;
+     append) for i in "$@"; do
+                 autostash PATH="$PATH:$i"
+             done
+             ;;
+          *) echo "Usage: smartcd helper run path ( append | prepend ) <path>";;
+esac

@@ -57,7 +57,9 @@ for file in                            \
     lib/core/smartcd_upgrade_database  \
     lib/core/varstash                  \
     lib/core/arrays                    \
-    lib/core/completion
+    lib/core/completion                \
+    helper/path/script                 \
+    helper/path/meta
 do
     download_file "$file"
 done
