@@ -1,5 +1,3 @@
-#!/bin/bash
-
 function smartcd_template() {
     local action=$1; shift
 

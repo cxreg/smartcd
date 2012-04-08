@@ -1,5 +1,3 @@
-#!/bin/bash
-
 function smartcd_config() {
     local smartcd_file="$(_smartcd_file)"
     local varstash_file=${smartcd_file/%smartcd/varstash}

@@ -1,5 +1,3 @@
-#!/bin/bash
-
 # Export file format: (leading space added before all file contents)
 # -------------------------
 # smartcd export 1.0

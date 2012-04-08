@@ -1,5 +1,3 @@
-#!/bin/bash
-
 function smartcd_edit() {
     # Invoke the users editor (or vi) on the relevant file
     local file="$1"

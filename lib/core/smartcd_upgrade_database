@@ -1,5 +1,3 @@
-#!/bin/bash
-
 function smartcd_upgrade_database() {
     if (( ${SMARTCD_QUIET:-0} == 0 )); then
         case $_manual_upgrade in
