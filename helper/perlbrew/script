@@ -1,0 +1,25 @@
+###############################################################################
+# Perlbrew compatibility
+#
+# Example usage:
+#     smartcd helper run perlbrew init __PATH__/local/perl
+#
+# By using this helper, perlbrew will be loaded automatically on directory
+# enter, and its effects will be undone when you cd away.
+#
+# Due to perlbrew's current assumption about $HOME/.perlbrew/init, you
+# cannot yet affect where your configuration is loaded from.
+#
+###############################################################################
+
+local action=$1; shift
+case $action in
+     init) case $1 in
+                "") echo "Usage: smartcd helper run perlbrew init <perlbrew base>";;
+                 *) autostash PATH PERLBREW_PERL PERLBREW_VERSION PERLBREW_PATH PERLBREW_ROOT PATH_WITHOUT_PERLBREW
+                    source $1/etc/bashrc
+                    ;;
+            esac
+            ;;
+        *) echo "Usage: smartcd helper run perlbrew init <perlbrew base>";;
+esac

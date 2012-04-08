@@ -79,11 +79,13 @@
 #   you may find useful.  This system also allows people to distribute
 #   and share these independently of the core smartcd distribution.
 #
-#   Currently the included helpers are 'path' and 'history'
+#   Currently the included helpers are 'path', 'history', and 'perlbrew'
 #
 #       smartcd helper run history localize __PATH__/.history
 #
 #       smartcd helper run path append __PATH__/bin
+#
+#       smartcd helper run perlbrew init /path/to/perlbrew/install
 #
 #   #############
 #   # Templates #

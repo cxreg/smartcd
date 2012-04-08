@@ -224,11 +224,13 @@ WHAT ARE SOME COMMON RECIPES?
     language, allowing you to easily switch between them.  This is very valuable
     for development, but probably not what you want for your whole system.
 
-    Here is a recipe I've used to allow perlbrew to do its thing from within
-    a project folder
+    smartcd now ships with a helper designed to integrate perlbrew and smartcd
+    seamlessly together.  Simply put this line in your enter script:
 
-        autostash PATH PERLBREW_PERL PERLBREW_VERSION PERLBREW_PATH PERLBREW_ROOT PATH_WITHOUT_PERLBREW
-        source /path/to/perlbrew/install/etc/bashrc
+        smartcd helper run perlbrew init /path/to/perlbrew/install
+
+    When you leave the directory, perlbrew will stop being in effect and you will
+    get your previous perl back.
 
     perlbrew is available at http://search.cpan.org/~gugod/App-perlbrew/
 
@@ -336,6 +338,12 @@ WHAT ELSE CAN IT DO?
             command will prepend another history file into the shell's buffer
             when setting up, so that other history can be availble "further
             back" in your history.
+
+        perlbrew:
+
+            smartcd helper run perlbrew init /path/to/perlbrew/install
+
+            Automagic setup and teardown of Perlbrew
 
   TEMPLATES
 
