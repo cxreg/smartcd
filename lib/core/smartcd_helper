@@ -9,9 +9,9 @@ function smartcd_helper() {
                     # $dir is set in _smartcd, or undefined
                     _smartcd_exec_file "$HOME/.smartcd/helper/$type/script" "$dir" "$@"
                 else
-                    echo "helper $type not found"
+                    echo "smartcd: helper $type not found"
                 fi
                 ;;
-             *) echo "Usage: smartcd helper ( run )"
+             *) echo "Usage: smartcd helper run <name> [args...]"
     esac
 }
