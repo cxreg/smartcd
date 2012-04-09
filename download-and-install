@@ -19,7 +19,7 @@
 baseurl="https://raw.github.com/cxreg/smartcd/master"
 tarurl="https://github.com/cxreg/smartcd/tarball/master"
 
-if [[ -f ~/.smartcd/lib/core/smartcd ]]; then
+if [[ -d ~/.smartcd ]]; then
     smartcd_previously_installed=1
 fi
 
