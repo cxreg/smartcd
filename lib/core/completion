@@ -28,7 +28,7 @@ function _smartcd_completion() {
         case $prev in
                          setup) words="cd pushd popd prompt-hook chpwd-hook exit-hook completion";;
                       template) words="edit create list show run install delete";;
-            edit|show|filename) words="enter leave";;
+     append|edit|show|filename) words="enter leave";;
                         helper) words="run";;
         esac
     elif [[ $COMP_CWORD == 3 ]]; then

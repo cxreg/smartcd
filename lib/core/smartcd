@@ -186,7 +186,7 @@ function smartcd() {
                     _smartcd cd "$dir"
                     ;;
      edit|show|cat|\
-          filename) shift; local file=$1; shift
+   append|filename) shift; local file=$1; shift
                     case $file in
                                    enter|leave) _smartcd_file_check bash_$file $command  "$@";;
                          bash_enter|bash_leave) _smartcd_file_check $file $command  "$@";;

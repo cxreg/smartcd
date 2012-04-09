@@ -20,7 +20,7 @@ function smartcd_edit() {
     fi
 
     # Edit the file if interactive, otherwise write standard input to it
-    if [[ -t 0 ]]; then
+    if [[ -z $append && -t 0 ]]; then
         local tmpfile=$(mktemp /tmp/smartcd-edit.XXXXXX) line=
         local _old_ifs="$IFS"
         IFS=$'\n'
@@ -75,6 +75,8 @@ EOF
         fi
         IFS="$_old_ifs"
         rm "$tmpfile"
+    elif [[ -n $append ]]; then
+        command cat >> "$smartcd_dir/$file"
     else
         command cat > "$smartcd_dir/$file"
     fi
@@ -83,6 +85,11 @@ EOF
         # Delete any file that is left empty
         command rm "$smartcd_dir/$file"
     fi
+}
+
+function smartcd_append() {
+    local append=1
+    smartcd_edit "$@"
 }
 
 # It's probably better to use getopts or something for this, but since only one
@@ -100,6 +107,7 @@ function _smartcd_file_check() {
            -h|help) echo "Usage: $file [ edit | show | filename ]";;
        -f|filename) echo "$confdir/$file";;
            -e|edit) smartcd_edit $file;;
+         -a|append) smartcd_append $file;;
     -l|show|cat|'') if [[ -f "$confdir/$file" ]]; then
                         echo "$confdir/$file exists"
                         case $1 in
