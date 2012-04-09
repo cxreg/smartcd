@@ -98,6 +98,10 @@ function smartcd_config() {
         done < "$HOME/.smartcd_config"
     else
         local use_defs=$(ask "use defaults" "Use all default settings?" y)
+
+        # In case the answer is 'no', set the actual defaults
+        local cd_def=y pushd_def=y prompt_def=n exit_def=n comp_def=y autocon_def=n autoed_def=n
+        local inode_def=n automig_def=n legacy_def=n
     fi
 
     if [[ ! $use_defs =~ $yes ]]; then
@@ -118,7 +122,7 @@ function smartcd_config() {
         local automigrate=$(ask "SMARTCD_AUTOMIGRATE=1" "Would you like to automigrate legacy smartcd scripts?" $automig_def)
         local legacy=$(ask "SMARTCD_LEGACY=1" "Would you like to allow legacy scripts to run in-place? (DISCOURAGED)" $legacy_def)
     else
-        local setup_cd=y setup_pushd=y enable_prompt_hook=n enable_exit_hook=n enable_completion=yu
+        local setup_cd=y setup_pushd=y enable_prompt_hook=n enable_exit_hook=n enable_completion=y
         local autoconfigure=n autoedit=n noinode=n automigrate=n legacy=n
     fi
 
