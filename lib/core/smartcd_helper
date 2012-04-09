@@ -5,6 +5,15 @@ function smartcd_helper() {
     case $action in
            run) local type="$1"; shift
 
+                # If this comman was run interactively, configure it automatically,
+                # and then run the command.  This is what the user most likely wants to
+                # happen here.
+                if [[ -z $run_from_smartcd ]]; then
+                    local run_from_smartcd=1
+                    smartcd inform "Configuring enter script to run helper, run 'smartcd edit enter' to review"
+                    echo "smartcd helper run $type $@" | smartcd append enter
+                fi
+
                 if [[ -f "$HOME/.smartcd/helper/$type/script" ]]; then
                     # $dir is set in _smartcd, or undefined
                     _smartcd_exec_file "$HOME/.smartcd/helper/$type/script" "$dir" "$@"
