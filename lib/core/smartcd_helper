@@ -15,8 +15,7 @@ function smartcd_helper() {
                 fi
 
                 if [[ -f "$HOME/.smartcd/helper/$type/script" ]]; then
-                    # $dir is set in _smartcd, or undefined
-                    _smartcd_exec_file "$HOME/.smartcd/helper/$type/script" "$dir" "$@"
+                    _smartcd_exec_file "$HOME/.smartcd/helper/$type/script" "${smartcd_working_dir:-$(command pwd)}" "$@"
                 else
                     echo "smartcd: helper $type not found"
                 fi

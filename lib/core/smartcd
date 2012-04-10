@@ -445,27 +445,27 @@ function _smartcd() {
     local smartcd_runmode=leave
     while (( $stack_size >= 1 )); do
         # ashift in a sub-shell doesn't work
-        local dir="$(afirst leave_stack)"
+        local smartcd_current_dir="$(afirst leave_stack)"
         ashift leave_stack >/dev/null
 
-        # Set this just in case we are not able to actualy chdir to $dir
-        local varstash_dir="$dir"
+        # Set this just in case we are not able to actualy chdir to $smartcd_current_dir
+        local varstash_dir="$smartcd_current_dir"
 
-        local confdir="$base/scripts$dir"
-        local olddir="$base$dir"
-        if [[ -d "$dir" ]]; then
-            builtin cd "$dir"
+        local confdir="$base/scripts$smartcd_current_dir"
+        local olddir="$base$smartcd_current_dir"
+        if [[ -d "$smartcd_current_dir" ]]; then
+            builtin cd "$smartcd_current_dir"
             if [[ -f .bash_leave ]]; then
                 if [[ -n $SMARTCD_LEGACY ]]; then
                     if (( ${SMARTCD_QUIET:-0} == 0 )); then
-                        echo "smartcd: running $dir/.bash_leave"
+                        echo "smartcd: running $smartcd_current_dir/.bash_leave"
                     fi
-                    _smartcd_exec_file .bash_leave "$dir"
+                    _smartcd_exec_file .bash_leave "$smartcd_current_dir"
                 elif [[ -n $SMARTCD_AUTOMIGRATE ]]; then
-                    echo "Automatically migrating \"$dir/.bash_leave\" to \"$confdir/bash_leave\""
+                    echo "Automatically migrating \"$smartcd_current_dir/.bash_leave\" to \"$confdir/bash_leave\""
                     command mkdir -p "$confdir"
-                    command cat "$dir/.bash_leave" >> "$confdir/bash_leave"
-                    command rm "$dir/.bash_leave"
+                    command cat "$smartcd_current_dir/.bash_leave" >> "$confdir/bash_leave"
+                    command rm "$smartcd_current_dir/.bash_leave"
                 elif (( ${SMARTCD_QUIET:-0} == 0 )); then
                     echo "############################################################################"
                     echo "# NOTICE!  Deprecated .bash_leave found, please migrate this file to the new"
@@ -473,8 +473,8 @@ function _smartcd() {
                     if [[ ! -d $confdir ]]; then
                         echo "mkdir -p \"$confdir\""
                     fi
-                    echo "cat \"$dir/.bash_leave\" >> \"$confdir/bash_leave\""
-                    echo "rm \"$dir/.bash_leave\""
+                    echo "cat \"$smartcd_current_dir/.bash_leave\" >> \"$confdir/bash_leave\""
+                    echo "rm \"$smartcd_current_dir/.bash_leave\""
                     echo "#"
                     echo "# If you would like smartcd to perform this migration for you whenever"
                     echo "# possible, set SMARTCD_AUTOMIGRATE=1"
@@ -485,7 +485,7 @@ function _smartcd() {
                 fi
             fi
         else
-            echo "smartcd: leaving non-existent directory $dir"
+            echo "smartcd: leaving non-existent directory $smartcd_current_dir"
         fi
 
         if [[ -f "$olddir/bash_leave" ]]; then
@@ -498,9 +498,9 @@ function _smartcd() {
             if (( ${SMARTCD_QUIET:-0} == 0 )); then
                 echo "smartcd: running $confdir/bash_leave"
             fi
-            _smartcd_check_inode "$dir"
+            _smartcd_check_inode "$smartcd_current_dir"
             if [[ -z $_inode_skip ]]; then
-                _smartcd_exec_file "$confdir/bash_leave" "$dir"
+                _smartcd_exec_file "$confdir/bash_leave" "$smartcd_current_dir"
             fi
             unset -v _inode_skip
         fi
@@ -528,22 +528,22 @@ function _smartcd() {
     local smartcd_runmode=enter
     while (( $stack_size >= 1 )); do
         # apop in a sub-shell doesn't work
-        local dir="$(alast enter_stack)"
+        local smartcd_current_dir="$(alast enter_stack)"
         apop enter_stack >/dev/null
-        builtin cd "$dir"
-        local confdir="$base/scripts$dir"
-        local olddir="$base$dir"
+        builtin cd "$smartcd_current_dir"
+        local confdir="$base/scripts$smartcd_current_dir"
+        local olddir="$base$smartcd_current_dir"
         if [[ -f .bash_enter ]]; then
             if [[ -n $SMARTCD_LEGACY ]]; then
                 if (( ${SMARTCD_QUIET:-0} == 0 )); then
-                    echo "smartcd: running $dir/.bash_enter"
+                    echo "smartcd: running $smartcd_current_dir/.bash_enter"
                 fi
-                _smartcd_exec_file .bash_enter "$dir"
+                _smartcd_exec_file .bash_enter "$smartcd_current_dir"
             elif [[ -n $SMARTCD_AUTOMIGRATE ]]; then
-                echo "Automatically migrating \"$dir/.bash_enter\" to \"$confdir/bash_enter\""
+                echo "Automatically migrating \"$smartcd_current_dir/.bash_enter\" to \"$confdir/bash_enter\""
                 command mkdir -p "$confdir"
-                command cat "$dir/.bash_enter" >> "$confdir/bash_enter"
-                command rm "$dir/.bash_enter"
+                command cat "$smartcd_current_dir/.bash_enter" >> "$confdir/bash_enter"
+                command rm "$smartcd_current_dir/.bash_enter"
             elif (( ${SMARTCD_QUIET:-0} == 0 )); then
                 echo "############################################################################"
                 echo "# NOTICE!  Deprecated .bash_enter found, please migrate this file to the new"
@@ -551,8 +551,8 @@ function _smartcd() {
                 if [[ ! -d $confdir ]]; then
                     echo "mkdir -p \"$confdir\""
                 fi
-                echo "cat \"$dir/.bash_enter\" >> \"$confdir/bash_enter\""
-                echo "rm \"$dir/.bash_enter\""
+                echo "cat \"$smartcd_current_dir/.bash_enter\" >> \"$confdir/bash_enter\""
+                echo "rm \"$smartcd_current_dir/.bash_enter\""
                 echo "#"
                 echo "# If you would like smartcd to perform this migration for you whenever"
                 echo "# possible, set SMARTCD_AUTOMIGRATE=1"
@@ -571,9 +571,9 @@ function _smartcd() {
             if (( ${SMARTCD_QUIET:-0} == 0 )); then
                 echo "smartcd: running $confdir/bash_enter"
             fi
-            _smartcd_check_inode "$dir"
+            _smartcd_check_inode "$smartcd_current_dir"
             if [[ -z $_inode_skip ]]; then
-                _smartcd_exec_file "$confdir/bash_enter" "$dir"
+                _smartcd_exec_file "$confdir/bash_enter" "$smartcd_current_dir"
             fi
             unset -v _inode_skip
         fi
