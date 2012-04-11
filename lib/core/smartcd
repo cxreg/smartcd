@@ -211,6 +211,11 @@ function smartcd() {
                     local hook_array=$(_mangle_var smartcd_leave_hook)
                     apush $hook_array $fn
                     ;;
+         on-prompt) shift;
+                    local run_from_smartcd=1
+                    autostash smartcd_onprompt_callbacks
+                    apush smartcd_onprompt_callbacks "$1"
+                    ;;
             config) smartcd_config;;
             export) shift; smartcd_export "$@";;
             import) shift; smartcd_import "$@";;
@@ -614,8 +619,18 @@ function _smartcd_hook() {
         local smartcd_skip_action=1
         smartcd cd "$cwd"
     fi
+}
 
-    eval $_smartcd_original_command
+function _smartcd_prompt_hook() {
+    _smartcd_hook "$@"
+
+    local i=0
+    while (( $i < $(alen smartcd_onprompt_callbacks) )); do
+        eval "${smartcd_onprompt_callbacks[i]}"
+        i=$((i + 1))
+    done
+
+    eval $_smartcd_original_prompt_command
 }
 
 function setup_smartcd_function() {
@@ -635,16 +650,16 @@ function setup_smartcd_prompt_hook() {
             echo "array library is not loaded, please ensure that it is installed before using smartcd"
             return
         fi
-        _smartcd_original_command=:
-        apush precmd_functions _smartcd_hook
+        _smartcd_original_prompt_command=:
+        apush precmd_functions _smartcd_prompt_hook
     else
-        if [[ -n $PROMPT_COMMAND && -z $_smartcd_original_command ]]; then
-            _smartcd_original_command=$PROMPT_COMMAND
+        if [[ -n $PROMPT_COMMAND && -z $_smartcd_original_prompt_command ]]; then
+            _smartcd_original_prompt_command=$PROMPT_COMMAND
         else
-            _smartcd_original_command=:
+            _smartcd_original_prompt_command=:
         fi
 
-        PROMPT_COMMAND=_smartcd_hook
+        PROMPT_COMMAND=_smartcd_prompt_hook
     fi
 }
 
@@ -654,7 +669,6 @@ function setup_smartcd_chpwd_hook() {
             echo "array library is not loaded, please ensure that it is installed before using smartcd"
             return
         fi
-        _smartcd_original_command=:
         apush chpwd_functions _smartcd_hook
     fi
 }
