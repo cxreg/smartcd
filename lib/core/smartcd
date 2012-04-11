@@ -212,6 +212,10 @@ function smartcd() {
                     apush $hook_array $fn
                     ;;
          on-prompt) shift;
+                    # The prompt hook is required for this feature
+                    if [[ -z $_smartcd_original_prompt_command ]]; then
+                        setup_smartcd_prompt_hook
+                    fi
                     local run_from_smartcd=1
                     autostash smartcd_onprompt_callbacks
                     apush smartcd_onprompt_callbacks "$1"
