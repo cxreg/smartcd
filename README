@@ -235,6 +235,23 @@ WHAT ARE SOME COMMON RECIPES?
     perlbrew is available at http://search.cpan.org/~gugod/App-perlbrew/
 
 
+  VIRTUALENV
+
+    virtualenv is a system for maintaining multiple, independent python
+    interpreters and associated modules, allowing you to easily activate and
+    deactivate them.  This is very useful for development.
+
+    smartcd now ships with a helper designed to integrate virtualenv and smartcd
+    seamlessly together.  Simply put this line in your enter script:
+
+        smartcd helper run virtualenv init /path/to/virtualenv
+
+    When you leave the directory, virtualenv will stop being in effect and you will
+    get your previous python back.
+
+    virtual is available at http://www.virtualenv.org/en/latest/index.html
+
+
   RVM
 
     RVM is the Ruby Version Manager, which like perlbrew, can manage multiple
