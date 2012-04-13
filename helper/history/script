@@ -26,32 +26,34 @@ if [[ -n $ZSH_VERSION ]]; then
 fi
 
 case $1 in
-     localize) # First we will set up a hook to revert these changes when we leave
-               smartcd leave-hook 'history -a; unstash SMARTCD_HISTORY_ALSOREAD; unstash HISTFILE; history -c; history -r'
+         localize) # First we will set up a hook to revert these changes when we leave
+                   smartcd leave-hook 'history -a; unstash SMARTCD_HISTORY_ALSOREAD; unstash HISTFILE; history -c; history -r'
 
-               # Flush current history
-               history -a
-               history -c
+                   # Flush current history
+                   history -a
+                   history -c
 
-               # Read also-read files in first
-               local alsoread_copy
-               acopy SMARTCD_HISTORY_ALSOREAD alsoread_copy
-               while (( $(alen alsoread_copy) > 0 )); do
-                   ashift alsoread_copy >/dev/null
-                   HISTFILE="$_ashift_return"
+                   # Read also-read files in first
+                   local alsoread_copy
+                   acopy SMARTCD_HISTORY_ALSOREAD alsoread_copy
+                   while (( $(alen alsoread_copy) > 0 )); do
+                       ashift alsoread_copy >/dev/null
+                       HISTFILE="$_ashift_return"
+                       history -r
+                   done
+
+                   # Now set the actual file we're working with and read it in
+                   stash HISTFILE=$2
                    history -r
-               done
-
-               # Now set the actual file we're working with and read it in
-               stash HISTFILE=$2
-               history -r
-               ;;
-    also-read) shift
-               stash SMARTCD_HISTORY_ALSOREAD=
-               unset -v SMARTCD_HISTORY_ALSOREAD
-               for file in "$@"; do
-                   apush SMARTCD_HISTORY_ALSOREAD "$file"
-               done
-               ;;
-            *) echo "Usage: smartcd helper run history localize <file>"
+                   ;;
+        also-read) shift
+                   stash SMARTCD_HISTORY_ALSOREAD=
+                   unset -v SMARTCD_HISTORY_ALSOREAD
+                   for file in "$@"; do
+                       apush SMARTCD_HISTORY_ALSOREAD "$file"
+                   done
+                   ;;
+    prompt-append) smartcd on-prompt 'history -a';;
+    prompt-reload) smartcd on-prompt 'history -n';;
+                *) echo "Usage: smartcd helper run history localize <file>";;
 esac

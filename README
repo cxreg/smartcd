@@ -190,7 +190,7 @@ WHAT ARE SOME COMMON RECIPES?
         smartcd inform "Reminder, don't forget to commit your code!"
 
 
-  PROMPT
+  PROMPT COLOR
 
     If you want a visual cue that you need to be careful, it might make sense
     to change your prompt.  Here's one that will temporarily make your prompt
@@ -339,6 +339,12 @@ WHAT ELSE CAN IT DO?
             when setting up, so that other history can be availble "further
             back" in your history.
 
+            You can also have ask it to save and/or reload this history
+            file on each prompt
+
+            smartcd helper run history prompt-append
+            smartcd helper run history prompt-reload
+
         perlbrew:
 
             smartcd helper run perlbrew init /path/to/perlbrew/install
@@ -412,13 +418,6 @@ WHAT ELSE CAN IT DO?
         test 1
         ~/foo$ cd
         ~$
-
-    One way that someone might use this is in concert with the history helper,
-    to flush and optionally reload their history on each prompt, to facilitate
-    cross-terminal sharing.
-
-        smartcd helper run history localize __PATH__/.history
-        smartcd on-prompt 'history -a; history -n'
 
 
   EXIT HOOK

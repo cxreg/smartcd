@@ -3,6 +3,6 @@
 # Set words="" to what you want to suggest
 
 case $SMARTCD_COMP_CWORD in
-    1) words="localize also-read";;
+    1) words="localize also-read prompt-append prompt-reload";;
     *) ;; # Path completion is the default
 esac
