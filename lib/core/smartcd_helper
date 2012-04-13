@@ -12,11 +12,18 @@ function smartcd_helper() {
                     local run_from_smartcd=1
                     smartcd inform "Configuring enter script to run helper, run 'smartcd edit enter' to review"
                     echo "smartcd helper run $type $@" | smartcd append enter
+
+                    # Do token substitution since we're about to run this command interactively
+                    # and nothing has done the replacement yet
+                    local params i
+                    for i in "$@"; do
+                        apush params "${i//__PATH__/${smartcd_working_dir:-$(command pwd)}}"
+                    done
+                    set -- "${params[@]}"
                 fi
 
                 if [[ -f "$HOME/.smartcd/helper/$type/script" ]]; then
-                    # $dir is set in _smartcd, or undefined
-                    _smartcd_exec_file "$HOME/.smartcd/helper/$type/script" "$dir" "$@"
+                    _smartcd_exec_file "$HOME/.smartcd/helper/$type/script" "${smartcd_working_dir:-$(command pwd)}" "$@"
                 else
                     echo "smartcd: helper $type not found"
                 fi

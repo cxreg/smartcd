@@ -106,14 +106,18 @@ function stash() {
                 -n "$(eval echo '$__varstash_nostash__'$stash_name)" )
                 && -z $force ]]; then
 
-            if [[ -z $already_stashed && ${already_stashed-_} = "_" ]]; then
+            if [[ -z $already_stashed && ${already_stashed-_} == "_" ]]; then
                 local already_stashed=1
             else
                 already_stashed=1
             fi
 
-            if [[ $stash_which = $stash_expression ]]; then
-                echo "You have already stashed $stash_which, please specify \"-f\" if you want to overwrite another stashed value"
+            if [[ $stash_which == $stash_expression ]]; then
+                if [[ -z $run_from_smartcd ]]; then
+                    echo "You have already stashed $stash_which, please specify \"-f\" if you want to overwrite another stashed value"
+                fi
+
+                # Skip remaining work if we're not doing an assignment
                 shift
                 continue
             fi
@@ -365,6 +369,9 @@ function autostash_edit() {
 }
 
 function varstash_edit() {
+    local file="$1"
+    local dir="$2"
+
     if [[ -n $ZSH_VERSION ]]; then
         if [[ $(type smartcd_edit) == "smartcd_edit is a shell function" ]]; then
             local can_run=1
@@ -376,7 +383,7 @@ function varstash_edit() {
     fi
 
     if [[ -n "$can_run" ]]; then
-        smartcd_edit "$@"
+        _smartcd_file_check "$file" edit "$dir"
     else
         echo "smartcd not loaded, cannot run smartcd_edit"
     fi

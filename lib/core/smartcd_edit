@@ -1,20 +1,23 @@
 function smartcd_edit() {
     # Invoke the users editor (or vi) on the relevant file
     local file="$1"
+    local dir="${2:-$(pwd)}"
+
     case $file in
         bash_enter|bash_leave) local type=${file#bash_};;
                   enter|leave) local type=$file; file="bash_$file";;
-                            *) echo "Usage: smartcd_edit ( bash_enter | bash_leave )"
+                            *) echo "Usage: smartcd_edit ( enter | leave )"
                                return
                                ;;
     esac
 
     local base=$(_smartcd_base)
-    if [[ -f "$base$(pwd)/$file" ]]; then
+
+    if [[ -f "$base$dir/$file" ]]; then
         smartcd_upgrade_database
     fi
 
-    local smartcd_dir="$base/scripts$(pwd)"
+    local smartcd_dir="$base/scripts$dir"
     if [[ ! -d "$smartcd_dir" ]]; then
         command mkdir -p "$smartcd_dir"
     fi
@@ -49,7 +52,7 @@ EOF
             fi
             command cat > "$tmpfile" << EOF
 ########################################################################
-# smartcd $type - $(pwd)
+# smartcd $type - $dir
 #
 # This is a smartcd script.  Commands you type will be run when you
 # $type this directory.  The string __PATH__ will be replaced with
@@ -92,25 +95,38 @@ function smartcd_append() {
     smartcd_edit "$@"
 }
 
-# It's probably better to use getopts or something for this, but since only one
-# option at a time is valid right now, no need
+# _smartcd_file_check <file> <action> [<directory>]
 function _smartcd_file_check() {
-    local file=$1; shift
-    local base=$(_smartcd_base)
-    local confdir="$base/scripts$(pwd)"
+    local file="$1"
+    local action="$2"
+    local dir="$3"
 
-    if [[ -f "$base$(pwd)/$file" ]]; then
+    if [[ -n $dir ]]; then
+        # canonicalize
+        dir=$(builtin cd $dir 2>/dev/null && command pwd)
+        if [[ -z $dir ]]; then
+            echo "$3 is not a valid directory"
+            return
+        fi
+    else
+        dir="$(pwd)"
+    fi
+
+    local base=$(_smartcd_base)
+    local confdir="$base/scripts$dir"
+
+    if [[ -f "$base$dir/$file" ]]; then
         smartcd_upgrade_database
     fi
 
-    case $1 in
+    case $action in
            -h|help) echo "Usage: $file [ edit | show | filename ]";;
        -f|filename) echo "$confdir/$file";;
-           -e|edit) smartcd_edit $file;;
-         -a|append) smartcd_append $file;;
+           -e|edit) smartcd_edit $file "$dir";;
+         -a|append) smartcd_append $file "$dir";;
     -l|show|cat|'') if [[ -f "$confdir/$file" ]]; then
                         echo "$confdir/$file exists"
-                        case $1 in
+                        case $action in
                            -l|show|cat) echo "-------------------------------------------------------------------------"
                                         command cat "$confdir/$file"
                                         echo "-------------------------------------------------------------------------"
