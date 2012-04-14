@@ -26,21 +26,26 @@ if [[ -n $ZSH_VERSION ]]; then
 fi
 
 case $1 in
-         localize) # First we will set up a hook to revert these changes when we leave
-                   smartcd leave-hook 'history -a; unstash SMARTCD_HISTORY_ALSOREAD; unstash HISTFILE; history -c; history -r'
+         localize) # First we will set up a hook to revert these changes when we
+                   # leave. Need to flush out the current file and restore the
+                   # parent's settings.  alsoread may mess with HISTFILE
+                   # temporarily, so stash it while restoring that
+                   smartcd leave-hook '
+                       history -a
+                       unstash SMARTCD_HISTORY_ALSOREAD HISTFILE
+                       history -c
+                       stash HISTFILE
+                       smartcd_history_alsoread
+                       unstash HISTFILE
+                       history -r
+                   '
 
                    # Flush current history
                    history -a
                    history -c
 
-                   # Read also-read files in first
-                   local alsoread_copy
-                   acopy SMARTCD_HISTORY_ALSOREAD alsoread_copy
-                   while (( $(alen alsoread_copy) > 0 )); do
-                       ashift alsoread_copy >/dev/null
-                       HISTFILE="$_ashift_return"
-                       history -r
-                   done
+                   # Read also-read files in first, if any
+                   smartcd_history_alsoread
 
                    # Now set the actual file we're working with and read it in
                    stash HISTFILE=$2
@@ -57,3 +62,13 @@ case $1 in
     prompt-reload) smartcd on-prompt 'history -n';;
                 *) echo "Usage: smartcd helper run history localize <file>";;
 esac
+
+function smartcd_history_alsoread() {
+    local alsoread_copy
+    acopy SMARTCD_HISTORY_ALSOREAD alsoread_copy
+    while (( $(alen alsoread_copy) > 0 )); do
+        ashift alsoread_copy >/dev/null
+        HISTFILE="$_ashift_return"
+        history -r
+    done
+}
