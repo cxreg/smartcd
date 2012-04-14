@@ -685,7 +685,6 @@ function setup_smartcd_exit_hook() {
     if [[ -n $ZSH_VERSION ]]; then
         apush zshexit_functions _smartcd_exit_trap
     else
-        # Bash supports this, which is much cleaner
         _smartcd_original_exit_trap=$(trap -p EXIT)
         _smartcd_original_exit_trap=${_smartcd_original_exit_trap#trap -- }
         _smartcd_original_exit_trap=${_smartcd_original_exit_trap% EXIT}
