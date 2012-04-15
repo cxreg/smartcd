@@ -211,6 +211,7 @@ function smartcd() {
                     local hook_array=$(_mangle_var smartcd_onleave_callbacks)
                     apush $hook_array $fn
                     ;;
+        on-descend) apush smartcd_ondescend_callbacks "$2";;
          on-prompt) shift;
                     # The prompt hook is required for this feature
                     if [[ -z $_smartcd_original_prompt_command ]]; then
@@ -460,6 +461,11 @@ function _smartcd() {
         # Set this just in case we are not able to actualy chdir to $smartcd_current_dir
         local varstash_dir="$smartcd_current_dir"
 
+        # Empty descend callbacks before unstashing, because if nothing was stashed,
+        # it will not empty
+        smartcd_ondescend_callbacks=()
+        unstash smartcd_ondescend_callbacks
+
         local confdir="$base/scripts$smartcd_current_dir"
         local olddir="$base$smartcd_current_dir"
         if [[ -d "$smartcd_current_dir" ]]; then
@@ -540,6 +546,20 @@ function _smartcd() {
         local smartcd_current_dir="$(alast enter_stack)"
         apop enter_stack >/dev/null
         builtin cd "$smartcd_current_dir"
+
+        # Work from a copy of these hooks, and immediately stash and empty
+        # the parent's data, so that any hooks or scripts are free to push
+        # into it
+        local descend_copy
+        acopy smartcd_ondescend_callbacks descend_copy
+        autostash smartcd_ondescend_callbacks
+        smartcd_ondescend_callbacks=()
+
+        while (( $(alen descend_copy) > 0 )); do
+            ashift descend_copy >/dev/null
+            eval "$_ashift_return"
+        done
+
         local confdir="$base/scripts$smartcd_current_dir"
         local olddir="$base$smartcd_current_dir"
         if [[ -f .bash_enter ]]; then
