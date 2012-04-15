@@ -204,14 +204,24 @@ function smartcd() {
                     esac
                     ;;
           on-leave) local code=${2//\\/\\\\};
-                    code=${code//\"/\\\"};
+                    code=${code//\"/\\\"}
                     __smartcd_func_ctr=$(( $__smartcd_func_ctr + 1 ))
                     local fn="__generated_smartcd_function_$__smartcd_func_ctr"
                     eval "function $fn() { eval \"$code\"; unset -f $fn; }"
                     local hook_array=$(_mangle_var smartcd_onleave_callbacks)
                     apush $hook_array $fn
                     ;;
-        on-descend) apush smartcd_ondescend_callbacks "$2";;
+        on-descend) shift
+                    case "$1" in
+                        # Recursive means that we use on-descend to hook itself.  Clever huh?
+                        -r) shift
+                            local param="${1//\\/\\\\}"
+                            param=${param//\"/\\\"}
+                            apush smartcd_ondescend_callbacks "smartcd on-descend -r \"$param\""
+                            ;;
+                    esac
+                    apush smartcd_ondescend_callbacks "$1"
+                    ;;
          on-prompt) shift;
                     # The prompt hook is required for this feature
                     if [[ -z $_smartcd_original_prompt_command ]]; then
@@ -557,7 +567,22 @@ function _smartcd() {
 
         while (( $(alen descend_copy) > 0 )); do
             ashift descend_copy >/dev/null
-            eval "$_ashift_return"
+            local cmd="$_ashift_return"
+
+            # Token substitution is useful here, but doing so on the self-calls
+            # breaks it, so special case that.  I wonder if there are other
+            # uses for this which would be better off un-expanded...
+            #
+            # This is still problematic when smartcd on-descend -r is placed into
+            # an enter script since that script will be expanded when run.  One
+            # hack to avoid that is to break the literal but preserve the semantics
+            # like this:
+            #
+            #   smartcd on-descend -r 'echo recursive descent into _''_PATH__'
+            if [[ ! $cmd =~ ^'smartcd on-descend -r' ]]; then
+                cmd="${cmd//__PATH__/$smartcd_current_dir}"
+            fi
+            eval "$cmd"
         done
 
         local confdir="$base/scripts$smartcd_current_dir"
