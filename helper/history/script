@@ -30,7 +30,7 @@ case $1 in
                    # leave. Need to flush out the current file and restore the
                    # parent's settings.  alsoread may mess with HISTFILE
                    # temporarily, so stash it while restoring that
-                   smartcd leave-hook '
+                   smartcd on-leave '
                        history -a
                        unstash SMARTCD_HISTORY_ALSOREAD HISTFILE
                        history -c
