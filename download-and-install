@@ -73,9 +73,12 @@ working_dir=$(mktemp -d /tmp/smartcd-install.XXXXXX)
 builtin cd $working_dir
 
 if [[ $method == "git" ]]; then
+    # Some systems wont verify github's SSL cert, so ignore it
+    export GIT_SSL_NO_VERIFY=1
+
     # Clone into ~/.smartcd
     if [[ -d ~/.smartcd/.git ]]; then
-        ( cd ~/.smartcd && git pull )
+        ( cd ~/.smartcd && $git pull )
     else
         $git clone https://github.com/cxreg/smartcd ~/.smartcd
     fi
