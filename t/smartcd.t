@@ -90,7 +90,7 @@ is "_${output-_}" "_2 1" "ran two bash_leave scripts in correct order"
 
 mkdir deleted_dir
 output=$(smartcd cd deleted_dir; rmdir ../deleted_dir; smartcd cd .. 2>&1)
-unlike "_$output" "No such file or directory" "smartcd doens't try to re-enter a deleted directory"
+unlike "_$output" "No such file or directory" "smartcd doesn't try to re-enter a deleted directory"
 
 # Clean up
 rm -rf $dir
