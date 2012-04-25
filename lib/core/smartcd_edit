@@ -50,7 +50,7 @@ function smartcd_edit() {
 EOF
 )"
             fi
-            command cat > "$tmpfile" << EOF
+            command cat >> "$tmpfile" << EOF
 ########################################################################
 # smartcd $type - $dir
 #
