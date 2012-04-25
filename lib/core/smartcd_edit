@@ -41,14 +41,14 @@ function smartcd_edit() {
             done < "$smartcd_dir/$file"
         else
             if [[ $type == "enter" ]]; then
-                local enter_usage=$(cat <<EOF
+                local enter_usage="$(cat <<EOF
   Some examples are editing your \$PATH or creating
 # a temporary alias:
 #
 #     autostash PATH=__PATH__/bin:\$PATH
 #     autostash alias restart="service stop; sleep 1; service start"
 EOF
-)
+)"
             fi
             command cat > "$tmpfile" << EOF
 ########################################################################
