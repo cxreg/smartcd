@@ -551,6 +551,8 @@ function _smartcd() {
     local stack_size=$(alen enter_stack)
     : ${stack_size:=0}
     local smartcd_runmode=enter
+    local descend_copy
+    descend_copy=()
     while (( $stack_size >= 1 )); do
         # apop in a sub-shell doesn't work
         local smartcd_current_dir="$(alast enter_stack)"
@@ -560,7 +562,6 @@ function _smartcd() {
         # Work from a copy of these hooks, and immediately stash and empty
         # the parent's data, so that any hooks or scripts are free to push
         # into it
-        local descend_copy=()
         acopy smartcd_ondescend_callbacks descend_copy
         autostash smartcd_ondescend_callbacks
         smartcd_ondescend_callbacks=()
