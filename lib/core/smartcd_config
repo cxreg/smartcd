@@ -134,7 +134,7 @@ function smartcd_config() {
         local autoconfigure=n autoedit=n noinode=n automigrate=n legacy=n
     fi
 
-    local config=$(generate_config)
+    local config="$(generate_config)"
 
     echo
 
