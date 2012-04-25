@@ -22,6 +22,9 @@ function smartcd_edit() {
         command mkdir -p "$smartcd_dir"
     fi
 
+    # Temporarily disable noclobber for zsh users
+    [[ -n $ZSH_VERSION ]] && setopt localoptions && setopt clobber
+
     # Edit the file if interactive, otherwise write standard input to it
     if [[ -z $append && -t 0 ]]; then
         local tmpfile=$(mktemp /tmp/smartcd-edit.XXXXXX) line=
