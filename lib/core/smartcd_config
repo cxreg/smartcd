@@ -138,6 +138,9 @@ function smartcd_config() {
 
     echo
 
+    # Temporarily disable noclobber for zsh users
+    [[ -n $ZSH_VERSION ]] && setopt localoptions && setopt clobber
+
     if [[ -f "$HOME/.smartcd_config" ]]; then
         local config_file_exists=1
         echo -n "$HOME/.smartcd_config already exists, do you want to overwrite it? [y/N] "
