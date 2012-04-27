@@ -1,0 +1,56 @@
+#!/bin/bash
+#
+# This script will help you set up smartcd if invoked accidentally
+#
+
+function canonicalize() {
+    (builtin cd -P -- "$(dirname -- "$1")" && printf '%s\n' "$(builtin pwd -P)/$(basename -- "$1")")
+}
+
+function smartcd_root() {
+    if [[ -n $ZSH_VERSION ]]; then
+        local this_file="${funcsourcetrace[1]}"
+        this_file="${this_file%:*}"
+    else
+        local this_file="$BASH_SOURCE"
+    fi
+
+    echo "${this_file/%\/bin\/smartcd/}"
+}
+
+smartcd_lib_path=$(canonicalize ${SMARTCD_ROOT:-$(smartcd_root)}/lib/core/smartcd)
+
+export SMARTCD_NOINITIAL=1
+export SMARTCD_NOEXIT=1
+source $smartcd_lib_path
+
+if [[ $1 == "config" ]]; then
+    SMARTCD_LOADNOW=0
+    smartcd config
+
+    echo
+    echo "smartcd is now configured, please start a new shell or run the following command"
+    echo
+    echo "    source $smartcd_lib_path"
+
+else
+    echo -n "You have not yet configured smartcd.  Would you like to do so now? [Y/n] "
+    read answer
+
+    if [[ $answer == "y" || $answer == "Y" || $answer == "" ]]; then
+        SMARTCD_LOADNOW=1
+        smartcd config
+
+        # Run command that was originally invoked
+        if [[ -n $1 ]]; then
+            smartcd "$@"
+        fi
+
+        echo
+        echo "smartcd is now configured, please start a new shell or run the following command"
+        echo
+        echo "    source $smartcd_lib_path"
+    else
+        echo "Aborting"
+    fi
+fi

@@ -781,7 +781,10 @@ function setup_smartcd_exit_hook() {
 
 function _smartcd_exit_trap() {
     local smartcd_exiting=1
-    smartcd cd /
+
+    if [[ -z $SMARTCD_NOEXIT ]]; then
+        smartcd cd /
+    fi
 
     if [[ -n $_smartcd_original_exit_trap ]]; then
         eval $_smartcd_original_exit_trap

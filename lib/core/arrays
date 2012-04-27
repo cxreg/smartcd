@@ -211,7 +211,7 @@ function alen() {
 }
 
 # Run deferred smartcd if we're waiting for it, and varstash is also loaded
-if [[ -n "$smartcd_initially_deferred" && -n "$(fn_exists autostash)" ]]; then
+if [[ -n "$smartcd_initially_deferred" && -n "$(fn_exists autostash)" && -z "$SMARTCD_NOINITIAL" ]]; then
     smartcd_skip_action=1
     smartcd_run_mainline=1
     smartcd cd

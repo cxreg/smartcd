@@ -162,8 +162,13 @@ function smartcd_config() {
 
     if [[ -n $config_file_exists ]]; then
 
-        echo -n "Would you like to load your config file now? [Y/n] "
-        local loadnow=$(read_yesno y)
+        if [[ $SMARTCD_LOADNOW == "1" ]]; then
+            local loadnow=yes
+        elif [[ $SMARTCD_LOADNOW != "0" ]]; then
+            echo -n "Would you like to load your config file now? [Y/n] "
+            local loadnow=$(read_yesno y)
+        fi
+
         if [[ $loadnow =~ $yes ]]; then
             source $HOME/.smartcd_config
         fi
