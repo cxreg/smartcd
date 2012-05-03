@@ -181,7 +181,7 @@ function smartcd() {
     case $command in
         -h|help|'') echo $usage;;
      cd|pushd|popd) shift; _smartcd $command "$@"; return $?;;
-           reenter) local dir="$(pwd)"
+           reenter) local dir="$(pwd -P)"
                     _smartcd cd ..
                     _smartcd cd "$dir"
                     ;;
@@ -411,7 +411,7 @@ function _smartcd() {
     IFS="$_old_ifs"
 
     if (( $rv != 0 )); then return $rv; fi
-    local whereto="$(pwd)"
+    local whereto="$(pwd -P)"
     _smartcd_last_run_for="x$whereto"
 
     # If zsh, turn autopushd off temporarily to avoid extra pushes
@@ -662,7 +662,7 @@ function _smartcd() {
 }
 
 function _smartcd_hook() {
-    local cwd="$(pwd)"
+    local cwd="$(pwd -P)"
 
     # Skip this if we already ran smartcd for this directory
     if [[ "x$cwd" != "$_smartcd_last_run_for" ]]; then

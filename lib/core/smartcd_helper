@@ -17,13 +17,13 @@ function smartcd_helper() {
                     # and nothing has done the replacement yet
                     local params i
                     for i in "$@"; do
-                        apush params "${i//__PATH__/${smartcd_working_dir:-$(command pwd)}}"
+                        apush params "${i//__PATH__/${smartcd_working_dir:-$(command pwd -P)}}"
                     done
                     set -- "${params[@]}"
                 fi
 
                 if [[ -f "$HOME/.smartcd/helper/$type/script" ]]; then
-                    _smartcd_exec_file "$HOME/.smartcd/helper/$type/script" "${smartcd_working_dir:-$(command pwd)}" "$@"
+                    _smartcd_exec_file "$HOME/.smartcd/helper/$type/script" "${smartcd_working_dir:-$(command pwd -P)}" "$@"
                 else
                     echo "smartcd: helper $type not found"
                 fi

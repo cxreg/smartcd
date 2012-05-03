@@ -71,7 +71,7 @@ function stash() {
     fi
 
     if [[ -n $1 ]] && [[ -z $run_from_smartcd ]] && [[ -z $run_from_autostash ]]; then
-        local working_dir="${varstash_dir:-$(pwd)}"
+        local working_dir="${varstash_dir:-$(pwd -P)}"
         local smartcd_dir="$(_smartcd_base)/scripts$working_dir"
         local help_action="stashing a variable"
         local help_dir=$smartcd_dir
@@ -209,7 +209,7 @@ function stash() {
 
 function autostash() {
     if [[ -n $1 ]] && [[ -z $run_from_smartcd ]]; then
-        local working_dir="${varstash_dir:-$(pwd)}"
+        local working_dir="${varstash_dir:-$(pwd -P)}"
         local smartcd_dir="$(_smartcd_base)/scripts$working_dir"
         local help_action="autostashing a variable"
         local help_dir=$smartcd_dir
@@ -239,7 +239,7 @@ function autostash() {
 
 function unstash() {
     if [[ -n $1 ]] && [[ -z $run_from_smartcd ]] && [[ -z $run_from_autounstash ]]; then
-        local working_dir=${varstash_dir:-$(pwd)}
+        local working_dir=${varstash_dir:-$(pwd -P)}
         local smartcd_dir="$(_smartcd_base)/scripts$working_dir"
         local help_action="unstashing a variable"
         local help_dir=$smartcd_dir
@@ -330,7 +330,7 @@ function autounstash() {
 }
 
 function _mangle_var() {
-    local mangle_var_where="${varstash_dir:-$(pwd)}"
+    local mangle_var_where="${varstash_dir:-$(pwd -P)}"
     mangle_var_where=${mangle_var_where//[^A-Za-z0-9]/_}
     echo "_tmp_${mangle_var_where}_$1"
 }

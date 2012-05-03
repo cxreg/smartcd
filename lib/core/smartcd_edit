@@ -1,7 +1,7 @@
 function smartcd_edit() {
     # Invoke the users editor (or vi) on the relevant file
     local file="$1"
-    local dir="${2:-$(pwd)}"
+    local dir="${2:-$(pwd -P)}"
 
     case $file in
         bash_enter|bash_leave) local type=${file#bash_};;
@@ -110,13 +110,13 @@ function _smartcd_file_check() {
 
     if [[ -n $dir ]]; then
         # canonicalize
-        dir=$(builtin cd $dir 2>/dev/null && command pwd)
+        dir=$(builtin cd $dir 2>/dev/null && command pwd -P)
         if [[ -z $dir ]]; then
             echo "$3 is not a valid directory"
             return
         fi
     else
-        dir="$(pwd)"
+        dir="$(pwd -P)"
     fi
 
     local base=$(_smartcd_base)
