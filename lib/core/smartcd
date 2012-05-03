@@ -778,6 +778,20 @@ function _smartcd_file() {
     echo "$this_file"
 }
 
+function _smartcd_bash_local_clobber() {
+    _smartcd_clobber=
+    if [[ -n $BASH_VERSION ]]; then
+        for opt in `echo $SHELLOPTS | sed -e 's/:/ /g'`; do
+            [[ "$opt" == "noclobber" ]] && _smartcd_clobber=
+        done
+        set +o noclobber
+    fi
+}
+
+function _smartcd_bash_restore_clobber() {
+    [[ -n "$BASH_VERSION" && -z "$_smartcd_clobber" ]] && set -o noclobber
+}
+
 # Autoload stubs
 function _smartcd_file_check() {
     _smartcd_load "smartcd_edit" && _smartcd_file_check "$@"

@@ -138,7 +138,8 @@ function smartcd_config() {
 
     echo
 
-    # Temporarily disable noclobber for zsh users
+    # Temporarily disable noclobber for bash, zsh users
+    _smartcd_bash_local_clobber
     [[ -n $ZSH_VERSION ]] && setopt localoptions && setopt clobber
 
     if [[ -f "$HOME/.smartcd_config" ]]; then
@@ -159,6 +160,9 @@ function smartcd_config() {
             local config_file_exists=1
         fi
     fi
+
+    # Restore bash clobber option to previous value
+    _smartcd_bash_restore_clobber
 
     if [[ -n $config_file_exists ]]; then
 

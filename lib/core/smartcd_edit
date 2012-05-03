@@ -22,7 +22,8 @@ function smartcd_edit() {
         command mkdir -p "$smartcd_dir"
     fi
 
-    # Temporarily disable noclobber for zsh users
+    # Temporarily disable noclobber for bash, zsh users
+    _smartcd_bash_local_clobber
     [[ -n $ZSH_VERSION ]] && setopt localoptions && setopt clobber
 
     # Edit the file if interactive, otherwise write standard input to it
@@ -91,6 +92,9 @@ EOF
         # Delete any file that is left empty
         command rm "$smartcd_dir/$file"
     fi
+
+    # Restore bash clobber option to previous value
+    _smartcd_bash_restore_clobber
 }
 
 function smartcd_append() {
