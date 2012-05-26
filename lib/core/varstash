@@ -308,7 +308,10 @@ function unstash() {
             unset -f $unstash_which 2>/dev/null
         fi
         if [[ ( -n "$nostash" && -z "$unstashed" ) || ( -n "$unstashed" && -z "$unstashed_variable" ) ]]; then
-            unset -v $unstash_which
+            # Don't try to unset illegal variable names
+            if ! [[ $unstash_which =~ [^a-zA-Z0-9_] || $unstash_which =~ ^[0-9] ]]; then
+                unset -v $unstash_which
+            fi
         fi
 
         shift
@@ -332,7 +335,8 @@ function autounstash() {
 function _mangle_var() {
     local mangle_var_where="${varstash_dir:-$(pwd)}"
     mangle_var_where=${mangle_var_where//[^A-Za-z0-9]/_}
-    echo "_tmp_${mangle_var_where}_$1"
+    local mangled_name=${1//[^A-Za-z0-9]/_}
+    echo "_tmp_${mangle_var_where}_${mangled_name}"
 }
 
 function _manual_stash_help() {
