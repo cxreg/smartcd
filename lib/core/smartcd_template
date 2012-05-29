@@ -68,7 +68,7 @@ EOF
                         if [[ -f "$base/templates/$name" ]]; then
                             echo "Template $name already exists, run \"smartcd template edit $name\" to modify it"
                         else
-                            smartcd_template _init "$name" "$(pwd)"
+                            smartcd_template _init "$name" "$(pwd -P)"
                             smartcd_template edit "$name"
                         fi
                     else
@@ -119,7 +119,7 @@ EOF
      install|-i)    local name="$1"; shift
                     if [[ -n $name ]]; then
                         if [[ -f "$base/templates/$name" ]]; then
-                            local current_dir=$(pwd)
+                            local current_dir=$(pwd -P)
                             local smartcd_dir="$base/scripts$current_dir"
                             command mkdir -p "$smartcd_dir"
                             local mode= line=
@@ -184,7 +184,7 @@ EOF
                                 esac
                             done < "$base/templates/$name"
                             IFS="$_old_ifs"
-                            _smartcd_exec "$contents" "$(pwd)"
+                            _smartcd_exec "$contents" "$(pwd -P)"
                         else
                             echo "Template $name not found"
                         fi
