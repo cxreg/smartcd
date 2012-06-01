@@ -18,6 +18,7 @@
 
 baseurl="https://raw.github.com/cxreg/smartcd/master"
 tarurl="https://github.com/cxreg/smartcd/tarball/master"
+giturl="git://github.com/cxreg/smartcd.git"
 
 if [[ -d ~/.smartcd ]]; then
     smartcd_previously_installed=1
@@ -80,7 +81,7 @@ if [[ $method == "git" ]]; then
     if [[ -d ~/.smartcd/.git ]]; then
         ( cd ~/.smartcd && $git pull )
     else
-        $git clone https://github.com/cxreg/smartcd ~/.smartcd
+        $git clone $giturl ~/.smartcd
     fi
 elif [[ $method == "tar" ]]; then
     echo -n "Downloading smartcd tarball...."
