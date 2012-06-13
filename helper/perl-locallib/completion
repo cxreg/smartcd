@@ -1,0 +1,8 @@
+# $@ contains the command line after "smartcd helper run perl-locallib"
+# $SMARTCD_COMP_CWORD contains the numbered argument which is currently being completed
+# Set words="" to what you want to suggest
+
+case $SMARTCD_COMP_CWORD in
+    1) words="activate deactivate";;
+    *) ;; # Path completion is the default
+esac

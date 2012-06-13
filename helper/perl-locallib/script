@@ -1,0 +1,34 @@
+###############################################################################
+# Perl local::lib compatibility
+#
+# Example usage:
+#     smartcd helper run perl-locallib activate __PATH__/local/perl
+#
+# By using this helper, your environment will be configured to find
+# Perl libraries in accordance with your local::lib install.
+#
+# You can explicitly deactivate (which is useful to remove specific paths
+# from your current shell's settings) but if you do not, autounstash will
+# undo the settings upon directory exit
+#
+###############################################################################
+
+local action=$1; shift
+case $action in
+      activate) case $1 in
+                     "") echo "Usage: smartcd helper run perl-locallib activate <local::lib base>";;
+                      *) local locallib_path=$1; shift;
+                        autostash PATH PERL5LIB PERL_MM_OPT PERL_MB_OPT PERL_LOCAL_LIB_ROOT
+                        eval $(perl -I$locallib_path -Mlocal::lib=$locallib_path)
+                        ;;
+                esac
+                ;;
+    deactivate) case $1 in
+                     "") echo "Usage: smartcd helper run perl-locallib deactivate <local::lib base>";;
+                      *) local locallib_path=$1; shift;
+                         eval $(perl -Mlocal::lib=--deactivate,$locallib_path)
+                         ;;
+                esac
+                ;;
+             *) echo "Usage: smartcd helper run perl-locallib ( activate | deactivate ) <local::lib base>";;
+esac
