@@ -108,7 +108,10 @@ else
         helper/history/completion          \
         helper/perlbrew/script             \
         helper/perlbrew/meta               \
-        helper/perlbrew/completion
+        helper/perlbrew/completion         \
+        helper/perl-locallib/script        \
+        helper/perl-locallib/meta          \
+        helper/perl-locallib/completion
     do
         download_file "$file"
     done

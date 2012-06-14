@@ -235,6 +235,25 @@ WHAT ARE SOME COMMON RECIPES?
     perlbrew is available at http://search.cpan.org/~gugod/App-perlbrew/
 
 
+  local::lib
+
+    Perl currently ships with a module named local::lib, which is handy for
+    installing module dependencies outside of the standard install locations.
+
+    A helper is included for interacting with this module as well.
+
+        smartcd helper run perl-locallib activate __PATH__/perl5lib
+
+    If you want to explicitly remove a path (as you might do with
+    -Mlocal::lib=--deactivate), this is supported
+
+        smartcd helper run perl-locallib deactivate __PATH__/perl5lib
+
+    but not required.  If you don't perform this set, it will still be
+    automatically cleared when you cd away restoring any prior local::lib
+    or PERL5LIB state.
+
+
   RVM
 
     RVM is the Ruby Version Manager, which like perlbrew, can manage multiple
