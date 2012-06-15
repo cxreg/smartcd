@@ -80,7 +80,7 @@ EOF
             fi
         fi
         IFS="$_old_ifs"
-        rm "$tmpfile"
+        command rm "$tmpfile"
     elif [[ -n $append ]]; then
         command cat >> "$smartcd_dir/$file"
     else
