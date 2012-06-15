@@ -18,7 +18,7 @@ function smartcd_upgrade_database() {
                                 ;;
                              *) # A little extra caution never hurt anybody, let's try to be future-proof
                                 if [[ -d "/$entry" || $entry == "bash_enter" || $entry == "bash_leave" ]]; then
-                                    command cp -rpP "$base/$entry" "$base/scripts"
+                                    command cp -RpP "$base/$entry" "$base/scripts"
                                     command mv "$base/$entry" "$base/archive"
                                 fi
                                 ;;
