@@ -64,7 +64,7 @@ case $1 in
 esac
 
 function smartcd_history_alsoread() {
-    local alsoread_copy
+    local alsoread_copy=()
     acopy SMARTCD_HISTORY_ALSOREAD alsoread_copy
     while (( $(alen alsoread_copy) > 0 )); do
         ashift alsoread_copy >/dev/null
