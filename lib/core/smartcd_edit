@@ -65,7 +65,7 @@ EOF
 ########################################################################
 EOF
         fi
-        ${EDITOR:-vi} "$tmpfile"
+        eval ${EDITOR:-vi} "$tmpfile"
         if [[ $? == 0 ]]; then
             echo -n > "$smartcd_dir/$file"
             if [[ -s "$tmpfile" ]]; then
