@@ -65,7 +65,11 @@ EOF
 ########################################################################
 EOF
         fi
+        # Bash has trouble with eg EDITOR="emacs -nw" if you have changed IFS, so
+        # temporarily switch it back
+        IFS="$_old_ifs"
         ${EDITOR:-vi} "$tmpfile"
+        IFS=$'\n'
         if [[ $? == 0 ]]; then
             echo -n > "$smartcd_dir/$file"
             if [[ -s "$tmpfile" ]]; then
