@@ -25,6 +25,16 @@ if [[ -n $ZSH_VERSION ]]; then
     return
 fi
 
+function smartcd_history_alsoread() {
+    local alsoread_copy=()
+    acopy SMARTCD_HISTORY_ALSOREAD alsoread_copy
+    while (( $(alen alsoread_copy) > 0 )); do
+        ashift alsoread_copy >/dev/null
+        HISTFILE="$_ashift_return"
+        history -r
+    done
+}
+
 case $1 in
          localize) # First we will set up a hook to revert these changes when we
                    # leave. Need to flush out the current file and restore the
@@ -62,13 +72,3 @@ case $1 in
     prompt-reload) smartcd on-prompt 'history -n';;
                 *) echo "Usage: smartcd helper run history localize <file>";;
 esac
-
-function smartcd_history_alsoread() {
-    local alsoread_copy=()
-    acopy SMARTCD_HISTORY_ALSOREAD alsoread_copy
-    while (( $(alen alsoread_copy) > 0 )); do
-        ashift alsoread_copy >/dev/null
-        HISTFILE="$_ashift_return"
-        history -r
-    done
-}
