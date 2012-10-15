@@ -688,29 +688,12 @@ function _smartcd_prompt_hook() {
 
 function setup_smartcd_function() {
     local cmd=$1;
-
-    smartcd_wrap_function $cmd
-
     if typeset -f rvm >/dev/null 2>/dev/null &&
-            typeset -f __rvm_setup_cd_function >/dev/null 2>/dev/null
+      typeset -f __rvm_setup_cd_function >/dev/null 2>/dev/null
     then
         __rvm_setup_cd_function smartcd $cmd
     else
-        eval "function $cmd() { smartcd $cmd \"\$@\"; __smartcd_orig_$cmd; }"
-    fi
-}
-
-function smartcd_wrap_function() {
-    local func=$1
-
-    local newfunc="__smartcd_orig_"$func
-    if typeset -f $func >/dev/null 2>/dev/null; then
-        local prior_def=$(declare -f $func)
-        prior_def=${prior_def/#$func/$newfunc}
-        eval "$prior_def"
-        export _smartcd_original_prompt_command=_smartcd_prior_precmd
-    else
-        eval "function $newfunc() { :; }"
+        eval "function $cmd() { smartcd $cmd \"\$@\"; }"
     fi
 }
 
