@@ -22,8 +22,15 @@ function smartcd_helper() {
                     set -- "${params[@]}"
                 fi
 
-                if [[ -f "$HOME/.smartcd/helper/$type/script" ]]; then
-                    _smartcd_exec_file "$HOME/.smartcd/helper/$type/script" "${smartcd_working_dir:-$(command pwd)}" "$@"
+                local helpername=${type#local:}
+                local workdir="${smartcd_working_dir:-$(command pwd)}"
+                if [[ $type != $helpername ]]; then
+                    local helperpath="$workdir/.smartcd/helper/$helpername/script"
+                else
+                    local helperpath="$HOME/.smartcd/helper/$type/script"
+                fi
+                if [[ -n $helperpath && -f $helperpath ]]; then
+                    _smartcd_exec_file "$helperpath" "$workdir" "$@"
                 else
                     echo "smartcd: helper $type not found"
                 fi
