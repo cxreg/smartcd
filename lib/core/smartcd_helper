@@ -5,34 +5,38 @@ function smartcd_helper() {
     case $action in
            run) local type="$1"; shift
 
-                # If this command was run interactively, configure it automatically,
-                # and then run the command.  This is what the user most likely wants to
-                # happen here.
-                if [[ -z $run_from_smartcd ]]; then
-                    local run_from_smartcd=1
-                    smartcd inform "Configuring enter script to run helper, run 'smartcd edit enter' to review"
-                    echo "smartcd helper run $type $@" | smartcd append enter
-
-                    # Do token substitution since we're about to run this command interactively
-                    # and nothing has done the replacement yet
-                    local params i
-                    for i in "$@"; do
-                        apush params "${i//__PATH__/${smartcd_working_dir:-$(command pwd)}}"
-                    done
-                    set -- "${params[@]}"
-                fi
-
-                local helpername=${type#local:}
-                local workdir="${smartcd_working_dir:-$(command pwd)}"
-                if [[ $type != $helpername ]]; then
-                    local helperpath="$workdir/.smartcd/helper/$helpername/script"
+                if [[ -z $type ]]; then
+                    echo "Usage: smartcd helper run <name> [args...]"
                 else
-                    local helperpath="$HOME/.smartcd/helper/$type/script"
-                fi
-                if [[ -n $helperpath && -f $helperpath ]]; then
-                    _smartcd_exec_file "$helperpath" "$workdir" "$@"
-                else
-                    echo "smartcd: helper $type not found"
+                    # If this command was run interactively, configure it automatically,
+                    # and then run the command.  This is what the user most likely wants to
+                    # happen here.
+                    if [[ -z $run_from_smartcd ]]; then
+                        local run_from_smartcd=1
+                        smartcd inform "Configuring enter script to run helper, run 'smartcd edit enter' to review"
+                        echo "smartcd helper run $type $@" | smartcd append enter
+
+                        # Do token substitution since we're about to run this command interactively
+                        # and nothing has done the replacement yet
+                        local params i
+                        for i in "$@"; do
+                            apush params "${i//__PATH__/${smartcd_working_dir:-$(command pwd)}}"
+                        done
+                        set -- "${params[@]}"
+                    fi
+
+                    local helpername=${type#local:}
+                    local workdir="${smartcd_working_dir:-$(command pwd)}"
+                    if [[ $type != $helpername ]]; then
+                        local helperpath="$workdir/.smartcd/helper/$helpername/script"
+                    else
+                        local helperpath="$HOME/.smartcd/helper/$type/script"
+                    fi
+                    if [[ -n $helperpath && -f $helperpath ]]; then
+                        _smartcd_exec_file "$helperpath" "$workdir" "$@"
+                    else
+                        echo "smartcd: helper $type not found"
+                    fi
                 fi
                 ;;
              *) echo "Usage: smartcd helper run <name> [args...]"
