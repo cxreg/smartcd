@@ -68,8 +68,20 @@ EOF
         # Bash has trouble with eg EDITOR="emacs -nw" if you have changed IFS, so
         # temporarily switch it back
         IFS="$_old_ifs"
+
+        # Disable job control.  Backgrounding your editor here results in lost changes.
+        local mon_on=:
+        if [[ -n $ZSH_VERSION ]]; then
+            setopt localoptions && setopt nomonitor
+        elif [[ $(set -o) =~ monitor[[:space:]]*on ]]; then
+            mon_on="set -m"
+            set +m
+        fi
+
         ${EDITOR:-vi} "$tmpfile"
-        IFS=$'\n'
+
+        eval $mon_on
+
         if [[ $? == 0 ]]; then
             echo -n > "$smartcd_dir/$file"
             if [[ -s "$tmpfile" ]]; then
