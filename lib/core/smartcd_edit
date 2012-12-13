@@ -73,7 +73,7 @@ EOF
         local mon_on=:
         if [[ -n $ZSH_VERSION ]]; then
             setopt localoptions && setopt nomonitor
-        elif [[ $(set -o) =~ monitor[[:space:]]*on ]]; then
+        elif [[ ":$SHELLOPTS:" = *:monitor:* ]]; then
             mon_on="set -m"
             set +m
         fi
