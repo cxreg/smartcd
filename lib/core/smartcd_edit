@@ -79,7 +79,7 @@ EOF
         fi
 
         ${EDITOR:-vi} "$tmpfile"
-
+        IFS=$'\n'
         eval $mon_on
 
         if [[ $? == 0 ]]; then
