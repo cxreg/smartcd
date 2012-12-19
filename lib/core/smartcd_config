@@ -181,7 +181,7 @@ function smartcd_config() {
                     echo -n "I see you have a $file, would you like to load your config file from there? [Y/n] "
                     local answer=$(read_yesno y)
                     if [[ $answer =~ $yes ]]; then
-                        echo -e "\n[[ -r \"\$HOME/.smartcd_config\" ]] && source ~/.smartcd_config" >> "$HOME/$file"
+                        echo -e "\n[ -r \"\$HOME/.smartcd_config\" ] && ( [ -n "\$BASH_VERSION" ] || [ -n "\$ZSH_VERSION" ] ) && source ~/.smartcd_config" >> "$HOME/$file"
                         local setup=1
                     fi
                 fi
