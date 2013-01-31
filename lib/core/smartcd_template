@@ -165,7 +165,7 @@ EOF
                     fi
                     ;;
                run) local name="$1"; shift
-                    local mode="$1"; shift
+                    local mode="$1"; [[ $# > 0 ]] && shift
                     if [[ -z $mode ]]; then
                         mode="$smartcd_runmode"
                     fi
