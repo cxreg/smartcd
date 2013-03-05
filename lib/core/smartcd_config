@@ -69,11 +69,14 @@ function smartcd_config() {
         read_yesno $3
     }
 
-    local which_shell=$SHELL
-    if [[ $which_shell =~ 'bash' ]]; then
+    if [[ -n "$BASH_VERSION" ]]; then
         local possible_files=".bashrc .bash_profile .profile"
-    elif [[ $which_shell =~ 'zsh' ]]; then
-        local possible_files=".zshrc"
+        local possible_dirs="$HOME"
+    elif [[ -n "$ZSH_VERSION" ]]; then
+        local -a possible_files
+        possible_files=(".zshrc" ".zprofile" ".zlogin")
+        local -a possible_dirs
+        possible_dirs=("$ZDOTDIR" "$HOME")
     else
         echo "Unknown shell, sorry!  Only bash and zsh are supported at this time"
         exit 1
@@ -173,19 +176,21 @@ function smartcd_config() {
             source $HOME/.smartcd_config
         fi
 
-        for file in $possible_files; do
-            if [[ -f "$HOME/$file" ]]; then
-                if command grep "\.smartcd_config" "$HOME/$file" >/dev/null 2>&1; then
-                    local setup=1
-                else
-                    echo -n "I see you have a $file, would you like to load your config file from there? [Y/n] "
-                    local answer=$(read_yesno y)
-                    if [[ $answer =~ $yes ]]; then
-                        echo -e "\n[ -r \"\$HOME/.smartcd_config\" ] && ( [ -n "\$BASH_VERSION" ] || [ -n "\$ZSH_VERSION" ] ) && source ~/.smartcd_config" >> "$HOME/$file"
+        for pdir in $possible_dirs; do
+            for file in $possible_files; do
+                if [[ -f "$pdir/$file" ]]; then
+                    if command grep "\.smartcd_config" "$pdir/$file" >/dev/null 2>&1; then
                         local setup=1
+                    else
+                        echo -n "I see you have a $pdir/$file, would you like to load your config file from there? [Y/n] "
+                        local answer=$(read_yesno y)
+                        if [[ $answer =~ $yes ]]; then
+                            echo -e "\n[ -r \"\$HOME/.smartcd_config\" ] && ( [ -n "\$BASH_VERSION" ] || [ -n "\$ZSH_VERSION" ] ) && source ~/.smartcd_config" >> "$pdir/$file"
+                            local setup=1
+                        fi
                     fi
                 fi
-            fi
+            done
         done
 
         if [[ -z $setup ]]; then
