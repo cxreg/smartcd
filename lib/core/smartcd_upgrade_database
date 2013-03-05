@@ -30,3 +30,5 @@ function smartcd_upgrade_database() {
     echo "smartcd: upgrade complete.  Your previous scripts can be found under"
     echo "$base/archive in case anything went wrong."
 }
+
+# vim: filetype=sh autoindent expandtab shiftwidth=4 softtabstop=4

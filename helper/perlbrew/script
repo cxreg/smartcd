@@ -23,3 +23,5 @@ case $action in
             ;;
         *) echo "Usage: smartcd helper run perlbrew init <perlbrew base>";;
 esac
+
+# vim: filetype=sh autoindent expandtab shiftwidth=4 softtabstop=4

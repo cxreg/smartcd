@@ -72,3 +72,5 @@ case $1 in
     prompt-reload) smartcd on-prompt 'history -n';;
                 *) echo "Usage: smartcd helper run history localize <file>";;
 esac
+
+# vim: filetype=sh autoindent expandtab shiftwidth=4 softtabstop=4

@@ -238,3 +238,5 @@ function smartcd_config() {
 
     unset -f setup_file generate_config read_yesno ask
 }
+
+# vim: filetype=sh autoindent expandtab shiftwidth=4 softtabstop=4
