@@ -29,6 +29,7 @@ install:
 	@echo
 	@echo "If this is your first time installing smartcd, run the following commands:"
 	@echo
+	@echo "    source ~/.smartcd/lib/core/arrays"
 	@echo "    source ~/.smartcd/lib/core/smartcd"
 	@echo "    smartcd config"
 	@echo
