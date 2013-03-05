@@ -42,3 +42,5 @@ function smartcd_helper() {
              *) echo "Usage: smartcd helper run <name> [args...]"
     esac
 }
+
+# vim: filetype=sh autoindent expandtab shiftwidth=4 softtabstop=4

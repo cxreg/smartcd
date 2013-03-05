@@ -85,3 +85,5 @@ function _smartcd_import() {
 
     IFS="$_old_ifs"
 }
+
+# vim: filetype=sh autoindent expandtab shiftwidth=4 softtabstop=4

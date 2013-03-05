@@ -157,3 +157,5 @@ function _smartcd_file_check() {
                     ;;
     esac
 }
+
+# vim: filetype=sh autoindent expandtab shiftwidth=4 softtabstop=4

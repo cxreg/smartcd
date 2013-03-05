@@ -32,3 +32,5 @@ case $action in
                 ;;
              *) echo "Usage: smartcd helper run perl-locallib ( activate | deactivate ) <local::lib base>";;
 esac
+
+# vim: filetype=sh autoindent expandtab shiftwidth=4 softtabstop=4

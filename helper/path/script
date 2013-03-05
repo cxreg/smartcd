@@ -30,3 +30,5 @@ case $action in
              ;;
           *) echo "Usage: smartcd helper run path ( append | prepend ) <path>";;
 esac
+
+# vim: filetype=sh autoindent expandtab shiftwidth=4 softtabstop=4

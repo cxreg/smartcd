@@ -199,3 +199,5 @@ EOF
                     ;;
     esac
 }
+
+# vim: filetype=sh autoindent expandtab shiftwidth=4 softtabstop=4

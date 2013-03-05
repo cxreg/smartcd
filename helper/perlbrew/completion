@@ -6,3 +6,5 @@ case $SMARTCD_COMP_CWORD in
     1) words="init";;
     *) ;; # Path completion is the default
 esac
+
+# vim: filetype=sh autoindent expandtab shiftwidth=4 softtabstop=4

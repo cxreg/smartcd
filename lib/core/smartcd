@@ -862,3 +862,5 @@ if [[ -n "$(fn_exists apush)" && -n "$(fn_exists autostash)" && -z "$SMARTCD_NOI
 else
     smartcd_initially_deferred=1
 fi
+
+# vim: filetype=sh autoindent expandtab shiftwidth=4 softtabstop=4

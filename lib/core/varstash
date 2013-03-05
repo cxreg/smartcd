@@ -401,3 +401,5 @@ if [[ -n "$smartcd_initially_deferred" && -n "$(fn_exists apush)" && -z "$SMARTC
     unset smartcd_skip_action
     unset smartcd_initially_deferred
 fi
+
+# vim: filetype=sh autoindent expandtab shiftwidth=4 softtabstop=4
