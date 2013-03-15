@@ -399,14 +399,10 @@ function _smartcd() {
 
     # If this is zsh and the user has chpwd enabled, it will fire a whole lot of times
     # during this.  Stash it and disable it until we're done.
-    if [[ -n $ZSH_VERSION && -n "$(fn_exists stash)" ]]; then
-        local varstash_dir="$wherestarted"
-        stash -f chpwd
-        stash -f chpwd_functions
-        unset -f chpwd 2>/dev/null
-        unset chpwd_functions 2>/dev/null
-        unset -v varstash_dir
-        local stashed_chpwd=1
+    if [[ -n $ZSH_VERSION ]]; then
+        local cd_flags="-q"
+    else
+        local cd_flags=""
     fi
 
     # Go there and get the fully qualified path.  Also, fail first if it's an
@@ -489,7 +485,7 @@ function _smartcd() {
         local varstash_dir="$smartcd_current_dir"
 
         if [[ -d "$smartcd_current_dir" ]]; then
-            builtin cd "$smartcd_current_dir"
+            builtin cd $cd_flags "$smartcd_current_dir"
         else
             echo "smartcd: leaving non-existent directory $smartcd_current_dir"
             local nodir=1
@@ -587,7 +583,7 @@ function _smartcd() {
         # apop in a sub-shell doesn't work
         local smartcd_current_dir="$(alast enter_stack)"
         apop enter_stack >/dev/null
-        builtin cd "$smartcd_current_dir"
+        builtin cd $cd_flags "$smartcd_current_dir"
 
         # Work from a copy of these hooks, and immediately stash and empty
         # the parent's data, so that any hooks or scripts are free to push
@@ -678,25 +674,12 @@ function _smartcd() {
 
     # First go to starting directory, as long as it still exists...
     if [[ -d "$wherestarted" ]]; then
-        builtin cd "$wherestarted"
-    fi
-
-    # ...restoring any chpwd hooks in the process, and allow them to fire once (now)...
-    if [[ -n $stashed_chpwd ]]; then
-        # However, if smartcd was called from a hook and we're still here, then that
-        # means that the chdir happened _before_ we started and thus the hook already
-        # fired.  So go there before re-adding the hooks.
-        if [[ -n $smartcd_skip_action ]]; then
-            builtin cd "$whereto"
-            local arrived_at_destination=1
-        fi
-        unstash chpwd
-        unstash chpwd_functions
+        builtin cd $cd_flags "$wherestarted"
     fi
 
     # ... and then jump to final directory to stay
     if [[ -z $arrived_at_destination ]]; then
-        builtin cd "$whereto"
+        builtin cd $cd_flags "$whereto"
     fi
 }
 
