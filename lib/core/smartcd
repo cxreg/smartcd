@@ -689,7 +689,7 @@ function _smartcd_hook() {
     # Skip this if we already ran smartcd for this directory
     if [[ "x$cwd" != "$_smartcd_last_run_for" ]]; then
         local smartcd_skip_action=1
-        smartcd cd "$cwd"
+        _smartcd true "$cwd"
     fi
 }
 
