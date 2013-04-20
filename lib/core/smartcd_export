@@ -75,6 +75,7 @@ function _smartcd_import() {
                                ;;
                             *)
                                line="${line# }"
+                               touch "$base/$file"
                                echo "$line" >> "$base/$file"
                                ;;
         esac
