@@ -48,6 +48,8 @@ function _smartcd_import() {
     local _old_ifs="$IFS"
     IFS=$'\n'
 
+    local base=$(_smartcd_base)
+
     if [[ -d "$base" ]]; then
         for file in $(command ls "$base"); do
             case $file in
