@@ -17,20 +17,24 @@ function smartcd_export() {
     while (( $(alen remaining_dirs) > 0 )); do
         dir=$(afirst remaining_dirs)
         ashift remaining_dirs >/dev/null
-        files="$(command ls $base/$dir)"
-        for entry in $files; do
-            if [[ -f "$base/$dir/$entry" ]]; then
-                echo "@ $dir/$entry"
-                local line=
-                while builtin read -r line; do
-                    echo " $line"
-                done < "$base/$dir/$entry"
-            elif [[ -d "$base/$dir/$entry" ]]; then
-                apush remaining_dirs "$dir/$entry"
-            else
-                echo "Skipping unknown file $base/$dir/$entry" >&2
-            fi
-        done
+        if [[ ! -d "$base/$dir" ]]; then
+           echo "Skipping non-existant $base/$dir" >&2
+        else
+           files="$(command ls $base/$dir)"
+           for entry in $files; do
+               if [[ -f "$base/$dir/$entry" ]]; then
+                   echo "@ $dir/$entry"
+                   local line=
+                   while builtin read -r line; do
+                       echo " $line"
+                   done < "$base/$dir/$entry"
+               elif [[ -d "$base/$dir/$entry" ]]; then
+                   apush remaining_dirs "$dir/$entry"
+               else
+                   echo "Skipping unknown file $base/$dir/$entry" >&2
+               fi
+           done
+        fi
     done
 
     IFS="$_old_ifs"
