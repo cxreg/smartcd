@@ -39,6 +39,7 @@ These are just a few examples of problems people are solving with smartcd.
   the source, you can:
 
     make install
+    source ~/.smartcd/lib/core/arrays
     source ~/.smartcd/lib/core/smartcd
     smartcd config
 
