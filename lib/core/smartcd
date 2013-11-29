@@ -807,9 +807,8 @@ function fn_exists() {
 
 function _smartcd_file() {
     if [[ -n $ZSH_VERSION ]]; then
-        # We need the third element because within anth or afirst, arrays is the
-        # first two due to the function call and the eval
-        local this_file="$(anth funcsourcetrace 3)"
+        setopt localoptions && setopt ksharrays
+        local this_file=${funcsourcetrace[0]}
         this_file="${this_file%:*}"
     else
         local this_file="$BASH_SOURCE"
