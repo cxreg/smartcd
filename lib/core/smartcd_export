@@ -17,20 +17,25 @@ function smartcd_export() {
     while (( $(alen remaining_dirs) > 0 )); do
         dir=$(afirst remaining_dirs)
         ashift remaining_dirs >/dev/null
-        files="$(command ls $base/$dir)"
-        for entry in $files; do
-            if [[ -f "$base/$dir/$entry" ]]; then
-                echo "@ $dir/$entry"
-                local line=
-                while builtin read -r line; do
-                    echo " $line"
-                done < "$base/$dir/$entry"
-            elif [[ -d "$base/$dir/$entry" ]]; then
-                apush remaining_dirs "$dir/$entry"
-            else
-                echo "Skipping unknown file $base/$dir/$entry" >&2
-            fi
-        done
+        # Skip directories never created
+        if [[ -d "$base/$dir" ]]; then
+            for entry in "$base/$dir/"*; do
+                local fn="${entry##*/}"
+                if [[ -f "$entry" ]]; then
+                    echo "@ $dir/$fn"
+                    local line=
+                    while builtin read -r line; do
+                        echo " $line"
+                    done < "$entry"
+                elif [[ -d "$entry" ]]; then
+                    apush remaining_dirs "$dir/$fn"
+                elif [[ "$entry" = "$base/$dir/*" ]]; then
+                    : # without nullglob the literal globbed string may appear; ignore it
+                else
+                    echo "Skipping unknown file $entry" >&2
+                fi
+            done
+        fi
     done
 
     IFS="$_old_ifs"
@@ -51,15 +56,16 @@ function _smartcd_import() {
     local base=$(_smartcd_base)
 
     if [[ -d "$base" ]]; then
-        for file in $(command ls "$base"); do
+        for file in "$base/"*; do
             case $file in
-                scripts|templates) command mkdir -p "$base/archive"
-                                   local backup=$(command mktemp -d "$base/archive/import-backup.XXXXXX")
-                                   if (( ${SMARTCD_QUIET:-0} == 0 )); then
-                                       echo "Old $base/$file found, moving to $backup"
-                                   fi
-                                   command mv "$base/$file" "$backup"
-                                   ;;
+                "$base/"scripts|"$base/"templates)
+                    command mkdir -p "$base/archive"
+                    local backup=$(command mktemp -d "$base/archive/import-backup.XXXXXX")
+                    if (( ${SMARTCD_QUIET:-0} == 0 )); then
+                        echo "Old $file found, moving to $backup"
+                    fi
+                    command mv "$file" "$backup"
+                    ;;
             esac
         done
 
