@@ -309,7 +309,11 @@ function unstash() {
         fi
         if [[ ( -n "$nostash" && -z "$unstashed" ) || ( -n "$unstashed" && -z "$unstashed_variable" ) ]]; then
             # Don't try to unset illegal variable names
-            if ! [[ $unstash_which =~ [^a-zA-Z0-9_] || $unstash_which =~ ^[0-9] ]]; then
+            if [[ $unstash_which =~ [^a-zA-Z0-9_] ]]; then 
+                false
+            elif [[ $unstash_which =~ ^[0-9] ]]; then
+                false
+            else
                 unset -v $unstash_which
             fi
         fi
