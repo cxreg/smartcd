@@ -96,6 +96,7 @@ function stash() {
         local stash_value=${stash_expression#*'='}
         stash_value=${stash_value//\\/\\\\}
         stash_value=${stash_value//\"/\\\"}
+        stash_value=${stash_value//\`/\\\`}
         stash_value=${stash_value//\$/\\\$}
 
         if [[ ( -n "$(eval echo '$__varstash_alias__'$stash_name)"    ||
