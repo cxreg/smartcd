@@ -9,7 +9,7 @@ source lib/core/arrays
 source lib/core/varstash
 source lib/core/smartcd
 
-plan_tests 12
+plan_tests 13
 
 # One tier
 dir=tmp_dir
@@ -94,6 +94,19 @@ is "_${output-_}" "_2 1" "ran two bash_leave scripts in correct order"
 mkdir deleted_dir
 output=$(smartcd cd deleted_dir; rmdir ../deleted_dir; smartcd cd .. 2>&1)
 unlike "_$output" "No such file or directory" "smartcd doesn't try to re-enter a deleted directory"
+
+
+if [[ -n $ZSH_VERSION ]]; then
+    echo "echo -n 1" | smartcd edit enter "$dir"
+    echo "echo -n 2" | smartcd edit enter "$dir2"
+    echo "echo -n 3" | smartcd edit leave "$dir2"
+    echo "echo 4" | smartcd edit leave "$dir"
+    smartcd setup chpwd-hook
+    output=$(cd "$dir2"; cd ../..)
+    like "${output:-_}" "1234" "zsh chpwd hook works"
+else
+    is 1 1 "not running zsh, no chpwd-hook"
+fi
 
 # Clean up
 rm -rf "$dir"
