@@ -1,7 +1,7 @@
 # Set up smartcd
 mkdir -p tmphome
 oldhome=$HOME
-export HOME=$(pwd)/tmphome
+export HOME="$(pwd)/tmphome"
 
 # Load testing library
 source t/tap-functions
@@ -13,37 +13,38 @@ plan_tests 12
 
 # One tier
 dir=tmp_dir
-mkdir -p $dir
-smartcd_dir=$HOME/.smartcd/scripts$(pwd)/$dir
-mkdir -p $smartcd_dir
+mkdir -p "$dir"
 
-echo -n >$smartcd_dir/bash_enter
+echo | smartcd edit enter "$dir"
 SMARTCD_QUIET=0
-output=$(smartcd cd $dir)
+output=$(smartcd cd "$dir")
 like "_${output-_}" "_smartcd: running" "smartcd informed user of script execution"
 SMARTCD_QUIET=1
-output=$(smartcd cd $dir)
+output=$(smartcd cd "$dir")
 is "_${output-_}_" "__" "quieted output"
 
-cat >$smartcd_dir/bash_enter <<EOF
+cat << EOF | smartcd edit enter "$dir"
 echo this is a test
 EOF
-output=$(smartcd cd $dir)
+output=$(smartcd cd "$dir")
 is "_$output" "_this is a test" "bash_enter executed successfully using smartcd"
 
-output=$(smartcd pushd $dir)
+output=$(smartcd pushd "$dir")
 like "${output-_}" "this is a test" "bash_enter executed successfully using smartcd pushd"
 
-rm $smartcd_dir/bash_enter
-cat >$smartcd_dir/bash_leave <<EOF
+echo -n | smartcd edit enter "$dir"
+cat << EOF | smartcd edit leave "$dir"
 echo this is a leaving test
 EOF
-output=$(smartcd cd $dir; smartcd cd ..)
-is "${output-_}" "this is a leaving test" "bash_leave executed successfully using smartcd"
+output=$(smartcd cd "$dir"; smartcd cd ..)
+is "${output:-_}" "this is a leaving test" "bash_leave executed successfully using smartcd"
 
-output=$(smartcd pushd $dir; smartcd popd)
+output=$(smartcd pushd "$dir"; smartcd popd)
 like "${output-_}" "this is a leaving test" "bash_leave executed successfully using smartcd popd"
-rm $smartcd_dir/bash_leave
+
+# Clean up
+echo | smartcd edit enter "$dir"
+echo | smartcd edit leave "$dir"
 
 linkdest="$(pwd)/$dir/destination"
 link="$dir/symlink"
@@ -72,19 +73,21 @@ echo 'echo -n "3 "' > "$smartcd_spacedir2/bash_leave"
 output=$(smartcd cd "$spacedir2"; smartcd cd ../..)
 is "${output-_}" "1 2 3 4" "could enter and leave a subdirectory of a directory with a space"
 
-dir2=$dir/another_dir
-smartcd_dir2=$smartcd_dir/another_dir
-mkdir -p $dir2
-mkdir -p $smartcd_dir2
-echo "echo -n \"1 \"" > $smartcd_dir/bash_enter
-echo "echo 2" > $smartcd_dir2/bash_enter
-output=$(smartcd cd $dir2; smartcd cd ../..)
+dir2="$dir/another_dir"
+mkdir -p "$dir2"
+echo "echo -n \"1 \"" | smartcd edit enter "$dir"
+echo "echo 2" | smartcd edit enter "$dir2"
+output=$(smartcd cd "$dir2"; smartcd cd ../..)
 is "_${output-_}" "_1 2" "ran two bash_enter scripts in correct order"
 
-rm $smartcd_dir/bash_enter
-rm $smartcd_dir2/bash_enter
-echo "echo 1" > $smartcd_dir/bash_leave
-echo "echo -n \"2 \"" > $smartcd_dir2/bash_leave
+# Clean up
+echo | smartcd edit enter "$dir"
+echo | smartcd edit leave "$dir"
+echo | smartcd edit enter "$dir2"
+echo | smartcd edit leave "$dir2"
+
+echo "echo 1" | smartcd edit leave "$dir"
+echo "echo -n \"2 \"" | smartcd edit leave "$dir2"
 output=$(smartcd cd $dir2; smartcd cd ../..)
 is "_${output-_}" "_2 1" "ran two bash_leave scripts in correct order"
 
@@ -93,7 +96,8 @@ output=$(smartcd cd deleted_dir; rmdir ../deleted_dir; smartcd cd .. 2>&1)
 unlike "_$output" "No such file or directory" "smartcd doesn't try to re-enter a deleted directory"
 
 # Clean up
-rm -rf $dir
+rm -rf "$dir"
+rm -rf "$dir2"
 rm -rf "$spacedir"
 rm -rf tmphome
 export HOME=$oldhome
