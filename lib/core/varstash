@@ -145,6 +145,7 @@ function stash() {
                 # source with "echo -e", we need to double-escape the backslashes (so 1 -> 4)
                 function_def=${function_def//\\/\\\\\\\\}
                 function_def=${function_def//\"/\\\"}
+                function_def=${function_def//\`/\\\`}
                 function_def=${function_def//\$/\\\$}
                 eval "__varstash_function__$stash_name=\"$function_def\""
                 local stashed=1
