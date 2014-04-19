@@ -259,7 +259,7 @@ These are just a few examples of problems people are solving with smartcd.
   action taken during its own cd.  If both projects are installed, RVM's cd()
   will call smartcd's, regardless of which order the two are set up.
 
-  RVM is available at http://beginrescueend.com/
+  RVM is available at https://rvm.io/
 
 
 ### STOP/START
