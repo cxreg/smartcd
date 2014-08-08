@@ -144,15 +144,14 @@ function _smartcd_file_check() {
            -e|edit) smartcd_edit $file "$dir";;
          -a|append) smartcd_append $file "$dir";;
     -l|show|cat|'') if [[ -f "$confdir/$file" ]]; then
-                        echo "$confdir/$file exists"
                         case $action in
-                           -l|show|cat) echo "-------------------------------------------------------------------------"
+                           -l|show|cat) echo "# ---8<--- begin $confdir/$file"
                                         command cat "$confdir/$file"
-                                        echo "-------------------------------------------------------------------------"
+                                        echo "# ---8<--- end $confdir/$file"
                                         ;;
                         esac
                     else
-                        echo "$confdir/$file does not exist"
+                        echo "No $file script for $dir"
                     fi
                     ;;
     esac

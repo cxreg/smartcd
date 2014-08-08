@@ -130,13 +130,12 @@ These are just a few examples of problems people are solving with smartcd.
     /home/user/.smartcd/scripts/usr/local/bin/bash_enter
 
     user@host:/usr/local/bin$ smartcd show leave
-    /home/user/.smartcd/scripts/usr/local/bin/bash_leave does not exist
+    No leave script for /usr/local/bin
 
     user@host:/usr/local/bin$ smartcd show enter
-    /home/user/.smartcd/scripts/usr/local/bin/bash_enter exists
-    -------------------------------------------------------------------------
+    # ---8<--- begin /home/user/.smartcd/scripts/usr/local/bin/bash_enter
     smartcd inform "testing"
-    -------------------------------------------------------------------------
+    # ---8<--- end /home/user/.smartcd/scripts/usr/local/bin/bash_enter
 
     user@host:/usr/local/bin$ smartcd edit enter
     --> edits ~/.smartcd/scripts/usr/local/bin/bash_enter
