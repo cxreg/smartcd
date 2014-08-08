@@ -124,7 +124,7 @@ These are just a few examples of problems people are solving with smartcd.
      /foo/bar/baz   leave     ~/.smartcd/scripts/foo/bar/baz/bash_leave
 
   You can edit and read these files with the smartcd command using the
-  "edit", "show", and "filename" actions.
+  "edit", "append", "show", and "filename" actions.
 
     user@host:/usr/local/bin$ smartcd filename enter
     /home/user/.smartcd/scripts/usr/local/bin/bash_enter
@@ -137,9 +137,14 @@ These are just a few examples of problems people are solving with smartcd.
     smartcd inform "testing"
     # ---8<--- end /home/user/.smartcd/scripts/usr/local/bin/bash_enter
 
+    # edit ~/.smartcd/scripts/usr/local/bin/bash_enter
     user@host:/usr/local/bin$ smartcd edit enter
-    --> edits ~/.smartcd/scripts/usr/local/bin/bash_enter
 
+    # truncate ~/.smartcd/scripts/usr/local/bin/bash_enter and replaces
+    # its contents with what is piped
+    user@host:/usr/local/bin$ echo "some-command" | smartcd edit enter
+
+    # add a line to ~/.smartcd/scripts/usr/local/bin/bash_enter
     user@host:/usr/local/bin$ echo "some-command" | smartcd edit enter
 
   One thing to note is that going from a directory to its child is not
@@ -321,7 +326,7 @@ These are just a few examples of problems people are solving with smartcd.
   and of course, if you want to be sure that this daemon is shut down properly
   if you simply log out or close your shell, you will want the exit hook as well
 
-    # in your .smartcd_config, see `smartcd config`
+    # in your ~/.smartcd_config, see `smartcd config`
     smartcd setup exit-hook
 
 
