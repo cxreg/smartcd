@@ -2,11 +2,13 @@ function smartcd_edit() {
     # Invoke the users editor (or vi) on the relevant file
     local type="$1"
     local dir="${2:-$(pwd)}"
+    local action=edit
+    [[ -n $append ]] && action=append
 
     case $type in
         bash_enter|bash_leave) local file=$type; type="${type#bash_}";;
                   enter|leave) local file="bash_$type";;
-                            *) echo "Usage: smartcd_edit ( enter | leave )"
+                            *) echo "Usage: smartcd_$action ( enter | leave )"
                                return
                                ;;
     esac
@@ -114,6 +116,30 @@ function smartcd_append() {
     smartcd_edit "$@"
 }
 
+function smartcd_delete() {
+    # Invoke the users editor (or vi) on the relevant file
+    local type="$1"
+    local dir="${2:-$(pwd)}"
+
+    case $type in
+                  enter|leave) local file="bash_$type";;
+                            *) echo "Usage: smartcd_delete ( enter | leave )"
+                               return
+                               ;;
+    esac
+
+
+    local base=$(_smartcd_base)
+    local smartcd_dir="$base/scripts$dir"
+
+    if [[ -f "$smartcd_dir/$file" ]]; then
+        echo "Removing $smartcd_dir/$file"
+        rm "$smartcd_dir/$file"
+    else
+        echo "No $type script for $dir"
+    fi
+}
+
 # _smartcd_file_check <type> <action> [<directory>]
 function _smartcd_file_check() {
     local type="$1"
@@ -140,10 +166,11 @@ function _smartcd_file_check() {
     fi
 
     case $action in
-           -h|help) echo "Usage: $type [ edit | show | filename ]";;
+           -h|help) echo "Usage: $type [ edit | append | delete | show | filename ]";;
        -f|filename) echo "$confdir/$file";;
            -e|edit) smartcd_edit $type "$dir";;
          -a|append) smartcd_append $type "$dir";;
+      -d|rm|delete) smartcd_delete $type "$dir";;
     -l|show|cat|'') if [[ -f "$confdir/$file" ]]; then
                         case $action in
                            -l|show|cat) echo "# ---8<--- begin $confdir/$file"

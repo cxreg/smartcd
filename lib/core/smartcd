@@ -180,7 +180,7 @@ function smartcd() {
         command="reenter"
     fi
 
-    local usage="Usage: smartcd ( edit | show | filename | helper | template | setup | config | export | import ) [args]"
+    local usage="Usage: smartcd ( edit | append | show | delete | filename | helper | template | setup | config | export | import ) [args]"
     case $command in
         -h|help|'') echo $usage;;
      cd|pushd|popd) shift; _smartcd $command "$@"; return $?;;
@@ -189,6 +189,7 @@ function smartcd() {
                     _smartcd cd "$dir"
                     ;;
      edit|show|cat|\
+         rm|delete|\
    append|filename) shift; local file=$1; shift
                     local type
                     case $file in
