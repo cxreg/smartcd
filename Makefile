@@ -29,7 +29,7 @@ install:
 	@echo
 	@echo "If this is your first time installing smartcd, run the following commands:"
 	@echo
-	@echo "    source ~/.smartcd/lib/core/smartcd"
+	@echo "    source load_smartcd"
 	@echo "    smartcd config"
 	@echo
 	@echo "See the README file for ideas about what you can do with it"

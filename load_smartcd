@@ -1,0 +1,18 @@
+#!/bin/bash
+
+if [[ $0 =~ load_smartcd ]]; then
+    echo "This cannot be run as a command, please run"
+    echo
+    echo "    source load_smartcd"
+    exit 1
+fi
+
+# Just loading ~/.smartcd_config would be enough if it
+# already exists, but for new installs it may not
+if [[ -f $HOME/.smartcd/lib/core/smartcd ]]; then
+    # TODO: handle system-wide install?
+    source $HOME/.smartcd/lib/core/smartcd
+    [[ -f $HOME/.smartcd_config ]] && source $HOME/.smartcd_config
+else
+    echo 'smartcd not installed yet!  Run "make install" or follow the README instructions'
+fi

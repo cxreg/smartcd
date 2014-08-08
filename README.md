@@ -39,7 +39,7 @@ These are just a few examples of problems people are solving with smartcd.
   the source, you can:
 
     make install
-    source ~/.smartcd/lib/core/smartcd
+    source load_smartcd
     smartcd config
 
   However, if you would rather skip all that and simply have it install itself,
