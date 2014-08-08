@@ -190,11 +190,13 @@ function smartcd() {
                     ;;
      edit|show|cat|\
    append|filename) shift; local file=$1; shift
+                    local type
                     case $file in
-                                   enter|leave) _smartcd_file_check bash_$file $command  "$@";;
-                         bash_enter|bash_leave) _smartcd_file_check $file $command  "$@";;
+                                   enter|leave) type="$file";;
+                         bash_enter|bash_leave) type="${file#bash_}";;
                                              *) echo "Usage: smartcd $command ( enter | leave )";;
                     esac
+                    [[ -n $type ]] && _smartcd_file_check $type $command "$@"
                     ;;
           template) shift; smartcd_template "$@";;
              setup) shift; local setup=$1; shift;
@@ -775,11 +777,11 @@ function _smartcd_exit_trap() {
 }
 
 function bash_enter() {
-    _smartcd_file_check bash_enter "$@"
+    _smartcd_file_check enter "$@"
 }
 
 function bash_leave() {
-    _smartcd_file_check bash_leave "$@"
+    _smartcd_file_check leave "$@"
 }
 
 function fn_exists() {

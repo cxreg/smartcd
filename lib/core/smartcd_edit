@@ -1,11 +1,11 @@
 function smartcd_edit() {
     # Invoke the users editor (or vi) on the relevant file
-    local file="$1"
+    local type="$1"
     local dir="${2:-$(pwd)}"
 
-    case $file in
-        bash_enter|bash_leave) local type=${file#bash_};;
-                  enter|leave) local type=$file; file="bash_$file";;
+    case $type in
+        bash_enter|bash_leave) local file=$type; type="${type#bash_}";;
+                  enter|leave) local file="bash_$type";;
                             *) echo "Usage: smartcd_edit ( enter | leave )"
                                return
                                ;;
@@ -114,9 +114,9 @@ function smartcd_append() {
     smartcd_edit "$@"
 }
 
-# _smartcd_file_check <file> <action> [<directory>]
+# _smartcd_file_check <type> <action> [<directory>]
 function _smartcd_file_check() {
-    local file="$1"
+    local type="$1"
     local action="$2"
     local dir="$3"
 
@@ -133,16 +133,17 @@ function _smartcd_file_check() {
 
     local base=$(_smartcd_base)
     local confdir="$base/scripts$dir"
+    local file="bash_$type"
 
     if [[ -f "$base$dir/$file" ]]; then
         smartcd_upgrade_database
     fi
 
     case $action in
-           -h|help) echo "Usage: $file [ edit | show | filename ]";;
+           -h|help) echo "Usage: $type [ edit | show | filename ]";;
        -f|filename) echo "$confdir/$file";;
-           -e|edit) smartcd_edit $file "$dir";;
-         -a|append) smartcd_append $file "$dir";;
+           -e|edit) smartcd_edit $type "$dir";;
+         -a|append) smartcd_append $type "$dir";;
     -l|show|cat|'') if [[ -f "$confdir/$file" ]]; then
                         case $action in
                            -l|show|cat) echo "# ---8<--- begin $confdir/$file"
@@ -151,7 +152,7 @@ function _smartcd_file_check() {
                                         ;;
                         esac
                     else
-                        echo "No $file script for $dir"
+                        echo "No $type script for $dir"
                     fi
                     ;;
     esac
