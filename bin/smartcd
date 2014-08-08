@@ -1,6 +1,8 @@
 #!/bin/bash
 #
-# This script will help you set up smartcd if invoked accidentally
+# This script will help you set up smartcd if invoked accidentally.  It can
+# also be invoked in situations such as "sudo smartcd edit --system enter",
+# where escalating privilege causes you to lose your environment
 #
 
 function canonicalize() {
@@ -24,33 +26,41 @@ export SMARTCD_NOINITIAL=1
 export SMARTCD_NOEXIT=1
 source $smartcd_lib_path
 
-if [[ $1 == "config" ]]; then
-    SMARTCD_LOADNOW=0
-    smartcd config
+case "$1" in
+        config) SMARTCD_LOADNOW=0
+                smartcd config
 
-    echo
-    echo "smartcd is now configured, please start a new shell or run the following command"
-    echo
-    echo "    source $smartcd_lib_path"
+                echo
+                echo "smartcd is now configured, please start a new shell or run the following command"
+                echo
+                echo "    source $smartcd_lib_path"
+                ;;
 
-else
-    echo -n "You have not yet configured smartcd.  Would you like to do so now? [Y/n] "
-    read answer
+   edit|append) command="$1"
+                shift
+                source $smartcd_lib_path
+                smartcd command "$@"
+                ;;
 
-    if [[ $answer == "y" || $answer == "Y" || $answer == "" ]]; then
-        SMARTCD_LOADNOW=1
-        smartcd config
+             *)
+                echo -n "You have not yet configured smartcd.  Would you like to do so now? [Y/n] "
+                read answer
 
-        # Run command that was originally invoked
-        if [[ -n $1 ]]; then
-            smartcd "$@"
-        fi
+                case $answer in
+                    y|Y|"") SMARTCD_LOADNOW=1
+                            smartcd config
 
-        echo
-        echo "smartcd is now configured, please start a new shell or run the following command"
-        echo
-        echo "    source $smartcd_lib_path"
-    else
-        echo "Aborting"
-    fi
-fi
+                            # Run command that was originally invoked
+                            if [[ -n $1 ]]; then
+                                smartcd "$@"
+                            fi
+
+                            echo
+                            echo "smartcd is now configured, please start a new shell or run the following command"
+                            echo
+                            echo "    source $smartcd_lib_path"
+                            ;;
+                        *) echo "Aborting";;
+                esac
+                ;;
+esac
