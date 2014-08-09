@@ -389,7 +389,8 @@ function varstash_edit() {
     fi
 
     if [[ -n "$can_run" ]]; then
-        _smartcd_file_check "$file" edit "$dir"
+        # XXX - no support for "--host" or "--system" with this (yet?)
+        _smartcd_file_check "$file" "global" "" edit "$dir"
     else
         echo "smartcd not loaded, cannot run smartcd_edit"
     fi

@@ -1,9 +1,7 @@
+# wrapper function to preserve legacy usage
 function smartcd_edit() {
-    # Invoke the users editor (or vi) on the relevant file
     local type="$1"
     local dir="${2:-$(pwd)}"
-    local action=edit
-    [[ -n $append ]] && action=append
 
     case $type in
         bash_enter|bash_leave) local file=$type; type="${type#bash_}";;
@@ -13,13 +11,34 @@ function smartcd_edit() {
                                ;;
     esac
 
+    # XXX - global only
     local base=$(_smartcd_base)
-
     if [[ -f "$base$dir/$file" ]]; then
         smartcd_upgrade_database
     fi
-
     local smartcd_dir="$base/scripts$dir"
+
+    _smartcd_edit "$type" "global" "$dir" "$file" "$smartcd_dir"
+}
+
+function _smartcd_edit() {
+    # Invoke the users editor (or vi) on the relevant file
+    local type="$1"
+    local whence="$2"
+    local dir="$3"
+    local file="$4"
+    local smartcd_dir="$5"
+    local action=edit
+
+    local smartcd_file="$smartcd_dir/$file"
+
+    if [[ -f $smartcd_file && ! -w "$smartcd_file" ]]; then
+        echo "$smartcd_file is not writable, do you need elevated privileges?"
+        return
+    fi
+
+    [[ -n $append ]] && action=append
+
     if [[ ! -d "$smartcd_dir" ]]; then
         command mkdir -p "$smartcd_dir"
     fi
@@ -32,7 +51,7 @@ function smartcd_edit() {
         local tmpfile=$(mktemp /tmp/smartcd-edit.XXXXXX) line=
         local _old_ifs="$IFS"
         IFS=$'\n'
-        if [[ -f "$smartcd_dir/$file" ]]; then
+        if [[ -f "$smartcd_file" ]]; then
             while builtin read -r line; do
                 case $line in
                     # extremely hinky replacement here, very whitespace sensitive
@@ -43,9 +62,9 @@ function smartcd_edit() {
                                             ;;
                                         *) echo "$line" >> "$tmpfile";;
                 esac
-            done < "$smartcd_dir/$file"
+            done < "$smartcd_file"
         else
-            if [[ $type == "enter" ]]; then
+            if [[ $type = "enter" ]]; then
                 local enter_usage="$(cat <<EOF
   Some examples are editing your \$PATH or creating
 # a temporary alias:
@@ -84,15 +103,15 @@ EOF
         IFS=$'\n'
         eval $mon_on
 
-        if [[ $? == 0 ]]; then
-            echo -n > "$smartcd_dir/$file"
+        if [[ $? = 0 ]]; then
+            echo -n > "$smartcd_file"
             if [[ -s "$tmpfile" ]]; then
                 local writing=1
                 while builtin read -r line; do
                     case $line in
                         "# begin smartcd template"*) writing=;;
                         "# end smartcd template"*) writing=1;;
-                                                *) if [[ -n $writing ]]; then echo "$line" >> "$smartcd_dir/$file"; fi;;
+                                                *) if [[ -n $writing ]]; then echo "$line" >> "$smartcd_file"; fi;;
                     esac
                 done < "$tmpfile"
             fi
@@ -100,51 +119,47 @@ EOF
         IFS="$_old_ifs"
         command rm "$tmpfile"
     elif [[ -n $append ]]; then
-        command cat >> "$smartcd_dir/$file"
+        command cat >> "$smartcd_file"
     else
-        command cat > "$smartcd_dir/$file"
+        command cat > "$smartcd_file"
     fi
 
-    if [[ -f "$smartcd_dir/$file" && ! -s "$smartcd_dir/$file" ]]; then
+    if [[ -f "$smartcd_file" && ! -s "$smartcd_file" ]]; then
         # Delete any file that is left empty
-        command rm "$smartcd_dir/$file"
+        command rm "$smartcd_file"
     fi
 }
 
-function smartcd_append() {
+function _smartcd_append() {
     local append=1
-    smartcd_edit "$@"
+    _smartcd_edit "$@"
 }
 
-function smartcd_delete() {
-    # Invoke the users editor (or vi) on the relevant file
+function _smartcd_delete() {
+    # Delete the file if it exists
     local type="$1"
-    local dir="${2:-$(pwd)}"
-
-    case $type in
-                  enter|leave) local file="bash_$type";;
-                            *) echo "Usage: smartcd_delete ( enter | leave )"
-                               return
-                               ;;
-    esac
-
-
-    local base=$(_smartcd_base)
-    local smartcd_dir="$base/scripts$dir"
+    local whence="$2"
+    local system="$3"
+    local dir="$4"
+    local file="$5"
+    local smartcd_dir="$6"
 
     if [[ -f "$smartcd_dir/$file" ]]; then
         echo "Removing $smartcd_dir/$file"
         rm "$smartcd_dir/$file"
     else
-        echo "No $type script for $dir"
+        [[ -n $system ]] && local issystem="system "
+        echo "No $issystem$whence $type script for $dir"
     fi
 }
 
 # _smartcd_file_check <type> <action> [<directory>]
 function _smartcd_file_check() {
     local type="$1"
-    local action="$2"
-    local dir="$3"
+    local whence="$2"
+    local system="$3"
+    local action="$4"
+    local dir="$5"
 
     if [[ -n $dir ]]; then
         # canonicalize
@@ -157,32 +172,56 @@ function _smartcd_file_check() {
         dir="$(pwd)"
     fi
 
-    local base=$(_smartcd_base)
-    local confdir="$base/scripts$dir"
+    if [[ -n $system ]]; then
+        local base=$(_smartcd_sysdir)
+    else
+        local base=$(_smartcd_base)
+    fi
+    if [[ $whence = "host" ]]; then
+        local host=${SMARTCD_HOSTNAME:-$(hostname)}
+        base="$base/hosts/$host"
+    fi
     local file="bash_$type"
 
     if [[ -f "$base$dir/$file" ]]; then
         smartcd_upgrade_database
     fi
 
-    case $action in
-           -h|help) echo "Usage: $type [ edit | append | delete | show | filename ]";;
-       -f|filename) echo "$confdir/$file";;
-           -e|edit) smartcd_edit $type "$dir";;
-         -a|append) smartcd_append $type "$dir";;
-      -d|rm|delete) smartcd_delete $type "$dir";;
-    -l|show|cat|'') if [[ -f "$confdir/$file" ]]; then
-                        case $action in
-                           -l|show|cat) echo "# ---8<--- begin $confdir/$file"
-                                        command cat "$confdir/$file"
-                                        echo "# ---8<--- end $confdir/$file"
-                                        ;;
-                        esac
-                    else
-                        echo "No $type script for $dir"
-                    fi
-                    ;;
-    esac
+    if [[ $whence = "all" ]]; then
+        case $action in
+              -f|filename|\
+             -d|rm|delete|\
+            -l|show|cat|'') _smartcd_file_check "$type" "global" "true" "$action" "$dir"
+                            _smartcd_file_check "$type" "host" "true" "$action" "$dir"
+                            _smartcd_file_check "$type" "global" "" "$action"
+                            _smartcd_file_check "$type" "host" "" "$action"
+                            ;;
+                         *) echo "--all not supported for smartcd $action"
+                            return
+                            ;;
+        esac
+    else
+        local smartcd_dir="$base/scripts$dir"
+        case $action in
+                   -h|help) echo "Usage: $type [edit|append|delete|show|filename]";;
+               -f|filename) echo "$smartcd_dir/$file";;
+                   -e|edit) _smartcd_edit "$type" "$whence" "$dir" "$file" "$smartcd_dir";;
+                 -a|append) _smartcd_append "$type" "$whence" "$dir" "$file" "$smartcd_dir";;
+              -d|rm|delete) _smartcd_delete "$type" "$whence" "$system" "$dir" "$file" "$smartcd_dir";;
+            -l|show|cat|'') if [[ -f "$smartcd_dir/$file" ]]; then
+                                case $action in
+                                   -l|show|cat) echo "# ---8<--- begin $smartcd_dir/$file"
+                                                command cat "$smartcd_dir/$file"
+                                                echo "# ---8<--- end $smartcd_dir/$file"
+                                                ;;
+                                esac
+                            else
+                                [[ -n $system ]] && local issystem="system "
+                                echo "No $issystem$whence $type script for $dir"
+                            fi
+                            ;;
+        esac
+    fi
 }
 
 # vim: filetype=sh autoindent expandtab shiftwidth=4 softtabstop=4

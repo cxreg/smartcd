@@ -53,7 +53,7 @@ These are just a few examples of problems people are solving with smartcd.
   Once it is installed, you're ready to go.  All actions are available through
   the `smartcd` command.
 
-    Usage: smartcd ( edit | append | show | delete | filename | helper | template | setup | config ) [args]
+    Usage: smartcd (edit|append|show|delete|filename|helper|template|setup|config) [args]
 
   If you run `smartcd edit enter`, it will launch your editor to allow you to
   begin creating a script for the current directory which will run when you

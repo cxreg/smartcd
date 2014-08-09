@@ -116,12 +116,29 @@ EOF
                         echo "Usage: smartcd template show <name>"
                     fi
                     ;;
-     install|-i)    local name="$1"; shift
+     install|-i)    local whence="global"
+                    if [[ -n $SMARTCD_DEFAULT_LOCATION ]]; then
+                        whence=$SMARTCD_DEFAULT_LOCATION
+                    fi
+                    local system=
+                    while [[ $1 =~ ^-- ]]; do
+                        opt="$1"
+                        case $opt in
+                              --host) whence="host";;
+                            --global) whence="global";;
+                            --system) system="true";;
+                                   *) echo "$opt unknown"
+                                      return
+                                      ;;
+                        esac
+                        shift
+                    done
+
+                    local name="$1"
                     if [[ -n $name ]]; then
                         if [[ -f "$base/templates/$name" ]]; then
                             local current_dir=$(pwd)
-                            local smartcd_dir="$base/scripts$current_dir"
-                            command mkdir -p "$smartcd_dir"
+
                             local mode= line=
                             while builtin read -r line; do
                                 if [[ $line =~ "Enter any bash_enter commands" ]]; then
@@ -134,16 +151,16 @@ EOF
                                 fi
                                 if [[ "$mode" == "enter" ]]; then
                                     if [[ -z "$notified_enter" ]]; then
-                                        echo "Configuring $smartcd_dir/bash_enter from template $name"
+                                        echo "Configuring $whence enter script from template $name"
                                         local notified_enter=1
                                     fi
-                                    echo "$line" >> "$smartcd_dir/bash_enter"
+                                    echo "$line" | _smartcd_file_check "enter" "$whence" "$system" "append" "$current_dir"
                                 elif [[ "$mode" == "leave" ]]; then
                                     if [[ -z "$notified_leave" ]]; then
-                                        echo "Configuring $smartcd_dir/bash_leave from template $name"
+                                        echo "Configuring $whence leave script from template $name"
                                         local notified_leave=1
                                     fi
-                                    echo "$line" >> "$smartcd_dir/bash_leave"
+                                    echo "$line" | _smartcd_file_check "leave" "$whence" "$system" "append" "$current_dir"
                                 fi
                             done < "$base/templates/$name"
                         else
@@ -189,13 +206,13 @@ EOF
                             echo "Template $name not found"
                         fi
                     else
-                        echo "Usage: smartcd template run <name> ( enter | leave )"
+                        echo "Usage: smartcd template run <name> (enter|leave)"
                     fi
                     ;;
-             '')    echo "Usage: smartcd template ( edit | create | list | show | run | install | delete ) [args]"
+             '')    echo "Usage: smartcd template (edit|create|list|show|run|install [--host|--global] [--system]| delete) [args]"
                     ;;
               *)    echo "Unknown action $action."
-                    echo "Usage: smartcd template ( edit | create | list | show | run | install | delete ) [args]"
+                    echo "Usage: smartcd template (edit|create|list|show|run|install [--host|--global] [--system]|delete ) [args]"
                     ;;
     esac
 }

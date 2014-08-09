@@ -36,7 +36,8 @@ case "$1" in
                 echo "    source $smartcd_lib_path"
                 ;;
 
-   edit|append) command="$1"
+  edit|append|\
+        delete) command="$1"
                 shift
                 source $smartcd_lib_path
                 smartcd $command "$@"
