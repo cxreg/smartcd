@@ -497,6 +497,8 @@ function _smartcd() {
         apop leave_stack >/dev/null
     done
 
+    local host=${SMARTCD_HOSTNAME:-$(hostname)}
+
     # Run leave_stack in lowest to highest
     local stack_size=$(alen leave_stack)
     : ${stack_size:=0}
@@ -525,20 +527,30 @@ function _smartcd() {
         # able to chdir there, but the user is notified that this occurred so they
         # can check things out
 
-        # 1) Run any system-wide scripts
+        # 1) Run system-wide global leave script
         local sysdir=$(_smartcd_sysdir)
-        if [[ -f "$sysdir/scripts$smartcd_current_dir/bash_leave" ]]; then
+        local confdir="$sysdir/scripts$smartcd_current_dir"
+        if [[ -f "$confdir/bash_leave" ]]; then
             if (( ${SMARTCD_QUIET:-0} == 0 )); then
-                echo "smartcd: running $sysdir/scripts$smartcd_current_dir/bash_leave"
+                echo "smartcd: running $confdir/bash_leave"
             fi
-            _smartcd_exec_file "$sysdir/scripts$smartcd_current_dir/bash_leave" "$smartcd_current_dir"
+            _smartcd_exec_file "$confdir/bash_leave" "$smartcd_current_dir"
         fi
 
-        # 2) Run ~/.smartcd scripts
+        # 2) Run system-wide host-local leave script
+        confdir="$sysdir/hosts/$host/scripts$smartcd_current_dir"
+        if [[ -f "$confdir/bash_leave" ]]; then
+            if (( ${SMARTCD_QUIET:-0} == 0 )); then
+                echo "smartcd: running $confdir/bash_leave"
+            fi
+            _smartcd_exec_file "$confdir/bash_leave" "$smartcd_current_dir"
+        fi
+
+        # 3) Run user's global leave script
         if [[ -f "$base$smartcd_current_dir/bash_leave" ]]; then
             smartcd_upgrade_database
         fi
-        local confdir="$base/scripts$smartcd_current_dir"
+        confdir="$base/scripts$smartcd_current_dir"
         if [[ -f "$confdir/bash_leave" ]]; then
             if (( ${SMARTCD_QUIET:-0} == 0 )); then
                 echo "smartcd: running $confdir/bash_leave"
@@ -550,7 +562,20 @@ function _smartcd() {
             unset -v _inode_skip
         fi
 
-        # 3) Detect .bash_leave and either notify or run
+        # 4) Run user's host-local leave script
+        confdir="$base/hosts/$host/scripts$smartcd_current_dir"
+        if [[ -f "$confdir/bash_leave" ]]; then
+            if (( ${SMARTCD_QUIET:-0} == 0 )); then
+                echo "smartcd: running $confdir/bash_leave"
+            fi
+            _smartcd_check_inode "$smartcd_current_dir"
+            if [[ -z $_inode_skip ]]; then
+                _smartcd_exec_file "$confdir/bash_leave" "$smartcd_current_dir"
+            fi
+            unset -v _inode_skip
+        fi
+
+        # 5) Detect .bash_leave and either notify or run
         if [[ -z "$nodir" && -f .bash_leave ]]; then
             if [[ -n $SMARTCD_LEGACY ]]; then
                 if (( ${SMARTCD_QUIET:-0} == 0 )); then
@@ -581,14 +606,14 @@ function _smartcd() {
             fi
         fi
 
-        # 4) Leave hook(s)
+        # 6) Leave hook(s)
         local hook_array=$(_mangle_var smartcd_onleave_callbacks)
         while (( $(alen $hook_array) >= 1 )); do
             ashift $hook_array >/dev/null
             eval "$_ashift_return"
         done
 
-        # 5) Autounstash
+        # 7) Autounstash
         if [[ -n "$(fn_exists autounstash)" ]]; then
             autounstash
         fi
@@ -637,20 +662,30 @@ function _smartcd() {
             eval "$cmd"
         done
 
-        # 1) Run any system-wide scripts
+        # 1) Run system-wide global enter script
         local sysdir=$(_smartcd_sysdir)
-        if [[ -f "$sysdir/scripts$smartcd_current_dir/bash_enter" ]]; then
+        local confdir="$sysdir/scripts$smartcd_current_dir"
+        if [[ -f "$confdir/bash_enter" ]]; then
             if (( ${SMARTCD_QUIET:-0} == 0 )); then
-                echo "smartcd: running $sysdir/scripts$smartcd_current_dir/bash_enter"
+                echo "smartcd: running $confdir/bash_enter"
             fi
-            _smartcd_exec_file "$sysdir/scripts$smartcd_current_dir/bash_enter" "$smartcd_current_dir"
+            _smartcd_exec_file "$confdir/bash_enter" "$smartcd_current_dir"
         fi
 
-        # 2) Run ~/.smartcd scripts
-        if [[ -f "$base$smartcd_current_dir/bash_leave" ]]; then
+        # 2) Run system-wide host-local enter script
+        confdir="$sysdir/hosts/$host/scripts$smartcd_current_dir"
+        if [[ -f "$confdir/bash_enter" ]]; then
+            if (( ${SMARTCD_QUIET:-0} == 0 )); then
+                echo "smartcd: running $confdir/bash_enter"
+            fi
+            _smartcd_exec_file "$confdir/bash_enter" "$smartcd_current_dir"
+        fi
+
+        # 3) Run user's global enter script
+        if [[ -f "$base$smartcd_current_dir/bash_enter" ]]; then
             smartcd_upgrade_database
         fi
-        local confdir="$base/scripts$smartcd_current_dir"
+        confdir="$base/scripts$smartcd_current_dir"
         if [[ -f "$confdir/bash_enter" ]]; then
             if (( ${SMARTCD_QUIET:-0} == 0 )); then
                 echo "smartcd: running $confdir/bash_enter"
@@ -662,7 +697,20 @@ function _smartcd() {
             unset -v _inode_skip
         fi
 
-        # 3) Detect .bash_enter and either notify or run
+        # 4) Run user's host-local enter script
+        confdir="$base/hosts/$host/scripts$smartcd_current_dir"
+        if [[ -f "$confdir/bash_enter" ]]; then
+            if (( ${SMARTCD_QUIET:-0} == 0 )); then
+                echo "smartcd: running $confdir/bash_enter"
+            fi
+            _smartcd_check_inode "$smartcd_current_dir"
+            if [[ -z $_inode_skip ]]; then
+                _smartcd_exec_file "$confdir/bash_enter" "$smartcd_current_dir"
+            fi
+            unset -v _inode_skip
+        fi
+
+        # 5) Detect .bash_enter and either notify or run
         if [[ -f .bash_enter ]]; then
             if [[ -n $SMARTCD_LEGACY ]]; then
                 if (( ${SMARTCD_QUIET:-0} == 0 )); then
