@@ -292,7 +292,7 @@ function _smartcd_load() {
 
 function _smartcd_exec_file() {
     local file="$1"; shift
-    local contents="$(command cat "$file")"
+    local contents="$(<$file)"
     _smartcd_exec "$contents" "$@"
 }
 
@@ -314,7 +314,7 @@ function _smartcd_check_inode() {
     local base=$(_smartcd_base)
     local inode=$(command ls -di "$dir" | command awk '{print $1}')
     if [[ -f "$base/inodes$dir.inode" ]]; then
-        prev=$(command cat "$base/inodes$dir.inode")
+        prev="$(<$base/inodes$dir.inode)"
         if [[ $prev != "*" && $inode != $prev ]]; then
             echo "WARNING!  Possibly outdated scripts detected, not running them.  These"
             echo "scripts were created for a directory which has been deleted or replaced,"
@@ -538,7 +538,7 @@ function _smartcd() {
             elif [[ -n $SMARTCD_AUTOMIGRATE ]]; then
                 echo "Automatically migrating \"$smartcd_current_dir/.bash_leave\" to \"$confdir/bash_leave\""
                 command mkdir -p "$confdir"
-                command cat "$smartcd_current_dir/.bash_leave" >> "$confdir/bash_leave"
+                echo "$(<$smartcd_current_dir/.bash_leave)" >> "$confdir/bash_leave"
                 command rm "$smartcd_current_dir/.bash_leave"
             elif (( ${SMARTCD_QUIET:-0} == 0 )); then
                 echo "############################################################################"
@@ -650,7 +650,7 @@ function _smartcd() {
             elif [[ -n $SMARTCD_AUTOMIGRATE ]]; then
                 echo "Automatically migrating \"$smartcd_current_dir/.bash_enter\" to \"$confdir/bash_enter\""
                 command mkdir -p "$confdir"
-                command cat "$smartcd_current_dir/.bash_enter" >> "$confdir/bash_enter"
+                echo "$(<$smartcd_current_dir/.bash_enter)" >> "$confdir/bash_enter"
                 command rm "$smartcd_current_dir/.bash_enter"
             elif (( ${SMARTCD_QUIET:-0} == 0 )); then
                 echo "############################################################################"
