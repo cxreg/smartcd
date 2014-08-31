@@ -1,10 +1,19 @@
 #!/bin/bash
 
-if [[ $0 =~ load_smartcd ]]; then
-    echo "This cannot be run as a command, please run"
-    echo
-    echo "    source load_smartcd"
-    exit 1
+if [[ -n $ZSH_VERSION ]]; then
+    if [[ $_ != $0 ]]; then
+        echo "This cannot be run as a command, please run"
+        echo
+        echo "    source load_smartcd"
+        exit 1
+    fi
+else
+    if [[ $0 =~ load_smartcd ]]; then
+        echo "This cannot be run as a command, please run"
+        echo
+        echo "    source load_smartcd"
+        exit 1
+    fi
 fi
 
 # Just loading ~/.smartcd_config would be enough if it
