@@ -24,35 +24,54 @@ function _smartcd_completion() {
     local words
     if [[ $COMP_CWORD == 1 ]]; then
         words="cd pushd popd setup config template edit show filename export import reenter inform helper on-prompt"
-    elif [[ $COMP_CWORD == 2 ]]; then
-        case $prev in
-                         setup) words="cd pushd popd prompt-hook chpwd-hook exit-hook completion";;
-                      template) words="edit create list show run install delete";;
-     append|edit|show|filename) words="enter leave";;
-                        helper) words="run";;
-        esac
-    elif [[ $COMP_CWORD == 3 ]]; then
-        case "${COMP_WORDS[COMP_CWORD-2]}" in
-            template) case $prev in
-                            edit|show|run|install|delete) words="$(smartcd template list)";;
-                      esac
-                      ;;
-              helper) case $prev in
-                            run) local _old_ifs="$IFS"
-                                 IFS=$'\n'
-                                 words="$(command ls $base/helper)"
-                                 IFS="$_old_ifs"
+    else
+        case "${COMP_WORDS[1]}" in
+                          setup) case $COMP_CWORD in
+                                   2) words="cd pushd popd prompt-hook chpwd-hook exit-hook completion";;
+                                 esac
                                  ;;
-                      esac
-                      ;;
+                       template) case $COMP_CWORD in
+                                   2) words="edit create list show run install delete";;
+                                   3) case $prev in
+                                        edit|show|run|install|delete) words="$(smartcd template list)";;
+                                      esac
+                                      ;;
+                                 esac
+                                 ;;
+      append|edit|show|filename) case $COMP_CWORD in
+                                   2) words="enter leave --system --host --global";;
+                                   3) case $prev in
+                                              --system) words="enter leave --host --global";;
+                                       --host|--global) words="enter leave --system";;
+                                      esac
+                                      ;;
+                                   4) case $prev in
+                                       --system|--host|--global) words="enter leave";;
+                                      esac
+                                 esac
+                                 ;;
+                         helper) case $COMP_CWORD in
+                                   2) words="run";;
+                                   3) case $prev in
+                                        run) local _old_ifs="$IFS"
+                                             IFS=$'\n'
+                                             words="$(command ls $base/helper)"
+                                             IFS="$_old_ifs"
+                                             ;;
+                                      esac
+                                      ;;
+                                   *) if [[ ${COMP_WORDS[1]} == "helper" && ${COMP_WORDS[2]} == "run" ]]; then
+                                        local helper="${COMP_WORDS[3]}"
+                                        if [[ -f "$base/helper/$helper/completion" ]]; then
+                                          # Pass unparsed tokens as arguments
+                                          local SMARTCD_COMP_CWORD=$(( $COMP_CWORD - 3))
+                                          source "$base/helper/$helper/completion" "${COMP_WORDS[@]:4}"
+                                        fi
+                                      fi
+                                      ;;
+                                 esac
+                                 ;;
         esac
-    elif (( $COMP_CWORD >= 4 )) && [[ ${COMP_WORDS[1]} == "helper" && ${COMP_WORDS[2]} == "run" ]]; then
-        local helper="${COMP_WORDS[3]}"
-        if [[ -f "$base/helper/$helper/completion" ]]; then
-            # Pass unparsed tokens as arguments
-            local SMARTCD_COMP_CWORD=$(( $COMP_CWORD - 3))
-            source "$base/helper/$helper/completion" "${COMP_WORDS[@]:4}"
-        fi
     fi
 
     COMPREPLY=( $(compgen -W "$words" -- "$cur") )
