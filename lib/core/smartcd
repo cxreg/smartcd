@@ -1,4 +1,5 @@
 ################################################################################
+
 # smartcd - cd with some oomph
 #
 #   Copyright (c) 2009,2012 Dave Olszewski <cxreg@pobox.com>
@@ -203,7 +204,7 @@ function smartcd() {
                             --global) whence="global";;
                             --system) system="true";;
                                --all) whence="all"; system="both";;
-                                   *) echo "$opt unknown"
+                                   *) echo "$opt unknown. Available: [--host|--global|--all] [--system]."
                                       return
                                       ;;
                         esac
@@ -229,6 +230,8 @@ function smartcd() {
                           chpwd-hook|chpwd) setup_smartcd_chpwd_hook;;
                             exit-hook|exit) setup_smartcd_exit_hook;;
                                 completion) _smartcd_load "completion";;
+                                         *) echo "Usage: smartcd $command (cd|pushd|popd|prompt[-hook]|chpwd[-hook]|exit[-hook]|completion)"
+                                            return ;;
                     esac
                     ;;
           on-leave) local code=${2//\\/\\\\};
@@ -508,7 +511,7 @@ function _smartcd() {
         local smartcd_current_dir="$(afirst leave_stack)"
         ashift leave_stack >/dev/null
 
-        # Set this just in case we are not able to actualy chdir to $smartcd_current_dir
+        # Set this in case we are not able to actually chdir to $smartcd_current_dir.
         local varstash_dir="$smartcd_current_dir"
 
         if [[ -d "$smartcd_current_dir" ]]; then
