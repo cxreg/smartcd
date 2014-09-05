@@ -500,7 +500,7 @@ function _smartcd() {
         apop leave_stack >/dev/null
     done
 
-    local host=${SMARTCD_HOSTNAME:-$(hostname)}
+    local host=${SMARTCD_HOSTNAME:-${HOST:-$(hostname)}}
 
     # Run leave_stack in lowest to highest
     local stack_size=$(alen leave_stack)

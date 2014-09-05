@@ -178,7 +178,7 @@ function _smartcd_file_check() {
         local base=$(_smartcd_base)
     fi
     if [[ $whence = "host" ]]; then
-        local host=${SMARTCD_HOSTNAME:-$(hostname)}
+        local host=${SMARTCD_HOSTNAME:-${HOST:-$(hostname)}}
         base="$base/hosts/$host"
     fi
     local file="bash_$type"
