@@ -506,6 +506,12 @@ function _smartcd() {
     local stack_size=$(alen leave_stack)
     : ${stack_size:=0}
     local smartcd_runmode=leave
+
+    # Set vars used in while loops.
+    if [[ $stack_size -gt 0 ]]; then
+        local sysdir=$(_smartcd_sysdir)
+    fi
+
     while (( $stack_size >= 1 )); do
         # ashift in a sub-shell doesn't work
         local smartcd_current_dir="$(afirst leave_stack)"
@@ -531,7 +537,6 @@ function _smartcd() {
         # can check things out
 
         # 1) Run system-wide global leave script
-        local sysdir=$(_smartcd_sysdir)
         local confdir="$sysdir/scripts$smartcd_current_dir"
         if [[ -f "$confdir/bash_leave" ]]; then
             if (( ${SMARTCD_QUIET:-0} == 0 )); then
@@ -666,7 +671,6 @@ function _smartcd() {
         done
 
         # 1) Run system-wide global enter script
-        local sysdir=$(_smartcd_sysdir)
         local confdir="$sysdir/scripts$smartcd_current_dir"
         if [[ -f "$confdir/bash_enter" ]]; then
             if (( ${SMARTCD_QUIET:-0} == 0 )); then
