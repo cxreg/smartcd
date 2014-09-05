@@ -881,9 +881,8 @@ function _smartcd_file() {
     else
         local this_file="$BASH_SOURCE"
     fi
-    if [[ "${this_file%/.smartcd/lib/core/smartcd}" == $HOME ]]; then
-        this_file=${this_file/#$HOME/\~}
-    fi
+    # Replace $HOME with ~ at the beginning.
+    this_file=${this_file/#$HOME/\~}
     echo "$this_file"
 }
 
