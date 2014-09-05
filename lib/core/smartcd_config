@@ -28,6 +28,7 @@ function smartcd_config() {
 
         local config="# Load and configure smartcd\nsource $arrays_file\nsource $varstash_file\nsource $smartcd_file"
 
+        _setup_conditionally "$enable_chpwd_hook"   "smartcd setup chpwd-hook"
         _setup_conditionally "$setup_cd"            "smartcd setup cd"
         _setup_conditionally "$setup_pushd"         "smartcd setup pushd"
         _setup_conditionally "$setup_pushd"         "smartcd setup popd"
@@ -83,10 +84,13 @@ function smartcd_config() {
     fi
 
     if [[ -f "$HOME/.smartcd_config" ]]; then
-        local cd_def=n pushd_def=n prompt_def=n exit_def=n comp_def=n autocon_def=n autoed_def=n
+        local use_defs=n
+        local chpwd_def=n cd_def=n pushd_def=n prompt_def=n exit_def=n
+        local comp_def=n autocon_def=n autoed_def=n
         local inode_def=n automig_def=n legacy_def=n line=
         while builtin read -r line; do
             case $line in
+                 "smartcd setup chpwd-hook") chpwd_def=y;;
                          "smartcd setup cd") cd_def=y;;
                       "smartcd setup pushd") pushd_def=y;;
                 "smartcd setup prompt-hook") prompt_def=y;;
@@ -102,15 +106,29 @@ function smartcd_config() {
     else
         local use_defs=$(ask "use defaults" "Use all default settings?" y)
 
-        # In case the answer is 'no', set the actual defaults
-        local cd_def=y pushd_def=y prompt_def=n exit_def=n comp_def=y autocon_def=n autoed_def=n
+        # In case the answer is 'no', set the actual defaults.
+        # Use chpwd hook for zsh by default.
+        if [[ -n "$ZSH_VERSION" ]]; then
+            local chpwd_def=y cd_def=n pushd_def=n
+        else
+            local chpwd_def=n cd_def=y pushd_def=y
+        fi
+        local prompt_def=n exit_def=n comp_def=y autocon_def=n autoed_def=n
         local inode_def=n automig_def=n legacy_def=n
     fi
 
     if [[ ! $use_defs =~ $yes ]]; then
-        local setup_cd=$(ask "smartcd setup cd" "Would you like to wrap cd with smartcd? (recommended)" $cd_def)
-        local setup_pushd=$(ask "smartcd setup pushd" "Would you like to wrap pushd and popd?" $pushd_def)
-        local enable_prompt_hook=$(ask "smartcd setup prompt-hook" "Would you like to enable prompt-command hooks?  (This is only recommended\nif you are an \"autocd\" user, say no if you are unsure)" $prompt_def)
+        if [[ -n "$ZSH_VERSION" ]]; then
+            local enable_chpwd_hook=$(ask "smartcd setup chpwd-hook" "Would you like to plug into Zsh's chpwd hook? (recommended)" $chpwd_def)
+        fi
+        # Ask for chpwd related settings only if not on zsh, or if not using chpwd hook.
+        if [[ -z "$ZSH_VERSION" ]] || [[ $enable_chpwd_hook == "n" ]]; then
+            local setup_cd=$(ask "smartcd setup cd" "Would you like to wrap cd with smartcd? (recommended)" y)
+            local setup_pushd=$(ask "smartcd setup pushd" "Would you like to wrap pushd and popd?" y)
+            local enable_prompt_hook=$(ask "smartcd setup prompt-hook" "Would you like to enable prompt-command hooks?  (This is only recommended\nif you are an \"autocd\" user, say no if you are unsure)" n)
+        else
+            local setup_cd=n setup_pushd=n enable_prompt_hook=n
+        fi
         local enable_exit_hook=$(ask "smartcd setup exit-hook" "Would you like to enable the shell exit hook?  This will cause bash_leave\nscripts to run when exiting your shell" $exit_def)
         local enable_completion=$(ask "smartcd setup completion" "Would you like to enable smartcd tab completion?" $comp_def)
         local autoconfigure=$(ask "VARSTASH_AUTOCONFIGURE=1" "Would you like smartcd to automatically add stash commands to your enter scripts\nwhen you run (auto)stash interactively?" $autocon_def)
@@ -133,7 +151,13 @@ function smartcd_config() {
             local legacy=$legacy_def
         fi
     else
-        local setup_cd=y setup_pushd=y enable_prompt_hook=n enable_exit_hook=n enable_completion=y
+        # Use chpwd hook for zsh by default.
+        if [[ -n "$ZSH_VERSION" ]]; then
+            local enable_chpwd_hook=y setup_cd=n setup_pushd=n
+        else
+            local enable_chpwd_hook=n setup_cd=y setup_pushd=y
+        fi
+        local enable_prompt_hook=n enable_exit_hook=n enable_completion=y
         local autoconfigure=n autoedit=n noinode=n automigrate=n legacy=n
     fi
 
