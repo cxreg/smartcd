@@ -822,6 +822,9 @@ function setup_smartcd_chpwd_hook() {
             return
         fi
         apush chpwd_functions _smartcd_hook
+    else
+        echo "chpwd hook is not supported for your shell."
+        return
     fi
 }
 
