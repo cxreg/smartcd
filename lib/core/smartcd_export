@@ -20,7 +20,8 @@ function smartcd_export() {
         # Skip directories never created
         if [[ -d "$base/$dir" ]]; then
             for entry in "$base/$dir/"*; do
-                local fn="${entry##*/}"
+                # Get filename, with trailing space from $entry removed (zsh).
+                local fn="${${entry%/}##*/}"
                 if [[ -f "$entry" ]]; then
                     echo "@ $dir/$fn"
                     local line=
