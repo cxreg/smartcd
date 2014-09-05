@@ -212,7 +212,6 @@ function smartcd() {
                     done
 
                     local type=$1
-                    shift
                     case $type in
                                    enter|leave) ;;
                          bash_enter|bash_leave) type="${type#bash_}";;
@@ -220,10 +219,11 @@ function smartcd() {
                                                 return
                                                 ;;
                     esac
+                    shift
                     [[ -n $type ]] && _smartcd_file_check "$type" "$whence" "$system" "$command" "$@"
                     ;;
           template) shift; smartcd_template "$@";;
-             setup) shift; local setup=$1; shift;
+             setup) shift; local setup=$1
                     case $setup in
                              cd|pushd|popd) setup_smartcd_function $setup;;
                         prompt-hook|prompt) setup_smartcd_prompt_hook;;
