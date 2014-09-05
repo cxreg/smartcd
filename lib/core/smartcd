@@ -876,7 +876,8 @@ function _smartcd_file() {
     if [[ -n $ZSH_VERSION ]]; then
         setopt localoptions && setopt ksharrays
         local this_file=${funcsourcetrace[0]}
-        this_file="${this_file%:*}"
+        # Remove line number and use absolute path.
+        this_file="${${this_file%:*}:a}"
     else
         local this_file="$BASH_SOURCE"
     fi
