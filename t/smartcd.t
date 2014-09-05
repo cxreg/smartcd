@@ -1,7 +1,7 @@
 # Set up smartcd
 mkdir -p tmphome
 oldhome=$HOME
-export HOME="$(pwd)/tmphome"
+export HOME="$PWD/tmphome"
 
 # Load testing library
 source t/tap-functions
@@ -46,17 +46,17 @@ like "${output-_}" "this is a leaving test" "bash_leave executed successfully us
 echo | smartcd edit enter "$dir"
 echo | smartcd edit leave "$dir"
 
-linkdest="$(pwd)/$dir/destination"
+linkdest="$PWD/$dir/destination"
 link="$dir/symlink"
 mkdir -p "$linkdest"
 ln -s destination "$link"
 smartcd cd -P $link
-is "_$(pwd)" "_$linkdest" "cd -P still works"
+is "_$PWD" "_$linkdest" "cd -P still works"
 smartcd cd ../..
 
 spacedir="dir with a space"
 mkdir -p "$spacedir"
-smartcd_spacedir="$HOME/.smartcd/scripts$(pwd)/$spacedir"
+smartcd_spacedir="$HOME/.smartcd/scripts$PWD/$spacedir"
 mkdir -p "$smartcd_spacedir"
 echo 'echo -n "1 "' > "$smartcd_spacedir/bash_enter"
 echo 'echo 2' > "$smartcd_spacedir/bash_leave"
@@ -66,7 +66,7 @@ is "${output-_}" "1 2" "could enter and leave a directory with a space"
 echo 'echo 4' > "$smartcd_spacedir/bash_leave"
 spacedir2="dir with a space/subdir"
 mkdir -p "$spacedir2"
-smartcd_spacedir2="$HOME/.smartcd/scripts$(pwd)/$spacedir2"
+smartcd_spacedir2="$HOME/.smartcd/scripts$PWD/$spacedir2"
 mkdir -p "$smartcd_spacedir2"
 echo 'echo -n "2 "' > "$smartcd_spacedir2/bash_enter"
 echo 'echo -n "3 "' > "$smartcd_spacedir2/bash_leave"

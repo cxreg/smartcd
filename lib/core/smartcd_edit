@@ -1,7 +1,7 @@
 # wrapper function to preserve legacy usage
 function smartcd_edit() {
     local type="$1"
-    local dir="${2:-$(pwd)}"
+    local dir="${2:-$PWD}"
 
     case $type in
         bash_enter|bash_leave) local file=$type; type="${type#bash_}";;
@@ -169,7 +169,7 @@ function _smartcd_file_check() {
             return
         fi
     else
-        dir="$(pwd)"
+        dir="$PWD"
     fi
 
     if [[ -n $system ]]; then
