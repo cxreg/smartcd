@@ -26,7 +26,7 @@ function smartcd_config() {
             config="$config\n${comment}$*"
         }
 
-        local config="\n# Load and configure smartcd\nsource $arrays_file\nsource $varstash_file\nsource $smartcd_file"
+        local config="# Load and configure smartcd\nsource $arrays_file\nsource $varstash_file\nsource $smartcd_file"
 
         _setup_conditionally "$setup_cd"            "smartcd setup cd"
         _setup_conditionally "$setup_pushd"         "smartcd setup pushd"
