@@ -32,7 +32,7 @@
 #       autostash PATH
 #       export PATH=/something/else
 #
-#   You may also do both operations on line line, leaving only the very succinct
+#   You may also do both operations in one line, resulting in the very succinct
 #
 #       autostash PATH=/something/else
 #
