@@ -12,6 +12,7 @@ function smartcd_export() {
     local _old_ifs="$IFS"
     local base=$(_smartcd_base)
     IFS=$'\n'
+    [[ -n $ZSH_VERSION ]] && setopt localoptions && setopt nullglob
     echo "smartcd export 1.0"
     apush remaining_dirs "scripts" "templates"
     while (( $(alen remaining_dirs) > 0 )); do
@@ -30,7 +31,7 @@ function smartcd_export() {
                 elif [[ -d "$entry" ]]; then
                     apush remaining_dirs "$dir/$fn"
                 elif [[ "$entry" = "$base/$dir/*" ]]; then
-                    : # without nullglob the literal globbed string may appear; ignore it
+                    : # without nullglob (for bash) the literal globbed string may appear; ignore it
                 else
                     echo "Skipping unknown file $entry" >&2
                 fi
