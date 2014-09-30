@@ -576,3 +576,11 @@ License v2 or the Artistic License.
       * Does not walk directory hierarchy
       * Is entirely "snapshot" based
       * Does not allow other actions besides environment variable switching
+
+  * autoenv - https://github.com/kennethreitz/autoenv
+      * Single shell script (Bash / Zsh), no support for fish.
+      * Runs files directly out of local directory, similar to "legacy mode":
+        Looks for `.env` files by default, authorized via
+        `~/.autoenv_authorized`.
+      * Uses/overrides `cd` function, no support for chpwd hook
+        (rejected: https://github.com/kennethreitz/autoenv/pull/39).
