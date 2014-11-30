@@ -106,7 +106,7 @@ These are just a few examples of problems people are solving with smartcd.
   The primary way of doing this is to create a "cd" function which calls
   `smartcd cd`. This also works with push and popd.  The simplest way to
   create these wrappers is to call `smartcd setup cd`, `smartcd setup pushd`,
-  and `smartcd setup pushd`.  When you `smartcd config`, this will be set up
+  and `smartcd setup popd`.  When you `smartcd config`, this will be set up
   for you.
 
   If you prefer (or in addition), you can hook the prompt command.
