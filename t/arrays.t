@@ -4,6 +4,8 @@ source lib/core/arrays
 
 plan_tests 19
 
+unset foo
+
 apush foo 1 2 3
 is "$(alen foo)" 3 "created 3 element array"
 
