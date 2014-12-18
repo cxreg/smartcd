@@ -577,10 +577,12 @@ License v2 or the Artistic License.
       * Is entirely "snapshot" based
       * Does not allow other actions besides environment variable switching
 
-  * autoenv - https://github.com/kennethreitz/autoenv
-      * Single shell script (Bash / Zsh), no support for fish.
+  * zsh-autoenv - https://github.com/Tarrasch/zsh-autoenv
+      * A light-weight alternative to smartcd.
+      * Single shell script (Zsh only).
       * Runs files directly out of local directory, similar to "legacy mode":
         Looks for `.env` files by default, authorized via
         `~/.autoenv_authorized`.
-      * Uses/overrides `cd` function, no support for chpwd hook
-        (rejected: https://github.com/kennethreitz/autoenv/pull/39).
+      * Support for leave events, which can be done in a separate file
+        (env.leave), or in the same file (according to $autoenv_event).
+      * Includes the varstash module from smartcd.
