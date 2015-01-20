@@ -32,7 +32,7 @@ function smartcd_template() {
 
                     command mkdir -p "$base/templates"
                     if [[ ! -f "$base/templates/$name" ]]; then
-                        command cat <<EOF >> "$base/templates/$name"
+                        command cat <<EOF > "$base/templates/$name"
 ########################################################################
 # This is a smartcd template.  Edit this file to create a named
 # configuration you can copy to any number of directories.  This is
