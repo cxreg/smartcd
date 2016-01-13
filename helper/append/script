@@ -1,0 +1,27 @@
+###############################################################################
+# Append values to any variable
+#
+# Example usage:
+#
+#     # append items to MYVAR variable
+#     local MYVAR='foo';
+#     smartcd helper run append MYVAR __PATH__/foo
+#     # $MYVAR='foo:__PATH__/foo'
+#
+###############################################################################
+
+local i
+local variable="$1"; shift
+local new
+for i in "$@"; do
+    if [[ -n "$new" ]]; then
+        new="$new:$i"
+    else
+        new="$i"
+    fi
+done
+if [[ -n "$new" ]]; then
+    eval autostash $variable="\"\$$variable:\$new\""
+else
+    eval autostash $variable="\"\$new\""
+fi
