@@ -27,7 +27,7 @@ function smartcd_helper() {
 
                     local helpername=${type#local:}
                     local workdir="${smartcd_working_dir:-$(command pwd)}"
-                    if [[ $type != $helpername ]]; then
+                    if [[ $t<ype != $helpername ]]; then
                         local helperpath="$workdir/.smartcd/helper/$helpername/script"
                     else
                         local helperpath="$HOME/.smartcd/helper/$type/script"
