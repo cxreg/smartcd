@@ -1,0 +1,28 @@
+###############################################################################
+# Prepend values to any variable
+#
+# Example usage:
+#
+#     # append items to MYVAR variable
+#     local MYVAR='foo';
+#     smartcd helper run prepend MYVAR __PATH__/foo
+#     # $MYVAR='__PATH__/foo:foo'
+#
+###############################################################################
+
+local i
+local variable="$1"; shift
+local new
+
+for i in "$@"; do
+    if [[ -n "$new" ]]; then
+        new="$new:$i"
+    else
+        new="$i"
+    fi
+done
+if [[ -n "$new" ]]; then
+    eval autostash $variable="\"\$new:\$$variable\""
+else
+    eval autostash $variable="\"\$new\""
+    fi
