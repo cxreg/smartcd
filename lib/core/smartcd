@@ -435,6 +435,7 @@ function _smartcd() {
     local _old_ifs="$IFS"
     IFS=$' \t\n'
     if [[ -z $smartcd_skip_action ]]; then
+        _smartcd_skip_chpwd=1
         if [[ -n $1 ]] || [[ -z ${1-_} ]]; then
             if [[ -n $ZSH_VERSION ]]; then
                 ${=action} "$@"
@@ -444,6 +445,7 @@ function _smartcd() {
         else
             eval $action
         fi
+        unset _smartcd_skip_chpwd
     fi
     local rv=$?
     IFS="$_old_ifs"
@@ -757,13 +759,13 @@ function _smartcd() {
 }
 
 function _smartcd_hook() {
-    local cwd="$(pwd)"
-
-    # Skip this if we already ran smartcd for this directory
-    if [[ "x$cwd" != "$_smartcd_last_run_for" ]]; then
-        local smartcd_skip_action=1
-        _smartcd true "$cwd"
+    # Skip this if we are being invoked from _smartcd.
+    if [[ -n "$_smartcd_skip_chpwd" ]]; then
+        return
     fi
+
+    local smartcd_skip_action=1
+    _smartcd true $PWD
 }
 
 function _smartcd_prompt_hook() {
