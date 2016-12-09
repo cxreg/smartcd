@@ -314,7 +314,7 @@ function _smartcd_load() {
 
 function _smartcd_exec_file() {
     local file="$1"; shift
-    local contents="$(<$file)"
+    local contents="$(<"$file")"
     _smartcd_exec "$contents" "$@"
 }
 
