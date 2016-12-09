@@ -576,3 +576,13 @@ License v2 or the Artistic License.
       * Does not walk directory hierarchy
       * Is entirely "snapshot" based
       * Does not allow other actions besides environment variable switching
+
+  * zsh-autoenv - https://github.com/Tarrasch/zsh-autoenv
+      * A light-weight alternative to smartcd.
+      * Single shell script (Zsh only).
+      * Runs files directly out of local directory, similar to "legacy mode":
+        Looks for `.env` files by default, authorized via
+        `~/.autoenv_authorized`.
+      * Support for leave events, which can be done in a separate file
+        (env.leave), or in the same file (according to $autoenv_event).
+      * Includes the varstash module from smartcd.
