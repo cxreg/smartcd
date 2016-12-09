@@ -335,7 +335,7 @@ function autounstash() {
 }
 
 function _mangle_var() {
-    local mangle_var_where="${varstash_dir:-$(pwd)}"
+    local mangle_var_where="${varstash_dir:-$PWD}"
     mangle_var_where=${mangle_var_where//[^A-Za-z0-9]/_}
     local mangled_name=${1//[^A-Za-z0-9]/_}
     echo "_tmp_${mangle_var_where}_${mangled_name}"
