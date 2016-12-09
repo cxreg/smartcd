@@ -503,6 +503,8 @@ function _smartcd() {
     local stack_size=$(alen leave_stack)
     : ${stack_size:=0}
     local smartcd_runmode=leave
+    local ask_trust
+    local trust
     while (( $stack_size >= 1 )); do
         # ashift in a sub-shell doesn't work
         local smartcd_current_dir="$(afirst leave_stack)"
@@ -577,7 +579,33 @@ function _smartcd() {
 
         # 5) Detect .bash_leave and either notify or run
         if [[ -z "$nodir" && -f .bash_leave ]]; then
-            if [[ -n $SMARTCD_LEGACY ]]; then
+            ask_trust=0
+            if builtin test ! -f "$confdir/bash_leave.shasum" || ! shasum -sc "$confdir/bash_leave.shasum"; then
+                ask_trust=1
+            fi
+
+            if [[ $ask_trust == 1 ]]; then
+                echo "smartcd: $smartcd_current_dir/.bash_leave is new or changed."
+                echo ""
+                command cat .bash_leave
+                echo ""
+                echo ""
+                echo -n "Trust? [y/N] "
+                builtin read trust < /dev/tty
+                setup=$(echo $setup | tr 'A-Z' 'a-z')
+                : ${trust:=n}
+                if [[ $trust =~ "y" ]]; then
+                    command mkdir -p "$confdir"
+                    command shasum .bash_leave > $confdir/bash_leave.shasum
+                fi
+            fi
+
+            trust=''
+            if builtin test -f "$confdir/bash_leave.shasum" && shasum -sc "$confdir/bash_leave.shasum"; then
+                trust=1
+            fi
+
+            if [[ -n $SMARTCD_LEGACY || -n $trust ]]; then
                 if (( ${SMARTCD_QUIET:-0} == 0 )); then
                     echo "smartcd: running $smartcd_current_dir/.bash_leave"
                 fi
@@ -712,7 +740,33 @@ function _smartcd() {
 
         # 5) Detect .bash_enter and either notify or run
         if [[ -f .bash_enter ]]; then
-            if [[ -n $SMARTCD_LEGACY ]]; then
+            ask_trust=0
+            if builtin test ! -f "$confdir/bash_enter.shasum" || ! shasum -sc "$confdir/bash_enter.shasum"; then
+                ask_trust=1
+            fi
+
+            if [[ $ask_trust == 1 ]]; then
+                echo "smartcd: $smartcd_current_dir/.bash_enter is new or changed."
+                echo ""
+                command cat .bash_enter
+                echo ""
+                echo ""
+                echo -n "Trust? [y/N] "
+                builtin read trust < /dev/tty
+                setup=$(echo $setup | tr 'A-Z' 'a-z')
+                : ${trust:=n}
+                if [[ $trust =~ "y" ]]; then
+                    command mkdir -p "$confdir"
+                    command shasum .bash_enter > $confdir/bash_enter.shasum
+                fi
+            fi
+
+            trust=''
+            if builtin test -f "$confdir/bash_enter.shasum" && shasum -sc "$confdir/bash_enter.shasum"; then
+                trust=1
+            fi
+
+            if [[ -n $SMARTCD_LEGACY || -n $trust ]]; then
                 if (( ${SMARTCD_QUIET:-0} == 0 )); then
                     echo "smartcd: running $smartcd_current_dir/.bash_enter"
                 fi
