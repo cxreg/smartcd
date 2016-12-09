@@ -3,12 +3,14 @@ mkdir -p tmphome
 oldhome=$HOME
 export HOME="$(pwd)/tmphome"
 
+
 # Load testing library
 source t/tap-functions
 source lib/core/arrays
 source lib/core/varstash
 source lib/core/smartcd
 
+SMARTCD_NO_INODE=1
 plan_tests 13
 
 # One tier
