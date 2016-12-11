@@ -109,12 +109,12 @@ is "_$(alast thing)" "_three four" "unstashed array"
 oldhome=$HOME
 stash HOME
 mkdir -p tmphome
-export HOME=$(pwd)/tmphome
+export HOME=$PWD/tmphome
 
 VARSTASH_AUTOCONFIG=1
 oldshell=$SHELL
 autostash SHELL
-config_file="$HOME/.smartcd/scripts$(pwd)/bash_enter"
+config_file="$HOME/.smartcd/scripts$PWD/bash_enter"
 config_file_exists=$([[ -f $config_file ]] && echo "yes")
 
 like "${config_file_exists-_}" "yes" "created smartcd file"

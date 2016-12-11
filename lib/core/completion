@@ -6,9 +6,15 @@
 #
 
 if [[ -n $ZSH_VERSION ]]; then
-    autoload -U compinit
-    compinit
-    autoload -U +X bashcompinit && bashcompinit
+    # Only load/call compinit once.
+    if [[ -z $_comp_dumpfile ]]; then
+        autoload -U compinit
+        compinit
+    fi
+    # Only load/call bashcompinit once.
+    if [[ -z $functions[complete] ]]; then
+        autoload -U +X bashcompinit && bashcompinit
+    fi
 fi
 
 function _smartcd_completion() {

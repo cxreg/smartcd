@@ -1,4 +1,5 @@
 ################################################################################
+
 # smartcd - cd with some oomph
 #
 #   Copyright (c) 2009,2012 Dave Olszewski <cxreg@pobox.com>
@@ -184,7 +185,7 @@ function smartcd() {
     case $command in
         -h|help|'') echo $usage;;
      cd|pushd|popd) shift; _smartcd $command "$@"; return $?;;
-           reenter) local dir="$(pwd)"
+           reenter) local dir="$PWD"
                     _smartcd cd ..
                     _smartcd cd "$dir"
                     ;;
@@ -203,7 +204,7 @@ function smartcd() {
                             --global) whence="global";;
                             --system) system="true";;
                                --all) whence="all"; system="both";;
-                                   *) echo "$opt unknown"
+                                   *) echo "$opt unknown. Available: [--host|--global|--all] [--system]."
                                       return
                                       ;;
                         esac
@@ -211,7 +212,6 @@ function smartcd() {
                     done
 
                     local type=$1
-                    shift
                     case $type in
                                    enter|leave) ;;
                          bash_enter|bash_leave) type="${type#bash_}";;
@@ -219,16 +219,19 @@ function smartcd() {
                                                 return
                                                 ;;
                     esac
+                    shift
                     [[ -n $type ]] && _smartcd_file_check "$type" "$whence" "$system" "$command" "$@"
                     ;;
           template) shift; smartcd_template "$@";;
-             setup) shift; local setup=$1; shift;
+             setup) shift; local setup=$1
                     case $setup in
                              cd|pushd|popd) setup_smartcd_function $setup;;
                         prompt-hook|prompt) setup_smartcd_prompt_hook;;
                           chpwd-hook|chpwd) setup_smartcd_chpwd_hook;;
                             exit-hook|exit) setup_smartcd_exit_hook;;
                                 completion) _smartcd_load "completion";;
+                                         *) echo "Usage: smartcd $command (cd|pushd|popd|prompt[-hook]|chpwd[-hook]|exit[-hook]|completion)"
+                                            return ;;
                     esac
                     ;;
           on-leave) local code=${2//\\/\\\\};
@@ -449,7 +452,7 @@ function _smartcd() {
     IFS="$_old_ifs"
 
     if (( $rv != 0 )); then return $rv; fi
-    local whereto="$(pwd)"
+    local whereto="$PWD"
     _smartcd_last_run_for="x$whereto"
 
     # If zsh, turn autopushd off temporarily to avoid extra pushes
@@ -497,18 +500,24 @@ function _smartcd() {
         apop leave_stack >/dev/null
     done
 
-    local host=${SMARTCD_HOSTNAME:-$(hostname)}
+    local host=${SMARTCD_HOSTNAME:-${HOST:-$(hostname)}}
 
     # Run leave_stack in lowest to highest
     local stack_size=$(alen leave_stack)
     : ${stack_size:=0}
     local smartcd_runmode=leave
+
+    # Set vars used in while loops.
+    if [[ $stack_size -gt 0 ]]; then
+        local sysdir=$(_smartcd_sysdir)
+    fi
+
     while (( $stack_size >= 1 )); do
         # ashift in a sub-shell doesn't work
         local smartcd_current_dir="$(afirst leave_stack)"
         ashift leave_stack >/dev/null
 
-        # Set this just in case we are not able to actualy chdir to $smartcd_current_dir
+        # Set this in case we are not able to actually chdir to $smartcd_current_dir.
         local varstash_dir="$smartcd_current_dir"
 
         if [[ -d "$smartcd_current_dir" ]]; then
@@ -528,7 +537,6 @@ function _smartcd() {
         # can check things out
 
         # 1) Run system-wide global leave script
-        local sysdir=$(_smartcd_sysdir)
         local confdir="$sysdir/scripts$smartcd_current_dir"
         if [[ -f "$confdir/bash_leave" ]]; then
             if (( ${SMARTCD_QUIET:-0} == 0 )); then
@@ -663,7 +671,6 @@ function _smartcd() {
         done
 
         # 1) Run system-wide global enter script
-        local sysdir=$(_smartcd_sysdir)
         local confdir="$sysdir/scripts$smartcd_current_dir"
         if [[ -f "$confdir/bash_enter" ]]; then
             if (( ${SMARTCD_QUIET:-0} == 0 )); then
@@ -757,7 +764,7 @@ function _smartcd() {
 }
 
 function _smartcd_hook() {
-    local cwd="$(pwd)"
+    local cwd="$PWD"
 
     # Skip this if we already ran smartcd for this directory
     if [[ "x$cwd" != "$_smartcd_last_run_for" ]]; then
@@ -815,6 +822,9 @@ function setup_smartcd_chpwd_hook() {
             return
         fi
         apush chpwd_functions _smartcd_hook
+    else
+        echo "chpwd hook is not supported for your shell."
+        return
     fi
 }
 
@@ -866,13 +876,13 @@ function _smartcd_file() {
     if [[ -n $ZSH_VERSION ]]; then
         setopt localoptions && setopt ksharrays
         local this_file=${funcsourcetrace[0]}
-        this_file="${this_file%:*}"
+        # Remove line number and use absolute path.
+        this_file="${${this_file%:*}:a}"
     else
         local this_file="$BASH_SOURCE"
     fi
-    if [[ "${this_file%/.smartcd/lib/core/smartcd}" == $HOME ]]; then
-        this_file=${this_file/#$HOME/\~}
-    fi
+    # Replace $HOME with ~ at the beginning.
+    this_file=${this_file/#$HOME/\~}
     echo "$this_file"
 }
 

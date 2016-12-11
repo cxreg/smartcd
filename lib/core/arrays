@@ -139,7 +139,7 @@ function ashift() {
     fi
 }
 
-# Bash requires the array be quoted, zsh requires it not
+# Bash requires the array to be quoted, zsh does not.
 function aunshift() {
     local var=$1; shift
 
