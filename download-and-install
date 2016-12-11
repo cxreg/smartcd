@@ -144,13 +144,13 @@ if [[ -z $smartcd_previously_installed ]]; then
     echo
     echo "To get started, create a few scripts.  Its easy!  Try this:"
     echo
-    echo "    echo 'echo hello there from \$(pwd)' | smartcd edit enter"
-    echo "    echo 'echo goodbye from \$(pwd)' | smartcd edit leave"
+    echo "    echo 'echo hello there from \$PWD' | smartcd edit enter"
+    echo "    echo 'echo goodbye from \$PWD' | smartcd edit leave"
     echo
     echo "Then simply leave the directory and come back.  For a more practical"
     echo "example, how about tweaking your PATH?"
     echo
-    echo "    echo \"autostash PATH=\$(pwd)/bin:\\\$PATH\" | smartcd edit enter"
+    echo "    echo \"autostash PATH=\$PWD/bin:\\\$PATH\" | smartcd edit enter"
     echo
     echo "(side note: the quoting rules when editing in this fashion can be a bit"
     echo "awkward, so feel free to run \`smartcd edit\` interactively too!"
