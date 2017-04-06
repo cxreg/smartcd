@@ -87,7 +87,7 @@ These are just a few examples of problems people are solving with smartcd.
 
     echo 'autostash PATH=__PATH__/temporary/path:$PATH' | smartcd edit enter
 
-  which also highlights a convenient feature that replaces __PATH__ with the
+  which also highlights a convenient feature that replaces `__PATH__` with the
   directory name before the script is run.
 
   If you like doing things by hand, you may prefer
