@@ -47,7 +47,7 @@ These are just a few examples of problems people are solving with smartcd.
   However, if you would rather skip all that and simply have it install itself,
   try this:
 
-    curl -L http://smartcd.org/install | bash
+    curl -L https://raw.githubusercontent.com/cxreg/smartcd/master/download-and-install | bash
 
   Either method will prompt you to configure a small number of settings, and
   then help you set up your shell to load it on login.
