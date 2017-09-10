@@ -10,7 +10,7 @@
 #
 ###############################################################################
 
-function have_deactivate() { 
+function run_deactivate_if_present() { 
     if [[ -n $ZSH_VERSION ]]; then
        echo '[ "`type -w deactivate`" = "function" ] && deactivate'
     else
@@ -23,8 +23,8 @@ case $action in
  init) case $1 in
            "") echo "Usage: smartcd helper run virtualenv init <virtualenv base>";;
             *) autostash PATH PYTHONHOME PS1 VIRTUAL_ENV
-               eval have_deactivate
-               smartcd on-leave have_deactivate
+               eval run_deactivate_if_present
+               smartcd on-leave run_deactivate_if_present
                if [ ! -e "$1" ]; then
                    virtualenv "$1"
                fi
