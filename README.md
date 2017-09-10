@@ -1,5 +1,7 @@
 # smartcd - make your shell come alive
 
+[![Join the chat at https://gitter.im/cxreg/smartcd](https://badges.gitter.im/cxreg/smartcd.svg)](https://gitter.im/cxreg/smartcd?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 ## WHAT IS SMARTCD?
 
   smartcd is a library for bash and zsh which brings transformative power
@@ -87,7 +89,7 @@ These are just a few examples of problems people are solving with smartcd.
 
     echo 'autostash PATH=__PATH__/temporary/path:$PATH' | smartcd edit enter
 
-  which also highlights a convenient feature that replaces __PATH__ with the
+  which also highlights a convenient feature that replaces `__PATH__` with the
   directory name before the script is run.
 
   If you like doing things by hand, you may prefer
