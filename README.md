@@ -380,6 +380,25 @@ These are just a few examples of problems people are solving with smartcd.
     ```
 
 
+  * virtualenv
+ 
+    virtualenv is a system for maintaining multiple, independent python
+    interpreters and associated modules, allowing you to easily activate and
+    deactivate them.  This is very useful for development.
+ 
+    smartcd now ships with a helper designed to integrate virtualenv and smartcd
+    seamlessly together.  Simply put this line in your enter script:
+ 
+    ```
+    smartcd helper run virtualenv init /path/to/virtualenv
+    ```
+ 
+    When you leave the directory, virtualenv will stop being in effect and you will
+    get your previous python back.
+ 
+    virtualenv is available at http://www.virtualenv.org/en/latest/index.html
+ 
+
 ### TEMPLATES
 
   In addition to configuring scripts individually, smartcd supports a template

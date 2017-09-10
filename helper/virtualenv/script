@@ -1,0 +1,35 @@
+###############################################################################
+# Virtualenv compatibility
+#
+# Example usage:
+#     smartcd helper run virtualenv init /path/to/virtualenv
+#
+# By using this helper, virtualenv will be loaded automatically on directory
+# enter, and its effects will be undone when you cd away. If the virtualenv
+# does not exist, it will be created.
+#
+###############################################################################
+
+function run_deactivate_if_present() { 
+    if [[ -n $ZSH_VERSION ]]; then
+       echo '[ "`type -w deactivate`" = "function" ] && deactivate'
+    else
+       echo '[ "`type -t deactivate`" = "function" ] && deactivate'
+    fi
+}
+
+local action=$1; shift
+case $action in
+ init) case $1 in
+           "") echo "Usage: smartcd helper run virtualenv init <virtualenv base>";;
+            *) autostash PATH PYTHONHOME PS1 VIRTUAL_ENV
+               eval run_deactivate_if_present
+               smartcd on-leave run_deactivate_if_present
+               if [ ! -e "$1" ]; then
+                   virtualenv "$1"
+               fi
+               source "$1/bin/activate"
+        esac
+        ;;
+    *) echo "Usage: smartcd helper run virtualenv init <virtualenv base>";;
+esac
