@@ -29,7 +29,7 @@ function _smartcd_completion() {
 
     local words
     if [[ $COMP_CWORD == 1 ]]; then
-        words="cd pushd popd setup config template edit show filename export import reenter inform helper on-prompt"
+        words="cd pushd popd setup config template edit delete show filename export import reenter inform helper on-prompt"
     else
         case "${COMP_WORDS[1]}" in
                           setup) case $COMP_CWORD in
@@ -44,7 +44,7 @@ function _smartcd_completion() {
                                       ;;
                                  esac
                                  ;;
-      append|edit|show|filename) case $COMP_CWORD in
+      append|edit|show|delete|filename) case $COMP_CWORD in
                                    2) words="enter leave --system --host --global";;
                                    3) case $prev in
                                               --system) words="enter leave --host --global";;
