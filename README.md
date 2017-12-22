@@ -49,6 +49,10 @@ These are just a few examples of problems people are solving with smartcd.
 
     curl -L http://smartcd.org/install | bash
 
+  Or
+    
+    wget --no-check-certificate -O - http://smartcd.org/install | bash
+ 
   Either method will prompt you to configure a small number of settings, and
   then help you set up your shell to load it on login.
 
