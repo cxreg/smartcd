@@ -50,9 +50,9 @@ These are just a few examples of problems people are solving with smartcd.
     curl -L http://smartcd.org/install | bash
 
   Or
-    
+
     wget --no-check-certificate -O - http://smartcd.org/install | bash
- 
+
   Either method will prompt you to configure a small number of settings, and
   then help you set up your shell to load it on login.
 
@@ -174,6 +174,25 @@ These are just a few examples of problems people are solving with smartcd.
 ## WHAT ARE SOME COMMON RECIPES?
 
   Here are some examples of useful setups that have been created so far
+
+
+### SILENCE SMARTCD
+
+  smartcd is by default verbose about what it does.
+
+  This can be silenced either by setting the environment variable
+  `SMARTCD_QUIET`
+
+  ```bash
+  export SMARTCD_QUIET=1
+  ```
+
+  Or you can quiet smartcd by setting the silence parameter in smartcd's
+  configuration file: `~/.smartcd_config`
+
+  ```
+  SMARTCD_QUIET=1
+  ```
 
 
 ### DISPLAY A MESSAGE
@@ -387,23 +406,23 @@ These are just a few examples of problems people are solving with smartcd.
 
 
   * virtualenv
- 
+
     virtualenv is a system for maintaining multiple, independent python
     interpreters and associated modules, allowing you to easily activate and
     deactivate them.  This is very useful for development.
- 
+
     smartcd now ships with a helper designed to integrate virtualenv and smartcd
     seamlessly together.  Simply put this line in your enter script:
- 
+
     ```
     smartcd helper run virtualenv init /path/to/virtualenv
     ```
- 
+
     When you leave the directory, virtualenv will stop being in effect and you will
     get your previous python back.
- 
+
     virtualenv is available at http://www.virtualenv.org/en/latest/index.html
- 
+
 
 ### TEMPLATES
 
