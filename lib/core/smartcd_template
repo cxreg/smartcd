@@ -137,7 +137,7 @@ EOF
                     local name="$1"
                     if [[ -n $name ]]; then
                         if [[ -f "$base/templates/$name" ]]; then
-                            local current_dir=$PWD
+                            local current_dir="$PWD"
 
                             local mode= line=
                             while builtin read -r line; do

@@ -161,9 +161,9 @@ function _smartcd_file_check() {
     local action="$4"
     local dir="$5"
 
-    if [[ -n $dir ]]; then
+    if [[ -n "$dir" ]]; then
         # canonicalize
-        dir=$(builtin cd $dir 2>/dev/null && command pwd)
+        dir=$(builtin cd "$dir" 2>/dev/null && command pwd)
         if [[ -z $dir ]]; then
             echo "$3 is not a valid directory"
             return

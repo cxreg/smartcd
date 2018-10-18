@@ -339,7 +339,7 @@ function _smartcd_check_inode() {
     local base=$(_smartcd_base)
     local inode=$(command ls -di "$dir" | command awk '{print $1}')
     if [[ -f "$base/inodes$dir.inode" ]]; then
-        prev="$(<$base/inodes$dir.inode)"
+        prev="$(<"$base/inodes$dir.inode")"
         if [[ $prev != "*" && $inode != $prev ]]; then
             echo "WARNING!  Possibly outdated scripts detected, not running them.  These"
             echo "scripts were created for a directory which has been deleted or replaced,"
