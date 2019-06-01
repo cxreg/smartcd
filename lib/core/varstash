@@ -170,7 +170,7 @@ function stash() {
                 || [[ $vartype == $pattern" -x"* ]]; then
                 # variable is exported
                 if [[ -z $already_stashed ]]; then
-                    eval "__varstash_export__$stash_name=\"\$$stash_which\""
+                    eval "export __varstash_export__$stash_name=\"\$$stash_which\""
                 fi
                 if [[ $stash_which != $stash_expression && -z $_stashing_alias_assign ]]; then
                     eval "export $stash_which=\"$stash_value\""
@@ -196,7 +196,7 @@ function stash() {
             # (eval):1: command not found: __varstash_nostash___tmp__home_dolszewski_src_smartcd_RANDOM_VARIABLE=1
             # fixed in zsh commit 724fd07a67f, version 4.3.14
             if [[ -z $already_stashed ]]; then
-                eval "__varstash_nostash__$stash_name=1"
+                eval "export __varstash_nostash__$stash_name=1"
             fi
 
             # In the case of a previously unset variable that we're assigning too, export it
